@@ -37,7 +37,7 @@ export const CardOptionsPanel = () => {
 
   const updateOrientation = (o: 'horizontal' | 'vertical') => {
     if (!canvas) return;
-    const [w, h] = o === 'horizontal' ? [700, 400] : [400, 700];
+    const [w, h] = o === 'horizontal' ? [1013, 638] : [638, 1013];
     canvas.setDimensions({ width: w, height: h });
     setConfig({ orientation: o });
   };
@@ -151,7 +151,11 @@ export const CardOptionsPanel = () => {
               <input
                 type="color"
                 value={config.backgroundColorBack}
-                onChange={(e) => setConfig({ backgroundColorBack: e.target.value })}
+                onChange={(e) => {
+                  setConfig({ backgroundColorBack: e.target.value });
+                  const { side, canvas } = useDesignerStore.getState();
+                  if (canvas && side === 'back') canvas.setBackgroundColor(e.target.value, canvas.renderAll.bind(canvas));
+                }}
                 className="w-10 h-10 rounded-xl border-none cursor-pointer bg-transparent shadow-inner"
               />
               <span className="text-[11px] font-mono font-bold text-gray-400">{config.backgroundColorBack.toUpperCase()}</span>

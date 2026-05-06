@@ -69,15 +69,17 @@ export const ImageLibraryModal = () => {
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (f) => {
-        const data = f.target?.result as string;
-        addUploadedImage(data);
-        setActiveFolder('My Images');
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+          const data = f.target?.result as string;
+          addUploadedImage(data);
+        };
+        reader.readAsDataURL(file);
+      });
+      setActiveFolder('My Images');
     }
   };
 
@@ -103,6 +105,7 @@ export const ImageLibraryModal = () => {
         ref={fileInputRef} 
         onChange={handleFileUpload} 
         accept="image/*" 
+        multiple
         className="hidden" 
       />
       <div className="bg-white w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
@@ -217,26 +220,32 @@ export const AddImageDialog = ({ isOpen, onClose }: { isOpen: boolean, onClose: 
   if (!isOpen) return null;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (f) => {
-        const data = f.target?.result as string;
-        addUploadedImage(data);
-        fabric.Image.fromURL(data, (img) => {
-          img.scaleToWidth(150);
-          canvas?.add(img);
-          canvas?.setActiveObject(img);
-          onClose();
-        });
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+          const data = f.target?.result as string;
+          addUploadedImage(data);
+          
+          // Only add the first image to canvas directly to prevent clutter
+          if (index === 0) {
+            fabric.Image.fromURL(data, (img) => {
+              img.scaleToWidth(150);
+              canvas?.add(img);
+              canvas?.setActiveObject(img);
+              onClose();
+            });
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-      <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+      <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" multiple className="hidden" />
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-[500px] border border-white/50 animate-in zoom-in-95 duration-200">
         <div className="bg-green-600 px-6 py-3 flex items-center justify-between">
           <h3 className="text-white font-bold text-sm">Add Image</h3>

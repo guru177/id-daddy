@@ -18,6 +18,17 @@ interface CardConfig {
   };
 }
 
+interface SavedDesign {
+  id: string;
+  name: string;
+  front: any;
+  back: any;
+  config: CardConfig;
+  thumbnailFront: string;
+  thumbnailBack: string;
+  timestamp: string;
+}
+
 interface DesignerState {
   canvas: fabric.Canvas | null;
   side: 'front' | 'back';
@@ -71,7 +82,24 @@ interface DesignerState {
   setShowGrid: (show: boolean) => void;
   downloadCanvas: () => void;
   saveDesign: () => void;
+  loadDesign: (design: SavedDesign) => void;
+  deleteDesign: (id: string) => void;
+  exportDesign: (design: any) => void;
   newDesign: () => void;
+  savedDesigns: SavedDesign[];
+  currentDesignId: string | null;
+  loadTrigger: number;
+  frontThumbnail: string;
+  backThumbnail: string;
+  modal: {
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'confirm' | 'error';
+    onConfirm?: () => void;
+  };
+  showModal: (options: { title: string; message: string; type?: 'info' | 'confirm' | 'error'; onConfirm?: () => void }) => void;
+  closeModal: () => void;
 }
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
@@ -115,29 +143,30 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   addUploadedImage: (url: string) => set((state) => ({ 
     uploadedImages: [url, ...state.uploadedImages] 
   })),
+  currentDesignId: null,
+  loadTrigger: 0,
+  frontThumbnail: '',
+  backThumbnail: '',
+  modal: {
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  },
+  showModal: (options) => set({ 
+    modal: { 
+      isOpen: true, 
+      type: 'info', 
+      ...options 
+    } 
+  }),
+  closeModal: () => set((state) => ({ 
+    modal: { ...state.modal, isOpen: false } 
+  })),
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
   
   setSide: (side: 'front' | 'back') => {
-    const { canvas, frontData, backData, side: currentSide } = get();
-    if (!canvas) return;
-
-    const currentData = canvas.toJSON();
-    const updates: any = { side };
-    if (currentSide === 'front') updates.frontData = currentData;
-    else updates.backData = currentData;
-
-    set(updates);
-
-    const targetData = side === 'front' ? frontData : backData;
-    if (targetData) {
-      canvas.loadFromJSON(targetData, () => {
-        canvas.renderAll();
-      });
-    } else {
-      canvas.clear();
-      const bgColor = side === 'front' ? get().config.backgroundColorFront : get().config.backgroundColorBack;
-      canvas.setBackgroundColor(bgColor, canvas.renderAll.bind(canvas));
-    }
+    set({ side });
   },
 
   setConfig: (newConfig: Partial<CardConfig>) => set((state) => ({ 
@@ -148,16 +177,32 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
   isHistoryPaused: false,
   saveState: () => {
-    const { canvas, history, isHistoryPaused } = get();
+    const { canvas, history, isHistoryPaused, side } = get();
     if (!canvas || isHistoryPaused) return;
+
+    const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType']);
+    const jsonStr = JSON.stringify(json);
     
-    const json = JSON.stringify(canvas.toJSON());
-    if (history.length > 0 && history[history.length - 1] === json) return;
-    
-    set({ 
-      history: [...history, json],
+    // Deduplicate history
+    if (history.length > 0 && JSON.stringify(history[history.length - 1]) === jsonStr) return;
+
+    const updates: any = {
+      history: [...history, json].slice(-50),
       redoStack: []
-    });
+    };
+
+    if (side === 'front') updates.frontData = json;
+    else updates.backData = json;
+
+    // Also update thumbnail for current side
+    const thumb = canvas.toDataURL({ format: 'png', multiplier: 1.0 });
+    if (side === 'front') updates.frontThumbnail = thumb;
+    else updates.backThumbnail = thumb;
+
+    set(updates);
+    
+    // Notify layers panel to refresh
+    canvas.fire('object:modified');
   },
 
   undo: () => {
@@ -169,10 +214,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     
     canvas.loadFromJSON(prevState, () => {
       canvas.renderAll();
-      set({
+      const updates: any = {
         history: history.slice(0, -1),
         redoStack: [...redoStack, currentState]
-      });
+      };
+      if (get().side === 'front') updates.frontData = prevState;
+      else updates.backData = prevState;
+      set(updates);
     });
   },
 
@@ -184,10 +232,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     
     canvas.loadFromJSON(nextState, () => {
       canvas.renderAll();
-      set({
+      const updates: any = {
         history: [...history, nextState],
         redoStack: redoStack.slice(0, -1)
-      });
+      };
+      if (get().side === 'front') updates.frontData = nextState;
+      else updates.backData = nextState;
+      set(updates);
     });
   },
 
@@ -527,58 +578,221 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
 
   downloadCanvas: () => {
-    const { canvas, side } = get();
+    const { canvas, side, frontData, backData, config } = get();
     if (!canvas) return;
     
     // Discard active object to clean up export
     canvas.discardActiveObject();
     canvas.renderAll();
 
-    const dataURL = canvas.toDataURL({
+    const downloadLink = (dataURL: string, filename: string) => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    const currentDataURL = canvas.toDataURL({
       format: 'png',
       multiplier: 3, // High quality
       enableRetinaScaling: true
     });
+    downloadLink(currentDataURL, `id-design-${side}-${Date.now()}.png`);
 
-    const link = document.createElement('a');
-    link.download = `id-design-${side}-${Date.now()}.png`;
-    link.href = dataURL;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Export the other side
+    const otherSideData = side === 'front' ? backData : frontData;
+    const otherSideName = side === 'front' ? 'back' : 'front';
+    const bgColor = side === 'front' ? config.backgroundColorBack : config.backgroundColorFront;
+
+    if (otherSideData) {
+      const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
+      const tempCanvasElem = document.createElement('canvas');
+      tempCanvasElem.width = width;
+      tempCanvasElem.height = height;
+      
+      const tempFabric = new fabric.StaticCanvas(tempCanvasElem, {
+        width, height, backgroundColor: bgColor
+      });
+      
+      tempFabric.loadFromJSON(otherSideData, () => {
+        if (config.slotPunch !== 'none') {
+          const punch = new fabric.Rect({
+            width: 160, height: 35, rx: 12, ry: 12, fill: '#d1d5db',
+            left: config.slotPunch === 'short' ? width / 2 : 30,
+            top: config.slotPunch === 'short' ? 30 : height / 2,
+            angle: config.slotPunch === 'long' ? 90 : 0,
+            originX: 'center', originY: 'center'
+          });
+          tempFabric.add(punch);
+        }
+        tempFabric.renderAll();
+        const otherDataURL = tempFabric.toDataURL({
+          format: 'png', multiplier: 3, enableRetinaScaling: true
+        });
+        downloadLink(otherDataURL, `id-design-${otherSideName}-${Date.now()}.png`);
+      });
+    }
   },
 
-  saveDesign: () => {
-    const { frontData, backData, config, canvas, side } = get();
-    if (!canvas) return;
-
-    // Capture current side before saving
-    const currentData = canvas.toJSON();
-    const fullDesign = {
-      front: side === 'front' ? currentData : frontData,
-      back: side === 'back' ? currentData : backData,
-      config,
-      timestamp: new Date().toISOString()
+  exportDesign: (design: any) => {
+    const downloadLink = (dataURL: string, filename: string) => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     };
 
-    localStorage.setItem('saved_id_design', JSON.stringify(fullDesign));
-    alert('Design saved successfully to local storage!');
+    const [width, height] = design.config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
+    
+    // Front side
+    if (design.front) {
+      const tempFront = document.createElement('canvas');
+      tempFront.width = width;
+      tempFront.height = height;
+      const fabFront = new fabric.StaticCanvas(tempFront, { width, height, backgroundColor: design.config.backgroundColorFront });
+      fabFront.loadFromJSON(design.front, () => {
+        if (design.config.slotPunch !== 'none') {
+          const punch = new fabric.Rect({
+            width: 160, height: 35, rx: 12, ry: 12, fill: '#d1d5db',
+            left: design.config.slotPunch === 'short' ? width / 2 : 30,
+            top: design.config.slotPunch === 'short' ? 30 : height / 2,
+            angle: design.config.slotPunch === 'long' ? 90 : 0,
+            originX: 'center', originY: 'center'
+          });
+          fabFront.add(punch);
+        }
+        fabFront.renderAll();
+        downloadLink(fabFront.toDataURL({ format: 'png', multiplier: 3 }), `${design.name.replace(/\s+/g, '-')}-front.png`);
+      });
+    }
+
+    // Back side
+    if (design.back) {
+      const tempBack = document.createElement('canvas');
+      tempBack.width = width;
+      tempBack.height = height;
+      const fabBack = new fabric.StaticCanvas(tempBack, { width, height, backgroundColor: design.config.backgroundColorBack });
+      fabBack.loadFromJSON(design.back, () => {
+        if (design.config.slotPunch !== 'none') {
+          const punch = new fabric.Rect({
+            width: 160, height: 35, rx: 12, ry: 12, fill: '#d1d5db',
+            left: design.config.slotPunch === 'short' ? width / 2 : 30,
+            top: design.config.slotPunch === 'short' ? 30 : height / 2,
+            angle: design.config.slotPunch === 'long' ? 90 : 0,
+            originX: 'center', originY: 'center'
+          });
+          fabBack.add(punch);
+        }
+        fabBack.renderAll();
+        downloadLink(fabBack.toDataURL({ format: 'png', multiplier: 3 }), `${design.name.replace(/\s+/g, '-')}-back.png`);
+      });
+    }
+  },
+
+  savedDesigns: JSON.parse(localStorage.getItem('saved_id_designs') || '[]'),
+
+  saveDesign: () => {
+    const { canvas, side, frontData, backData, config, savedDesigns, frontThumbnail, backThumbnail, currentDesignId } = get();
+    if (!canvas) return;
+
+    const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType']);
+    const isFront = side === 'front';
+    const currentThumb = canvas.toDataURL({ format: 'png', multiplier: 2.0, quality: 1.0 });
+
+    const fData = isFront ? currentData : frontData;
+    const bData = !isFront ? currentData : backData;
+    const fThumb = isFront ? currentThumb : frontThumbnail || currentThumb;
+    const bThumb = !isFront ? currentThumb : backThumbnail || currentThumb;
+
+    let updatedDesigns: SavedDesign[];
+    let designId = currentDesignId;
+
+    if (currentDesignId) {
+      // Overwrite existing
+      updatedDesigns = savedDesigns.map(d => 
+        d.id === currentDesignId 
+          ? { ...d, front: fData, back: bData, config, thumbnailFront: fThumb, thumbnailBack: bThumb, timestamp: new Date().toISOString() }
+          : d
+      );
+    } else {
+      // Create new
+      designId = Math.random().toString(36).substr(2, 9);
+      const newDesign: SavedDesign = {
+        id: designId,
+        name: `Design ${savedDesigns.length + 1}`,
+        front: fData,
+        back: bData,
+        config,
+        thumbnailFront: fThumb,
+        thumbnailBack: bThumb,
+        timestamp: new Date().toISOString()
+      };
+      updatedDesigns = [newDesign, ...savedDesigns];
+    }
+
+    set({ savedDesigns: updatedDesigns, currentDesignId: designId });
+    localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
+    get().showModal({
+      title: 'Success',
+      message: currentDesignId ? 'Design updated successfully!' : 'New design saved successfully!',
+      type: 'info'
+    });
+  },
+
+  loadDesign: (design) => {
+    set((state) => ({
+      frontData: design.front,
+      backData: design.back,
+      frontThumbnail: design.thumbnailFront,
+      backThumbnail: design.thumbnailBack,
+      config: design.config,
+      currentDesignId: design.id,
+      side: 'front',
+      history: [],
+      redoStack: [],
+      loadTrigger: state.loadTrigger + 1
+    }));
+  },
+
+  deleteDesign: (id) => {
+    const design = get().savedDesigns.find(d => d.id === id);
+    const updated = get().savedDesigns.filter(d => d.id !== id);
+    set({ savedDesigns: updated });
+    localStorage.setItem('saved_id_designs', JSON.stringify(updated));
+    get().showModal({
+      title: 'Deleted',
+      message: `"${design?.name || 'Design'}" has been removed from your library.`,
+      type: 'info'
+    });
   },
 
   newDesign: () => {
-    const { canvas, saveState } = get();
+    const { canvas, saveState, showModal, config } = get();
     if (!canvas) return;
-    if (confirm('Are you sure you want to start a new design? All unsaved changes will be lost.')) {
-      canvas.clear();
-      const bgColor = get().config.backgroundColorFront;
-      canvas.setBackgroundColor(bgColor, canvas.renderAll.bind(canvas));
-      set({ 
-        frontData: null, 
-        backData: null,
-        history: [],
-        redoStack: []
-      });
-      saveState();
-    }
+    
+    showModal({
+      title: 'New Design',
+      message: 'Are you sure you want to start a new design? All unsaved changes will be lost.',
+      type: 'confirm',
+      onConfirm: () => {
+        canvas.clear();
+        const bgColor = config.backgroundColorFront;
+        canvas.setBackgroundColor(bgColor, canvas.renderAll.bind(canvas));
+        set({ 
+          frontData: null, 
+          backData: null,
+          frontThumbnail: '',
+          backThumbnail: '',
+          currentDesignId: null,
+          history: [],
+          redoStack: []
+        });
+        saveState();
+      }
+    });
   }
 }));

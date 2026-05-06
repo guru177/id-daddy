@@ -6,6 +6,7 @@ import { useDesignerStore } from '../designer/store';
 import { ImageLibraryModal } from '../designer/ImageLibrary';
 import LayersPanel from '../designer/LayersPanel';
 import { ContextMenu } from '../designer/ContextMenu';
+import { MyMembers } from '../designer/MyMembers';
 import { 
   Undo2, 
   Redo2, 
@@ -15,7 +16,13 @@ import {
   Share2,
   Grid3X3,
   FileUp,
-  Settings
+  Settings,
+  Edit2,
+  Trash2,
+  Calendar,
+  AlertCircle,
+  CheckCircle2,
+  X
 } from 'lucide-react';
 
 export function DesignerView() {
@@ -33,13 +40,286 @@ export function DesignerView() {
     setShowGrid,
     downloadCanvas,
     saveDesign,
-    newDesign
+    newDesign,
+    savedDesigns,
+    loadDesign,
+    deleteDesign,
+    modal,
+    closeModal,
+    showModal
   } = useDesignerStore();
 
   const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
   const [activeTab, setActiveTab] = useState('Card Designer');
 
   const navItems = ['Get Started', 'Card Designer', 'My Designs', 'My Members'];
+
+  const MyDesigns = () => (
+    <div className="p-10 max-w-[1600px] mx-auto min-h-screen">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Design Library</h1>
+          <p className="text-gray-500 text-base font-medium">You have {savedDesigns.length} saved templates in your library</p>
+        </div>
+        <button 
+          onClick={() => {
+            newDesign();
+            setActiveTab('Card Designer');
+            setView('editor');
+          }}
+          className="flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-sm font-black rounded-2xl shadow-2xl shadow-green-200 transition-all hover:-translate-y-1 active:scale-95"
+        >
+          <Plus size={20} strokeWidth={3} />
+          Create New Design
+        </button>
+      </div>
+
+      {savedDesigns.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-40 bg-white/50 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-gray-200">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <Plus size={40} className="text-gray-300" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Your library is empty</h2>
+          <p className="text-gray-400 font-medium text-lg mb-8 text-center max-w-sm">
+            Start creating your professional ID cards and they'll appear here for easy management.
+          </p>
+          <button 
+             onClick={() => {
+               newDesign();
+               setActiveTab('Card Designer');
+               setView('editor');
+             }}
+             className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200"
+          >
+            Start Designing Now
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+          {savedDesigns.map((design) => (
+            <div 
+              key={design.id} 
+              className="group relative bg-white rounded-[32px] border border-gray-100 overflow-hidden hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)] transition-all duration-500 flex flex-col"
+            >
+              {/* Preview Image Container - Dual Side */}
+              <div className="relative aspect-square w-full bg-gray-100 flex items-center justify-center overflow-hidden group-hover:bg-green-50/30 transition-colors duration-500">
+                <div className={`w-full h-full flex ${design.config.orientation === 'horizontal' ? 'flex-col' : 'flex-row'}`}>
+                  {/* Front Side Preview */}
+                  <div className="flex-1 relative overflow-hidden border-b border-gray-100 last:border-0">
+                    <img 
+                      src={design.thumbnailFront} 
+                      alt="Front" 
+                      className="w-full h-full object-cover" 
+                    />
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Front</div>
+                  </div>
+                  {/* Back Side Preview */}
+                  <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0">
+                    <img 
+                      src={design.thumbnailBack} 
+                      alt="Back" 
+                      className="w-full h-full object-cover" 
+                    />
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Back</div>
+                  </div>
+                </div>
+                
+                {/* Floating Action Overlay */}
+                <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
+                   <button 
+                    onClick={() => {
+                      loadDesign(design);
+                      setActiveTab('Card Designer');
+                      setView('editor');
+                    }}
+                    className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-green-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 shadow-xl"
+                    title="Edit Design"
+                  >
+                    <Edit2 size={24} strokeWidth={2.5} />
+                  </button>
+                   <button 
+                    onClick={() => {
+                      showModal({
+                        title: 'Delete Design',
+                        message: `Are you sure you want to delete "${design.name}"? This action cannot be undone.`,
+                        type: 'confirm',
+                        onConfirm: () => deleteDesign(design.id)
+                      });
+                    }}
+                    className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-red-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 delay-100 shadow-xl"
+                    title="Delete"
+                  >
+                    <Trash2 size={24} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card Footer */}
+              <div className="p-6 pt-5 bg-white mt-auto border-t border-gray-50">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                   <h3 className="font-black text-gray-900 text-lg truncate flex-1 leading-tight">{design.name}</h3>
+                   <div className="flex gap-1.5">
+                     <button 
+                        onClick={() => {
+                          loadDesign(design);
+                          setActiveTab('Card Designer');
+                          setView('editor');
+                        }}
+                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          showModal({
+                            title: 'Delete Design',
+                            message: `Are you sure you want to delete "${design.name}"? This action cannot be undone.`,
+                            type: 'confirm',
+                            onConfirm: () => deleteDesign(design.id)
+                          });
+                        }}
+                        className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                   </div>
+                </div>
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2 text-xs text-gray-400 font-bold uppercase tracking-widest">
+                    <Calendar size={14} className="text-gray-300" />
+                    {new Date(design.timestamp).toLocaleDateString()}
+                  </div>
+                  <button 
+                    onClick={() => useDesignerStore.getState().exportDesign(design)}
+                    className="text-xs font-black text-green-600 hover:text-green-700 transition-colors flex items-center gap-1.5"
+                  >
+                    <Download size={14} />
+                    EXPORT PNG
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderModal = () => {
+    if (!modal.isOpen) return null;
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div 
+          className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
+          onClick={closeModal}
+        />
+        <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-sm overflow-hidden z-10 animate-in zoom-in-95 fade-in duration-200">
+          <div className="p-8 flex flex-col items-center text-center">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${
+              modal.type === 'confirm' ? 'bg-amber-50 text-amber-500' :
+              modal.type === 'error' ? 'bg-red-50 text-red-500' :
+              'bg-green-50 text-green-500'
+            }`}>
+              {modal.type === 'confirm' ? <AlertCircle size={32} /> :
+               modal.type === 'error' ? <AlertCircle size={32} /> :
+               <CheckCircle2 size={32} />}
+            </div>
+            
+            <h2 className="text-xl font-black text-gray-900 mb-2">{modal.title}</h2>
+            <p className="text-gray-500 text-sm leading-relaxed mb-8">
+              {modal.message}
+            </p>
+
+            <div className="flex flex-col w-full gap-3">
+              {modal.type === 'confirm' ? (
+                <>
+                  <button 
+                    onClick={() => {
+                      const previousModal = modal;
+                      modal.onConfirm?.();
+                      if (useDesignerStore.getState().modal.message === previousModal.message) {
+                        closeModal();
+                      }
+                    }}
+                    className="w-full py-3.5 bg-gray-900 text-white text-sm font-black rounded-2xl hover:bg-gray-800 transition-all active:scale-95"
+                  >
+                    Yes, Proceed
+                  </button>
+                  <button 
+                    onClick={closeModal}
+                    className="w-full py-3.5 bg-gray-100 text-gray-600 text-sm font-black rounded-2xl hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={closeModal}
+                  className="w-full py-3.5 bg-green-500 text-white text-sm font-black rounded-2xl hover:bg-green-600 transition-all active:scale-95 shadow-lg shadow-green-200"
+                >
+                  Got it
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (activeTab === 'My Designs') {
+    return (
+      <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-800">
+        <header className="h-10 bg-green-50/50 border-b border-green-100 flex items-center justify-center gap-10 px-4 shrink-0">
+          {navItems.map(item => (
+            <button 
+              key={item} 
+              onClick={() => {
+                setActiveTab(item);
+                if (item === 'Card Designer') setView('editor');
+                if (item === 'Get Started') setView('dashboard');
+              }}
+              className={`text-[10px] font-bold h-full border-b-2 px-2 transition-all ${activeTab === item ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500'}`}
+            >
+              {item}
+            </button>
+          ))}
+        </header>
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <MyDesigns />
+        </div>
+        {renderModal()}
+      </div>
+    );
+  }
+
+  if (activeTab === 'My Members') {
+    return (
+      <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-800">
+        <header className="h-10 bg-green-50/50 border-b border-green-100 flex items-center justify-center gap-10 px-4 shrink-0">
+          {navItems.map(item => (
+            <button 
+              key={item} 
+              onClick={() => {
+                setActiveTab(item);
+                if (item === 'Card Designer') setView('editor');
+                if (item === 'Get Started') setView('dashboard');
+              }}
+              className={`text-[10px] font-bold h-full border-b-2 px-2 transition-all ${activeTab === item ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500'}`}
+            >
+              {item}
+            </button>
+          ))}
+        </header>
+        <div className="flex-1 overflow-hidden">
+          <MyMembers />
+        </div>
+        {renderModal()}
+      </div>
+    );
+  }
 
   if (view === 'dashboard') {
     return (
@@ -59,6 +339,7 @@ export function DesignerView() {
           ))}
         </header>
         <Dashboard onSelect={() => setView('editor')} />
+        {renderModal()}
       </div>
     );
   }
@@ -102,10 +383,6 @@ export function DesignerView() {
               </button>
               <button onClick={downloadCanvas} className="hover:text-green-600 transition-all"><Download size={18} /></button>
               <button onClick={newDesign} className="hover:text-green-600 transition-all"><Plus size={18} /></button>
-              <button onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Project link copied to clipboard!');
-              }} className="hover:text-green-600 transition-all"><Share2 size={18} /></button>
            </div>
         </div>
 
@@ -162,6 +439,8 @@ export function DesignerView() {
         />
       )}
       <ImageLibraryModal />
+      
+      {renderModal()}
     </div>
   );
 }
