@@ -1,58 +1,33 @@
-import { FormEvent, useRef, useState } from "react";
-import { Upload } from "lucide-react";
-import { api } from "../api";
+import React, { useState } from "react";
+import { DataUpload } from "../designer/DataUpload";
+import { MyMembers } from "../designer/MyMembers";
 
 export function UploadView() {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [mappings, setMappings] = useState('[{"source":"Name","target":"name"},{"source":"ID","target":"id"},{"source":"Photo","target":"photo"}]');
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    const file = fileRef.current?.files?.[0];
-    if (!file) {
-      setMessage("Choose a CSV or Excel file.");
-      return;
-    }
-    setLoading(true);
-    setMessage("");
-    try {
-      const body = new FormData();
-      body.append("file", file);
-      body.append("mappings", mappings);
-      const result = await api<{ inserted: number }>("/records/upload", { method: "POST", body });
-      setMessage(`Imported ${result.inserted} records.`);
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [activeTab, setActiveTab] = useState<'Manage Data' | 'Member Previews'>('Manage Data');
 
   return (
-    <div className="h-full overflow-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Data Upload</h1>
-        <p className="text-sm text-stone-500">Import CSV, XLS, or XLSX and map source fields to template placeholders.</p>
+    <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-800">
+      {/* Top Navigation for Upload View */}
+      <header className="h-[73px] bg-green-50/50 border-b border-stone-200 flex items-center justify-center gap-10 px-4 shrink-0">
+        <button 
+          onClick={() => setActiveTab('Manage Data')}
+          className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === 'Manage Data' ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+        >
+          Manage Data
+        </button>
+        <button 
+          onClick={() => setActiveTab('Member Previews')}
+          className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === 'Member Previews' ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+        >
+          Member Previews
+        </button>
+      </header>
+
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-hidden relative">
+        {activeTab === 'Manage Data' && <DataUpload />}
+        {activeTab === 'Member Previews' && <MyMembers />}
       </div>
-      <form className="panel max-w-3xl p-4" onSubmit={submit}>
-        <label className="mb-4 block">
-          <span className="mb-1 block text-sm font-medium">Dataset</span>
-          <input ref={fileRef} className="input file:mr-3 file:border-0 file:bg-transparent" type="file" accept=".csv,.xlsx,.xls" />
-        </label>
-        <label className="mb-4 block">
-          <span className="mb-1 block text-sm font-medium">Field mappings JSON</span>
-          <textarea className="textarea min-h-32 font-mono" value={mappings} onChange={(event) => setMappings(event.target.value)} />
-        </label>
-        <div className="flex items-center gap-3">
-          <button className="btn-primary" disabled={loading}>
-            <Upload className="h-4 w-4" />
-            Upload
-          </button>
-          {message ? <p className="text-sm text-stone-600">{message}</p> : null}
-        </div>
-      </form>
     </div>
   );
 }

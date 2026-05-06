@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { fabric } from 'fabric';
+import { VdpResult } from './VdpEngine';
 
 interface CardConfig {
   orientation: 'horizontal' | 'vertical';
@@ -28,6 +29,138 @@ interface SavedDesign {
   thumbnailBack: string;
   timestamp: string;
 }
+
+export interface Member {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nickname: string;
+  dob: string;
+  title: string;
+  idNumber: string;
+  employeeId: string;
+  department: string;
+  hireDate: string;
+  issueDate: string;
+  expirationDate: string;
+  phone1: string;
+  phone2: string;
+  fax: string;
+  email: string;
+  website: string;
+  country: string;
+  postalCode: string;
+  state: string;
+  city: string;
+  street1: string;
+  street2: string;
+  gradeLevel: string;
+  securityLevel: string;
+  height: string;
+  weight: string;
+  gender: string;
+  eyeColor: string;
+  hairColor: string;
+  profileImage: string;
+  signature: string;
+  fingerprint: string;
+  divisionLogo: string;
+  customImage: string;
+  customFields?: Record<string, string>;
+}
+
+export const DEFAULT_MEMBERS: Member[] = [
+  {
+    id: 'm1', firstName: 'John', lastName: 'Doe', nickname: 'Johnny', dob: '1990-05-15', title: 'Software Engineer',
+    idNumber: 'EMP-1001', employeeId: 'EMP-1001', department: 'Engineering', hireDate: '2020-03-01', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0101', phone2: '', fax: '', email: 'john.doe@example.com', website: 'johndoe.dev', country: 'USA', postalCode: '90210',
+    state: 'CA', city: 'Beverly Hills', street1: '123 Tech Lane', street2: 'Suite 400', gradeLevel: '', securityLevel: 'Level 4',
+    height: '6\'0"', weight: '180 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm2', firstName: 'Jane', lastName: 'Smith', nickname: 'Janey', dob: '1985-08-22', title: 'Marketing Director',
+    idNumber: 'EMP-1002', employeeId: 'EMP-1002', department: 'Marketing', hireDate: '2018-06-15', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0102', phone2: '', fax: '', email: 'jane.smith@example.com', website: 'janesmith.io', country: 'USA', postalCode: '10001',
+    state: 'NY', city: 'New York', street1: '456 Market St', street2: 'Floor 12', gradeLevel: '', securityLevel: 'Level 5',
+    height: '5\'6"', weight: '130 lbs', gender: 'Female', eyeColor: 'Blue', hairColor: 'Blonde',
+    profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm3', firstName: 'Robert', lastName: 'Chen', nickname: 'Rob', dob: '1992-11-30', title: 'Financial Analyst',
+    idNumber: 'EMP-1003', employeeId: 'EMP-1003', department: 'Finance', hireDate: '2021-01-20', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0103', phone2: '', fax: '', email: 'robert.chen@example.com', website: '', country: 'USA', postalCode: '60601',
+    state: 'IL', city: 'Chicago', street1: '789 Loop Ave', street2: '', gradeLevel: '', securityLevel: 'Level 3',
+    height: '5\'10"', weight: '165 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm4', firstName: 'Emily', lastName: 'Davis', nickname: 'Em', dob: '1988-02-14', title: 'HR Manager',
+    idNumber: 'EMP-1004', employeeId: 'EMP-1004', department: 'Human Resources', hireDate: '2019-09-10', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0104', phone2: '', fax: '', email: 'emily.davis@example.com', website: '', country: 'USA', postalCode: '30301',
+    state: 'GA', city: 'Atlanta', street1: '321 Peach Tree Ln', street2: '', gradeLevel: '', securityLevel: 'Level 4',
+    height: '5\'4"', weight: '125 lbs', gender: 'Female', eyeColor: 'Green', hairColor: 'Red',
+    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm5', firstName: 'Michael', lastName: 'Johnson', nickname: 'Mike', dob: '1982-07-08', title: 'Operations Lead',
+    idNumber: 'EMP-1005', employeeId: 'EMP-1005', department: 'Operations', hireDate: '2015-04-22', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0105', phone2: '', fax: '', email: 'michael.j@example.com', website: '', country: 'USA', postalCode: '75201',
+    state: 'TX', city: 'Dallas', street1: '654 Main St', street2: 'Bldg 2', gradeLevel: '', securityLevel: 'Level 5',
+    height: '6\'2"', weight: '210 lbs', gender: 'Male', eyeColor: 'Hazel', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm6', firstName: 'Sarah', lastName: 'Wilson', nickname: 'Sarah', dob: '1995-04-12', title: 'UX Designer',
+    idNumber: 'EMP-1006', employeeId: 'EMP-1006', department: 'Design', hireDate: '2022-02-15', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0106', phone2: '', fax: '', email: 'sarah.w@example.com', website: 'sarahwilson.design', country: 'USA', postalCode: '98101',
+    state: 'WA', city: 'Seattle', street1: '987 Pine St', street2: '', gradeLevel: '', securityLevel: 'Level 3',
+    height: '5\'7"', weight: '135 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm7', firstName: 'David', lastName: 'Kim', nickname: 'Dave', dob: '1989-10-05', title: 'Sales Executive',
+    idNumber: 'EMP-1007', employeeId: 'EMP-1007', department: 'Sales', hireDate: '2020-08-01', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0107', phone2: '', fax: '', email: 'david.kim@example.com', website: '', country: 'USA', postalCode: '33101',
+    state: 'FL', city: 'Miami', street1: '147 Ocean Dr', street2: 'Apt 5B', gradeLevel: '', securityLevel: 'Level 2',
+    height: '5\'11"', weight: '175 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm8', firstName: 'Laura', lastName: 'Martinez', nickname: 'Lau', dob: '1984-12-18', title: 'Legal Counsel',
+    idNumber: 'EMP-1008', employeeId: 'EMP-1008', department: 'Legal', hireDate: '2017-11-05', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0108', phone2: '', fax: '', email: 'laura.m@example.com', website: '', country: 'USA', postalCode: '02108',
+    state: 'MA', city: 'Boston', street1: '258 Legal Way', street2: '', gradeLevel: '', securityLevel: 'Level 5',
+    height: '5\'5"', weight: '140 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Dark Brown',
+    profileImage: 'https://images.unsplash.com/photo-1531123897727-8f129e1bf98c?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm9', firstName: 'James', lastName: 'Taylor', nickname: 'Jim', dob: '1993-03-25', title: 'IT Support Specialist',
+    idNumber: 'EMP-1009', employeeId: 'EMP-1009', department: 'IT', hireDate: '2021-07-12', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0109', phone2: '', fax: '', email: 'james.t@example.com', website: '', country: 'USA', postalCode: '80202',
+    state: 'CO', city: 'Denver', street1: '369 Mountain Rd', street2: '', gradeLevel: '', securityLevel: 'Level 4',
+    height: '6\'1"', weight: '190 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Blonde',
+    profileImage: 'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm10', firstName: 'Amanda', lastName: 'White', nickname: 'Mandy', dob: '1980-09-14', title: 'CEO',
+    idNumber: 'EMP-1010', employeeId: 'EMP-1010', department: 'Management', hireDate: '2010-01-01', issueDate: '2023-01-10', expirationDate: '2025-01-10',
+    phone1: '+1 555-0110', phone2: '', fax: '', email: 'amanda.w@example.com', website: '', country: 'USA', postalCode: '94105',
+    state: 'CA', city: 'San Francisco', street1: '741 Silicon Blvd', street2: 'Penthouse', gradeLevel: '', securityLevel: 'Level 6',
+    height: '5\'8"', weight: '145 lbs', gender: 'Female', eyeColor: 'Green', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  }
+];
 
 interface DesignerState {
   canvas: fabric.Canvas | null;
@@ -87,6 +220,16 @@ interface DesignerState {
   exportDesign: (design: any) => void;
   newDesign: () => void;
   savedDesigns: SavedDesign[];
+  members: Member[];
+  addMember: (member: Omit<Member, 'id'>) => void;
+  updateMember: (id: string, member: Partial<Member>) => void;
+  deleteMember: (id: string) => void;
+  activeTemplateId: string | null;
+  setActiveTemplateId: (id: string) => void;
+  previewResults: VdpResult[];
+  setPreviewResults: (results: VdpResult[]) => void;
+  isGeneratingPreviews: boolean;
+  setIsGeneratingPreviews: (is: boolean) => void;
   currentDesignId: string | null;
   loadTrigger: number;
   frontThumbnail: string;
@@ -100,6 +243,10 @@ interface DesignerState {
   };
   showModal: (options: { title: string; message: string; type?: 'info' | 'confirm' | 'error'; onConfirm?: () => void }) => void;
   closeModal: () => void;
+  organizationType: 'corporate' | 'education' | 'healthcare';
+  setOrganizationType: (type: 'corporate' | 'education' | 'healthcare') => void;
+  formConfig: { enabledFields: string[]; customFields: string[]; enabledImageFields: string[]; customImageFields: string[] } | null;
+  setFormConfig: (config: { enabledFields: string[]; customFields: string[]; enabledImageFields: string[]; customImageFields: string[] } | null) => void;
 }
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
@@ -145,6 +292,10 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   })),
   currentDesignId: null,
   loadTrigger: 0,
+  organizationType: 'corporate',
+  setOrganizationType: (type) => set({ organizationType: type }),
+  formConfig: null,
+  setFormConfig: (config) => set({ formConfig: config }),
   frontThumbnail: '',
   backThumbnail: '',
   modal: {
@@ -165,6 +316,39 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   })),
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
   
+  members: (() => {
+    const stored = localStorage.getItem('saved_id_members');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.length > 0) return parsed;
+    }
+    // Fallback to default test members
+    localStorage.setItem('saved_id_members', JSON.stringify(DEFAULT_MEMBERS));
+    return DEFAULT_MEMBERS;
+  })(),
+  addMember: (member) => set((state) => {
+    const newMember = { ...member, id: Math.random().toString(36).substr(2, 9) };
+    const updated = [newMember, ...state.members];
+    localStorage.setItem('saved_id_members', JSON.stringify(updated));
+    return { members: updated, previewResults: [] };
+  }),
+  updateMember: (id, updatedMember) => set((state) => {
+    const updated = state.members.map(m => m.id === id ? { ...m, ...updatedMember } : m);
+    localStorage.setItem('saved_id_members', JSON.stringify(updated));
+    return { members: updated, previewResults: [] };
+  }),
+  deleteMember: (id) => set((state) => {
+    const updated = state.members.filter(m => m.id !== id);
+    localStorage.setItem('saved_id_members', JSON.stringify(updated));
+    return { members: updated, previewResults: [] };
+  }),
+  activeTemplateId: null,
+  setActiveTemplateId: (id) => set({ activeTemplateId: id, previewResults: [] }),
+  previewResults: [],
+  setPreviewResults: (results) => set({ previewResults: results }),
+  isGeneratingPreviews: false,
+  setIsGeneratingPreviews: (is) => set({ isGeneratingPreviews: is }),
+  
   setSide: (side: 'front' | 'back') => {
     set({ side });
   },
@@ -180,7 +364,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const { canvas, history, isHistoryPaused, side } = get();
     if (!canvas || isHistoryPaused) return;
 
-    const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType']);
+    const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder']);
     const jsonStr = JSON.stringify(json);
     
     // Deduplicate history
@@ -352,6 +536,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   centerObject: () => {
     const { canvas, selectedObject, saveState } = get();
     if (!canvas || !selectedObject) return;
+    
+    // Set origins to center so it stays centered when text changes
+    selectedObject.set({
+      originX: 'center',
+      originY: 'center'
+    });
+    
     canvas.centerObject(selectedObject);
     selectedObject.setCoords();
     canvas.renderAll();
@@ -696,51 +887,104 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   savedDesigns: JSON.parse(localStorage.getItem('saved_id_designs') || '[]'),
 
   saveDesign: () => {
-    const { canvas, side, frontData, backData, config, savedDesigns, frontThumbnail, backThumbnail, currentDesignId } = get();
+    const { canvas, side, frontData, backData, config, savedDesigns, currentDesignId } = get();
     if (!canvas) return;
 
-    const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType']);
-    const isFront = side === 'front';
-    const currentThumb = canvas.toDataURL({ format: 'png', multiplier: 2.0, quality: 1.0 });
+    // 1. Capture current side thumbnail
+    const currentThumb = canvas.toDataURL({ format: 'png', multiplier: 2.0 });
+    
+    // 2. Generate other side thumbnail to ensure slot punch and background are correct
+    const generateOtherThumb = () => {
+      const otherData = side === 'front' ? backData : frontData;
+      const otherBG = side === 'front' ? config.backgroundColorBack : config.backgroundColorFront;
+      
+      if (!otherData) return currentThumb; // Fallback if no data yet
 
-    const fData = isFront ? currentData : frontData;
-    const bData = !isFront ? currentData : backData;
-    const fThumb = isFront ? currentThumb : frontThumbnail || currentThumb;
-    const bThumb = !isFront ? currentThumb : backThumbnail || currentThumb;
+      const [w, h] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
+      const tempCanvasElem = document.createElement('canvas');
+      tempCanvasElem.width = w;
+      tempCanvasElem.height = h;
+      
+      const tempFabric = new fabric.StaticCanvas(tempCanvasElem, { 
+        width: w, 
+        height: h, 
+        backgroundColor: otherBG 
+      });
 
-    let updatedDesigns: SavedDesign[];
-    let designId = currentDesignId;
+      return new Promise<string>((resolve) => {
+        tempFabric.loadFromJSON(otherData, () => {
+          // Add slot punch to other side too
+          if (config.slotPunch !== 'none') {
+            const punch = new fabric.Rect({
+              width: 160, height: 35, rx: 12, ry: 12, fill: '#d1d5db',
+              left: config.slotPunch === 'short' ? w / 2 : 30,
+              top: config.slotPunch === 'short' ? 30 : h / 2,
+              angle: config.slotPunch === 'long' ? 90 : 0,
+              originX: 'center', originY: 'center'
+            });
+            tempFabric.add(punch);
+            punch.bringToFront();
+          }
+          tempFabric.renderAll();
+          const dataUrl = tempFabric.toDataURL({ format: 'png', multiplier: 1.0 });
+          tempFabric.dispose();
+          resolve(dataUrl);
+        });
+      });
+    };
 
-    if (currentDesignId) {
-      // Overwrite existing
-      updatedDesigns = savedDesigns.map(d => 
-        d.id === currentDesignId 
-          ? { ...d, front: fData, back: bData, config, thumbnailFront: fThumb, thumbnailBack: bThumb, timestamp: new Date().toISOString() }
-          : d
-      );
-    } else {
-      // Create new
-      designId = Math.random().toString(36).substr(2, 9);
-      const newDesign: SavedDesign = {
-        id: designId,
-        name: `Design ${savedDesigns.length + 1}`,
-        front: fData,
-        back: bData,
-        config,
-        thumbnailFront: fThumb,
-        thumbnailBack: bThumb,
-        timestamp: new Date().toISOString()
-      };
-      updatedDesigns = [newDesign, ...savedDesigns];
-    }
+    const runSave = async () => {
+      const otherThumb = await generateOtherThumb();
+      const isFront = side === 'front';
+      
+      const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder']);
+      const fData = isFront ? currentData : frontData;
+      const bData = !isFront ? currentData : backData;
+      const fThumb = isFront ? currentThumb : otherThumb;
+      const bThumb = !isFront ? currentThumb : otherThumb;
 
-    set({ savedDesigns: updatedDesigns, currentDesignId: designId });
-    localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
-    get().showModal({
-      title: 'Success',
-      message: currentDesignId ? 'Design updated successfully!' : 'New design saved successfully!',
-      type: 'info'
-    });
+      let updatedDesigns: SavedDesign[];
+      let designId = currentDesignId;
+
+      if (currentDesignId) {
+        updatedDesigns = savedDesigns.map(d => 
+          d.id === currentDesignId 
+            ? { ...d, front: fData, back: bData, config, thumbnailFront: fThumb, thumbnailBack: bThumb, timestamp: new Date().toISOString() }
+            : d
+        );
+      } else {
+        designId = Math.random().toString(36).substr(2, 9);
+        const newDesign: SavedDesign = {
+          id: designId,
+          name: `Design ${savedDesigns.length + 1}`,
+          front: fData,
+          back: bData,
+          config,
+          thumbnailFront: fThumb,
+          thumbnailBack: bThumb,
+          timestamp: new Date().toISOString()
+        };
+        updatedDesigns = [newDesign, ...savedDesigns];
+      }
+
+      set({ 
+        savedDesigns: updatedDesigns, 
+        currentDesignId: designId, 
+        activeTemplateId: designId,
+        previewResults: [],
+        frontThumbnail: fThumb,
+        backThumbnail: bThumb
+      });
+      localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
+      
+      get().showModal({
+        title: 'Success',
+        message: currentDesignId ? 'Design updated successfully!' : 'New design saved successfully!',
+        type: 'info'
+      });
+    };
+
+    runSave();
   },
 
   loadDesign: (design) => {
