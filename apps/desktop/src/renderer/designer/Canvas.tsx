@@ -5,7 +5,7 @@ import { useDesignerStore } from './store';
 const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-    const { setCanvas, setSelectedObject, saveState, config, side, setActivePanel, showGrid, loadTrigger } = useDesignerStore();
+    const { setCanvas, setSelectedObject, saveState, config, side, setActivePanel, showGrid, loadTrigger, zoom, setZoom, resetZoom } = useDesignerStore();
   
     useEffect(() => {
       if (!canvasRef.current) return;
@@ -68,6 +68,43 @@ const Canvas = () => {
         fabricCanvas.on('object:modified', () => saveState());
         fabricCanvas.on('object:added', () => saveState());
         fabricCanvas.on('object:removed', () => saveState());
+
+        // MAGNETIC SNAPPING TO GUIDELINES
+        fabricCanvas.on('object:moving', (options) => {
+          const obj = options.target;
+          if (!obj) return;
+
+          const { guidelines } = useDesignerStore.getState();
+          const snapThreshold = 5; // Snap within 5 logical pixels
+          
+          // SNAP VERTICAL (X)
+          guidelines.vertical.forEach(canvasGPos => {
+            // Check Left, Center, Right edges
+            const edges = [obj.left, obj.left! + (obj.width! * obj.scaleX!) / 2, obj.left! + (obj.width! * obj.scaleX!)];
+            edges.forEach((edgePos, i) => {
+              if (Math.abs(edgePos! - canvasGPos) < snapThreshold) {
+                if (i === 0) obj.set('left', canvasGPos);
+                else if (i === 1) obj.set('left', canvasGPos - (obj.width! * obj.scaleX!) / 2);
+                else if (i === 2) obj.set('left', canvasGPos - (obj.width! * obj.scaleX!));
+                obj.setCoords();
+              }
+            });
+          });
+
+          // SNAP HORIZONTAL (Y)
+          guidelines.horizontal.forEach(canvasGPos => {
+            // Check Top, Center, Bottom edges
+            const edges = [obj.top, obj.top! + (obj.height! * obj.scaleY!) / 2, obj.top! + (obj.height! * obj.scaleY!)];
+            edges.forEach((edgePos, i) => {
+              if (Math.abs(edgePos! - canvasGPos) < snapThreshold) {
+                if (i === 0) obj.set('top', canvasGPos);
+                else if (i === 1) obj.set('top', canvasGPos - (obj.height! * obj.scaleY!) / 2);
+                else if (i === 2) obj.set('top', canvasGPos - (obj.height! * obj.scaleY!));
+                obj.setCoords();
+              }
+            });
+          });
+        });
       };
 
       // Load existing data if available
@@ -176,6 +213,20 @@ const Canvas = () => {
           else useDesignerStore.getState().undo();
         }
 
+        // 6. Zoom
+        if (cmd && (e.key === '=' || e.key === '+')) {
+          e.preventDefault();
+          setZoom(zoom + 0.1);
+        }
+        if (cmd && e.key === '-') {
+          e.preventDefault();
+          setZoom(zoom - 0.1);
+        }
+        if (cmd && e.key === '0') {
+          e.preventDefault();
+          resetZoom();
+        }
+
         // 4. Layer Ordering (Forward/Backward)
         if (cmd && e.key === ']') {
           e.preventDefault();
@@ -186,6 +237,54 @@ const Canvas = () => {
           e.preventDefault();
           if (e.shiftKey) useDesignerStore.getState().sendToBack();
           else useDesignerStore.getState().sendBackward();
+        }
+
+        // 5. Copy / Paste / Cut
+        if (cmd && e.key.toLowerCase() === 'c') {
+          if (activeObject) {
+            e.preventDefault();
+            activeObject.clone((cloned: any) => {
+              (window as any)._fabricClipboard = cloned;
+            });
+          }
+        }
+        if (cmd && e.key.toLowerCase() === 'x') {
+          if (activeObject) {
+            e.preventDefault();
+            activeObject.clone((cloned: any) => {
+              (window as any)._fabricClipboard = cloned;
+              useDesignerStore.getState().deleteSelected();
+            });
+          }
+        }
+        if (cmd && e.key.toLowerCase() === 'v') {
+          const clipboard = (window as any)._fabricClipboard;
+          if (clipboard) {
+            e.preventDefault();
+            clipboard.clone((clonedObj: any) => {
+              fabricCanvas.discardActiveObject();
+              clonedObj.set({
+                left: clonedObj.left + 20,
+                top: clonedObj.top + 20,
+                evented: true,
+              });
+              if (clonedObj.type === 'activeSelection') {
+                clonedObj.canvas = fabricCanvas;
+                clonedObj.forEachObject((obj: any) => {
+                  fabricCanvas.add(obj);
+                });
+                clonedObj.setCoords();
+              } else {
+                fabricCanvas.add(clonedObj);
+              }
+              // Update clipboard position for next paste
+              clipboard.top += 20;
+              clipboard.left += 20;
+              fabricCanvas.setActiveObject(clonedObj);
+              fabricCanvas.requestRenderAll();
+              saveState();
+            });
+          }
         }
       };
       window.addEventListener('keydown', handleKeyDown);
@@ -241,44 +340,23 @@ const Canvas = () => {
     }, [config.backgroundColorFront, config.backgroundColorBack, config.slotPunch]);
 
   return (
-    <div className="flex-1 w-full flex items-center justify-center px-4 pt-10 pb-32">
-      <div 
-        ref={containerRef} 
-        className="bg-white shadow-2xl relative overflow-hidden transition-all" 
-        style={{
-          borderRadius: '3.18mm', // Standard ID corner radius
-          width: config.orientation === 'horizontal' ? 'min(90vw, 700px)' : 'min(90vw, 400px)',
-          aspectRatio: config.orientation === 'horizontal' ? '1.58/1' : '1/1.58',
-          ... (showGrid ? {
-            backgroundImage: 'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)',
-            backgroundSize: '20px 20px'
-          } : {})
-        }}
-      >
-        <div style={{
-          transform: `scale(${config.orientation === 'horizontal' ? 700/1013 : 400/638})`,
-          transformOrigin: 'top left',
-          width: config.orientation === 'horizontal' ? '1013px' : '638px',
-          height: config.orientation === 'horizontal' ? '638px' : '1013px',
-        }}>
-          <canvas ref={canvasRef} />
-        </div>
-
-        
-        {/* Grid Overlay - pointer-events-none ensures it doesn't block clicks */}
-        {showGrid && (
-          <div 
-            className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-                linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-              `,
-              backgroundSize: '20px 20px',
-              opacity: 0.6
-            }}
-          />
-        )}
+    <div 
+      ref={containerRef} 
+      className="w-full h-full relative"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => e.preventDefault()}
+    >
+      <div style={{
+        transform: `scale(${(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom})`,
+        transformOrigin: 'top left',
+        width: config.orientation === 'horizontal' ? '1013px' : '638px',
+        height: config.orientation === 'horizontal' ? '638px' : '1013px',
+        backgroundColor: '#fff',
+        boxShadow: '0 0 40px rgba(0,0,0,0.1)',
+        position: 'relative'
+      }}>
+        <canvas ref={canvasRef} />
+        {showGrid && <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '10px 10px' }} />}
       </div>
     </div>
   );

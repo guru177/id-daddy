@@ -339,6 +339,14 @@ interface DesignerState {
   setOrganizationType: (type: 'corporate' | 'education' | 'healthcare') => void;
   formConfig: { enabledFields: string[]; customFields: string[]; enabledImageFields: string[]; customImageFields: string[] } | null;
   setFormConfig: (config: { enabledFields: string[]; customFields: string[]; enabledImageFields: string[]; customImageFields: string[] } | null) => void;
+  guidelines: { horizontal: number[]; vertical: number[] };
+  addGuideline: (type: 'horizontal' | 'vertical', pos: number) => void;
+  updateGuideline: (type: 'horizontal' | 'vertical', index: number, pos: number) => void;
+  removeGuideline: (type: 'horizontal' | 'vertical', index: number) => void;
+  clearGuidelines: () => void;
+  zoom: number;
+  setZoom: (zoom: number) => void;
+  resetZoom: () => void;
 }
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
@@ -388,6 +396,29 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setOrganizationType: (type) => set({ organizationType: type }),
   formConfig: null,
   setFormConfig: (config) => set({ formConfig: config }),
+  guidelines: { horizontal: [], vertical: [] },
+  addGuideline: (type, pos) => set((state) => ({
+    guidelines: {
+      ...state.guidelines,
+      [type]: [...state.guidelines[type], pos]
+    }
+  })),
+  updateGuideline: (type, index, pos) => set((state) => ({
+    guidelines: {
+      ...state.guidelines,
+      [type]: state.guidelines[type].map((p, i) => i === index ? pos : p)
+    }
+  })),
+  removeGuideline: (type, index) => set((state) => ({
+    guidelines: {
+      ...state.guidelines,
+      [type]: state.guidelines[type].filter((_, i) => i !== index)
+    }
+  })),
+  clearGuidelines: () => set({ guidelines: { horizontal: [], vertical: [] } }),
+  zoom: 1,
+  setZoom: (zoom) => set({ zoom: Math.max(0.1, Math.min(5, zoom)) }),
+  resetZoom: () => set({ zoom: 1 }),
   frontThumbnail: '',
   backThumbnail: '',
   modal: {

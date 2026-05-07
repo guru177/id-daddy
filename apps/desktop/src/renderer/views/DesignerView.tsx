@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Toolbar from '../designer/Toolbar';
 import Canvas from '../designer/Canvas';
 import { Dashboard } from '../designer/Dashboard';
@@ -7,6 +7,7 @@ import { ImageLibraryModal } from '../designer/ImageLibrary';
 import LayersPanel from '../designer/LayersPanel';
 import { ContextMenu } from '../designer/ContextMenu';
 import { getPreviewText, applyVariableStyles } from '../designer/Panels';
+import { Ruler } from '../designer/Rulers';
 import {
   Undo2,
   Redo2,
@@ -170,10 +171,80 @@ export function DesignerView() {
     setActiveTemplateId,
     members,
     previewMemberId,
-    setPreviewMemberId
+    setPreviewMemberId,
+    guidelines,
+    addGuideline,
+    updateGuideline,
+    removeGuideline,
+    zoom
   } = useDesignerStore();
 
+  const [draggingGuideline, setDraggingGuideline] = useState<{ type: 'horizontal' | 'vertical', pos: number, index?: number } | null>(null);
+  const [workspaceOffset, setWorkspaceOffset] = useState({ x: 0, y: 0 });
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
+
+  useEffect(() => {
+    const updateOffset = () => {
+      if (workspaceRef.current && cardRef.current) {
+        const wRect = workspaceRef.current.getBoundingClientRect();
+        const cRect = cardRef.current.getBoundingClientRect();
+        setWorkspaceOffset({
+          x: cRect.left - wRect.left,
+          y: cRect.top - wRect.top
+        });
+      }
+    };
+
+    updateOffset();
+    window.addEventListener('resize', updateOffset);
+    // Also update when side/config changes as card size might change
+    return () => window.removeEventListener('resize', updateOffset);
+  }, [side, config.orientation, view]);
+
+  useEffect(() => {
+    if (!draggingGuideline) return;
+
+    const handleMove = (e: MouseEvent) => {
+      if (!workspaceRef.current) return;
+      const rect = workspaceRef.current.getBoundingClientRect();
+      
+      const scale = config.orientation === 'horizontal' ? 700/1013 : 400/638;
+      
+      if (draggingGuideline.type === 'horizontal') {
+        const y = (e.clientY - rect.top - workspaceOffset.y) / scale;
+        setDraggingGuideline({ ...draggingGuideline, pos: y });
+      } else {
+        const x = (e.clientX - rect.left - workspaceOffset.x) / scale;
+        setDraggingGuideline({ ...draggingGuideline, pos: x });
+      }
+    };
+
+    const handleUp = () => {
+      if (draggingGuideline) {
+        if (draggingGuideline.index !== undefined) {
+          updateGuideline(draggingGuideline.type, draggingGuideline.index, draggingGuideline.pos);
+        } else {
+          addGuideline(draggingGuideline.type, draggingGuideline.pos);
+        }
+        setDraggingGuideline(null);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [draggingGuideline]);
+
+  const startGuidelineDrag = (type: 'horizontal' | 'vertical') => {
+    setDraggingGuideline({ type, pos: -100 }); // Start off-screen
+  };
+
+
   const [activeTab, setActiveTab] = useState('Get Started');
 
   const navItems = ['Get Started', 'Card Designer', 'My Designs'];
@@ -460,7 +531,8 @@ export function DesignerView() {
 
         {/* Editor Area */}
         <div
-          className="flex-1 flex flex-col items-center bg-stone-100 relative overflow-hidden"
+          ref={workspaceRef}
+          className="flex-1 flex flex-col items-center bg-stone-100 relative overflow-auto"
           onContextMenu={(e) => {
             e.preventDefault();
             setContextMenu({ x: e.clientX, y: e.clientY });
@@ -474,8 +546,30 @@ export function DesignerView() {
             }
           }}
         >
+          {/* Photoshop-style Rulers Edge-to-Edge */}
+          <div className="absolute top-0 left-5 right-0 h-5 z-30">
+            <Ruler 
+              type="horizontal" 
+              size={workspaceRef.current?.clientWidth || 2000} 
+              scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} 
+              offset={workspaceOffset.x - 20} // -20 for the vertical ruler width
+              onStartDrag={startGuidelineDrag}
+            />
+          </div>
+          <div className="absolute top-5 left-0 bottom-0 w-5 z-30">
+            <Ruler 
+              type="vertical" 
+              size={workspaceRef.current?.clientHeight || 2000} 
+              scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} 
+              offset={workspaceOffset.y - 25} // -25 for ruler/header offset
+              onStartDrag={startGuidelineDrag}
+            />
+          </div>
+          <div className="absolute top-0 left-0 w-5 h-5 bg-stone-100 border-r border-b border-stone-300 z-40" />
+
+          {/* Main Card Workspace */}
           <div 
-            className="flex-1 w-full flex items-center justify-center px-4 pt-10 pb-32"
+            className="flex-1 w-full flex items-start justify-center p-20 min-h-0"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 if (canvas) {
@@ -485,7 +579,74 @@ export function DesignerView() {
               }
             }}
           >
-            <Canvas />
+            <div 
+              ref={cardRef} 
+              className="relative shadow-2xl"
+              style={{
+                width: (config.orientation === 'horizontal' ? 700 : 400) * zoom,
+                height: (config.orientation === 'horizontal' ? 441 : 633) * zoom,
+              }}
+            >
+              <Canvas />
+            </div>
+          </div>
+
+          {/* Guidelines Overlay - Full Workspace */}
+          <div className="absolute inset-0 pointer-events-none z-40">
+            {(() => {
+              const scale = config.orientation === 'horizontal' ? 700/1013 : 400/638;
+              return (
+                <>
+                  {guidelines.horizontal.map((canvasY, i) => {
+                    const y = canvasY * scale + workspaceOffset.y;
+                    return (
+                      <div 
+                        key={`h-${i}`}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setDraggingGuideline({ type: 'horizontal', pos: canvasY, index: i });
+                        }}
+                        onDoubleClick={() => removeGuideline('horizontal', i)}
+                        className="absolute left-5 right-0 h-2 -mt-1 bg-transparent pointer-events-auto cursor-ns-resize group z-50"
+                        style={{ top: y }}
+                      >
+                        <div className="h-px w-full bg-red-500/60 group-hover:bg-red-600 mt-1" />
+                        <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move • Dbl-click to delete</div>
+                      </div>
+                    );
+                  })}
+                  {guidelines.vertical.map((canvasX, i) => {
+                    const x = canvasX * scale + workspaceOffset.x;
+                    return (
+                      <div 
+                        key={`v-${i}`}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setDraggingGuideline({ type: 'vertical', pos: canvasX, index: i });
+                        }}
+                        onDoubleClick={() => removeGuideline('vertical', i)}
+                        className="absolute top-5 bottom-0 w-2 -ml-1 bg-transparent pointer-events-auto cursor-ew-resize group z-50"
+                        style={{ left: x }}
+                      >
+                        <div className="w-px h-full bg-red-500/60 group-hover:bg-red-600 ml-1" />
+                        <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move • Dbl-click to delete</div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Dragging Preview */}
+                  {draggingGuideline && (
+                    <div 
+                      className={`absolute bg-red-400/80 ${draggingGuideline.type === 'horizontal' ? 'left-5 right-0 h-px' : 'top-5 bottom-0 w-px'}`}
+                      style={{ 
+                        [draggingGuideline.type === 'horizontal' ? 'top' : 'left']: 
+                          draggingGuideline.pos * scale + (draggingGuideline.type === 'horizontal' ? workspaceOffset.y : workspaceOffset.x)
+                      }}
+                    />
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* Side Toggle */}
