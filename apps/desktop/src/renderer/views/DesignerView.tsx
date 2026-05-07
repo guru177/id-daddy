@@ -6,6 +6,7 @@ import { useDesignerStore } from '../designer/store';
 import { ImageLibraryModal } from '../designer/ImageLibrary';
 import LayersPanel from '../designer/LayersPanel';
 import { ContextMenu } from '../designer/ContextMenu';
+import { getPreviewText, applyVariableStyles } from '../designer/Panels';
 import {
   Undo2,
   Redo2,
@@ -22,8 +23,126 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  Star
+  Star,
+  Search,
+  ChevronDown,
+  Check
 } from 'lucide-react';
+
+const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  
+  const filteredMembers = members.filter((m: any) => 
+    `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase())
+  );
+  
+  const selectedMember = previewMemberId ? members.find((m: any) => m.id === previewMemberId) : members[0];
+  
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.member-dropdown')) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleSelect = (id: string) => {
+    setPreviewMemberId(id);
+    setIsOpen(false);
+    setSearch('');
+    
+    if (!canvas) return;
+    const targetMember = id ? members.find((m: any) => m.id === id) || members[0] : members[0];
+    
+    canvas.getObjects().forEach((obj: any) => {
+      if (obj.placeholder || obj.isVariable) {
+        if (obj.type === 'i-text' || obj.type === 'textbox') {
+          const rawText = obj.placeholder || obj.text;
+          const previewText = getPreviewText(rawText, members);
+          obj.set('text', previewText);
+          applyVariableStyles(obj, members);
+        } else if (obj.type === 'image' && obj.placeholder) {
+          const key = obj.placeholder.replace(/[{}]/g, '').trim();
+          let url = '';
+          if (key === 'photo') url = targetMember.profileImage;
+          else if (key === 'signature') url = targetMember.signature;
+          else if (key === 'fingerprint') url = targetMember.fingerprint;
+          else if (key === 'logo') url = targetMember.divisionLogo;
+          else if (targetMember.customFields && targetMember.customFields[key]) {
+            url = targetMember.customFields[key];
+          }
+          
+          if (url) {
+            obj.setSrc(url, () => {
+               canvas.renderAll();
+            }, { crossOrigin: 'anonymous' });
+          }
+        }
+      }
+    });
+    canvas.renderAll();
+  };
+
+  return (
+    <div className="relative member-dropdown flex items-center gap-2">
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:block">Preview:</span>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all shadow-sm w-48 justify-between"
+      >
+        <div className="flex items-center gap-2 truncate">
+          {selectedMember?.profileImage ? (
+            <img src={selectedMember.profileImage} className="w-5 h-5 rounded-full object-cover shrink-0 border border-gray-200" />
+          ) : (
+            <div className="w-5 h-5 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
+          )}
+          <span className="truncate">{selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : 'Default (First)'}</span>
+        </div>
+        <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+      </div>
+      
+      {isOpen && (
+        <div className="absolute top-full left-[55px] mt-1 w-64 bg-white border border-gray-100 shadow-xl rounded-xl z-50 overflow-hidden flex flex-col">
+          <div className="p-2 border-b border-gray-100 bg-gray-50/50">
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search members..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoFocus
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all"
+              />
+            </div>
+          </div>
+          <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+            {filteredMembers.length > 0 ? filteredMembers.map((m: any) => (
+              <button
+                key={m.id}
+                onClick={() => handleSelect(m.id)}
+                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${(previewMemberId === m.id || (!previewMemberId && m.id === members[0]?.id)) ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-700'}`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  {m.profileImage ? (
+                     <img src={m.profileImage} className="w-6 h-6 rounded-full object-cover shrink-0 border border-gray-200" />
+                  ) : (
+                     <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
+                  )}
+                  <span className="truncate">{m.firstName} {m.lastName}</span>
+                </div>
+                {(previewMemberId === m.id || (!previewMemberId && m.id === members[0]?.id)) && <Check size={14} className="text-green-600 flex-shrink-0" />}
+              </button>
+            )) : (
+              <div className="p-4 text-center text-xs text-gray-400 italic">No members found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export function DesignerView() {
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
@@ -48,7 +167,10 @@ export function DesignerView() {
     closeModal,
     showModal,
     activeTemplateId,
-    setActiveTemplateId
+    setActiveTemplateId,
+    members,
+    previewMemberId,
+    setPreviewMemberId
   } = useDesignerStore();
 
   const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
@@ -222,66 +344,7 @@ export function DesignerView() {
     </div>
   );
 
-  const renderModal = () => {
-    if (!modal.isOpen) return null;
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div
-          className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
-          onClick={closeModal}
-        />
-        <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-sm overflow-hidden z-10 animate-in zoom-in-95 fade-in duration-200">
-          <div className="p-8 flex flex-col items-center text-center">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${modal.type === 'confirm' ? 'bg-amber-50 text-amber-500' :
-                modal.type === 'error' ? 'bg-red-50 text-red-500' :
-                  'bg-green-50 text-green-500'
-              }`}>
-              {modal.type === 'confirm' ? <AlertCircle size={32} /> :
-                modal.type === 'error' ? <AlertCircle size={32} /> :
-                  <CheckCircle2 size={32} />}
-            </div>
-
-            <h2 className="text-xl font-black text-gray-900 mb-2">{modal.title}</h2>
-            <p className="text-gray-500 text-sm leading-relaxed mb-8">
-              {modal.message}
-            </p>
-
-            <div className="flex flex-col w-full gap-3">
-              {modal.type === 'confirm' ? (
-                <>
-                  <button
-                    onClick={() => {
-                      const previousModal = modal;
-                      modal.onConfirm?.();
-                      if (useDesignerStore.getState().modal.message === previousModal.message) {
-                        closeModal();
-                      }
-                    }}
-                    className="w-full py-3.5 bg-gray-900 text-white text-sm font-black rounded-2xl hover:bg-gray-800 transition-all active:scale-95"
-                  >
-                    Yes, Proceed
-                  </button>
-                  <button
-                    onClick={closeModal}
-                    className="w-full py-3.5 bg-gray-100 text-gray-600 text-sm font-black rounded-2xl hover:bg-gray-200 transition-all"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={closeModal}
-                  className="w-full py-3.5 bg-green-500 text-white text-sm font-black rounded-2xl hover:bg-green-600 transition-all active:scale-95 shadow-lg shadow-green-200"
-                >
-                  Got it
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // GlobalModal is now handled in App.tsx
 
   if (activeTab === 'My Designs') {
     return (
@@ -304,7 +367,6 @@ export function DesignerView() {
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <MyDesigns />
         </div>
-        {renderModal()}
       </div>
     );
   }
@@ -327,7 +389,6 @@ export function DesignerView() {
           ))}
         </header>
         <Dashboard onSelect={() => setView('editor')} />
-        {renderModal()}
       </div>
     );
   }
@@ -351,7 +412,7 @@ export function DesignerView() {
       </header>
 
       {/* Utility Toolbar */}
-      <div className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-6 z-10 shrink-0">
+      <div className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-6 z-50 shrink-0 relative">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <button onClick={undo} disabled={history.length <= 1} className="p-1.5 hover:bg-gray-50 text-gray-400 disabled:opacity-20 transition-all">
@@ -362,6 +423,16 @@ export function DesignerView() {
             </button>
           </div>
           <div className="h-6 w-px bg-gray-100" />
+          
+          <MemberDropdown 
+            members={members} 
+            previewMemberId={previewMemberId} 
+            setPreviewMemberId={setPreviewMemberId} 
+            canvas={canvas} 
+          />
+
+          <div className="h-6 w-px bg-gray-100" />
+          
           <div className="flex items-center gap-4 text-gray-400">
             <button
               onClick={() => setShowGrid(!showGrid)}
@@ -445,8 +516,6 @@ export function DesignerView() {
         />
       )}
       <ImageLibraryModal />
-
-      {renderModal()}
     </div>
   );
 }

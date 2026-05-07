@@ -38,6 +38,144 @@ import QRCode from 'qrcode';
 import bwipjs from 'bwip-js';
 import { removeBackground } from '@imgly/background-removal';
 
+const GOOGLE_FONTS = Array.from(new Set([
+  // Popular Global
+  "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", "Source Sans Pro", "Slabo 27px", 
+  "Raleway", "PT Sans", "Merriweather", "Noto Sans", "Nunito", "Concert One", "Prompt", "Work Sans",
+  "Ubuntu", "Playfair Display", "Lora", "Rubik", "Mukta", "Nanum Gothic", "Inconsolata", "Quicksand",
+  "Titillium Web", "PT Serif", "Fira Sans", "Barlow", "Josefin Sans", "Libre Franklin", "Poppins",
+  "Cabin", "Anton", "Bitter", "Dosis", "Hind", "Arimo", "Varela Round", "Oxygen", "Bebas Neue",
+  "Abel", "Teko", "Yanone Kaffeesatz", "Fjalla One", "Exo 2", "Asap", "Dancing Script", "Pacifico",
+  "Arvo", "Righteous", "Crete Round", "Rokkitt", "Zilla Slab", "Caveat", "Indie Flower", "Shadows Into Light",
+  "Amatic SC", "Acme", "Bree Serif", "Questrial", "Signika", "Cinzel", "Crimson Text", "Play",
+  "Permanent Marker", "Courgette", "Domine", "Cardo", "Cookie", "Vollkorn",
+  "Philosopher", "Great Vibes", "Sacramento", "Satisfy", "Kaushan Script", "Kalam", "Patua One",
+  "Changa One", "Fredoka One", "Russo One", "Glegoo", "Gudea", "Squada One", "Cantarell",
+  "Orbitron", "Audiowide", "Marmelad", "Special Elite", "Syncopate", "Allerta Stencil", "Oleo Script",
+  "Jura", "Saira", "Fira Code", "Overpass", "Karla", "Cormorant", "Taviraj", "Prata", "Heebo",
+  "Mulish", "Manrope", "Outfit", "Plus Jakarta Sans", "Space Grotesk", "Space Mono", "Syne", "DM Sans",
+  "Nunito Sans", "Ubuntu Condensed", "Kanit", "Muli", "Fira Sans Condensed", "Zilla Slab Highlight", "Asap Condensed", "Catamaran", "Exo", "Libre Baskerville", "Merriweather Sans", "Noto Serif", "Source Serif Pro", "Yantramanav", "Alegreya", "Alegreya Sans", "Archivo", "Archivo Narrow", "Assistant", "Barlow Condensed", "Barlow Semi Condensed", "Cairo", "Changa", "Comfortaa", "Cormorant Garamond", "Crimson Pro", "DM Serif Display", "DM Serif Text", "Fira Sans Extra Condensed", "Francois One", "Frank Ruhl Libre", "Josefin Slab", "Montserrat Alternates", "PT Sans Caption", "PT Sans Narrow", "Public Sans", "Rajdhani", "Roboto Condensed", "Roboto Mono", "Roboto Slab", "Signika Negative", "Source Code Pro", "Spectral", 
+  
+  // System Standard
+  "Arial", "Times New Roman", "Courier New", "Verdana", "Georgia", "Comic Sans MS", "Trebuchet MS", "Impact",
+  
+  // Indian Language Fonts (Hindi, Tamil, Telugu, Malayalam, Bengali, Gujarati, Kannada, Odia, Gurmukhi)
+  "Mukta", "Poppins", "Hind", "Rajdhani", "Yantramanav", "Kalam", "Tiro Devanagari Hindi", "Amita", "Arya", "Asar", "Biryani", "Cambay", "Chandas", "Chilanka", "Eczar", "Gargi", "Glegoo", "Gotu", "Halant", "Inknut Antiqua", "Jaldi", "Kadwa", "Khand", "Khula", "Kurale", "Laila", "Lateef", "Martel", "Martel Sans", "Modak", "NTR", "Palanquin", "Palanquin Dark", "Pramukh", "Pridi", "Proza Libre", "Ranga", "Rhodium Libre", "Rozha One", "Sahitya", "Saman", "Samarkan", "Sarala", "Sarpanch", "Shrikhand", "Sura", "Suranna", "Suryakant", "Teko", "Tillana", "Utsaah", "Vesper Libre", "Yatra One", "Noto Sans Devanagari", "Noto Serif Devanagari", "Tiro Devanagari Marathi", "Tiro Devanagari Sanskrit",
+  
+  "Hind Madurai", "Arima Madurai", "Coiny", "Catamaran", "Meera Inimai", "Baloo Thambi 2", "Kavivanar", "Pavanam", "Noto Sans Tamil", "Noto Serif Tamil", "Tiro Tamil", "Mukta Malar",
+  
+  "Hind Telugu", "Ramabhadra", "Mallanna", "Mandali", "Suravaram", "Tenali Ramakrishna", "NTR", "Peddana", "Ponnala", "Ravi Prakash", "Sree Krushnadevaraya", "Timmana", "Dhurjati", "Gidugu", "Gurajada", "Lakki Reddy", "Noto Sans Telugu", "Noto Serif Telugu", "Tiro Telugu",
+  
+  "Hind Siliguri", "Mina", "Galada", "Atma", "Noto Sans Bengali", "Noto Serif Bengali", "Tiro Bangla", "Baloo Da 2",
+  
+  "Hind Colombo", "Manjari", "Dyuthi", "Suruma", "AnjaliOldLipi", "Noto Sans Malayalam", "Noto Serif Malayalam", "Baloo Chettan 2",
+  
+  "Hind Vadodara", "Mukt Vaani", "Farsan", "Mogra", "Rasa", "Noto Sans Gujarati", "Noto Serif Gujarati", "Baloo Bhai 2",
+  
+  "Hind Jalandhar", "Mukta Mahee", "Baloo Paaji 2", "Noto Sans Gurmukhi", "Noto Serif Gurmukhi", "Tiro Gurmukhi",
+  
+  "Noto Sans Kannada", "Noto Serif Kannada", "Tiro Kannada", "Noto Sans Odia", "Baloo Bhaina 2", "Baloo Tamma 2",
+  
+  "Anek Devanagari", "Anek Tamil", "Anek Telugu", "Anek Malayalam", "Anek Bengali", "Anek Gujarati", "Anek Kannada", "Anek Odia", "Anek Gurmukhi"
+])).sort();
+
+export const loadGoogleFont = async (fontName: string) => {
+  if (!fontName || ['Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Trebuchet MS', 'Impact'].includes(fontName)) return Promise.resolve();
+  const linkId = `font-${fontName.replace(/\s+/g, '-')}`;
+  if (!document.getElementById(linkId)) {
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800&display=swap`;
+    document.head.appendChild(link);
+  }
+  
+  try {
+    await document.fonts.load(`16px "${fontName}"`);
+    await document.fonts.ready;
+    // Add a small delay to ensure the browser's font parsing and Canvas 2D context catch up
+    await new Promise(resolve => setTimeout(resolve, 150));
+  } catch (err) {
+    console.warn('Font loading API failed or timed out:', err);
+  }
+};
+
+const FontSelect = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [search, setSearch] = React.useState('');
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const filteredFonts = React.useMemo(() => {
+    return GOOGLE_FONTS.filter(f => f.toLowerCase().includes(search.toLowerCase()));
+  }, [search]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative flex-1" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-2 py-1 border border-gray-200 rounded-lg text-xs outline-none bg-white text-left flex justify-between items-center h-[34px] hover:bg-gray-50 transition-colors"
+      >
+        <span className="truncate" style={{ fontFamily: value }}>{value || 'Select Font'}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50 shrink-0 ml-1"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-50 w-[200px] mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden flex flex-col" style={{ maxHeight: '300px' }}>
+          <div className="p-2 border-b border-gray-100 bg-gray-50 shrink-0">
+            <input
+              autoFocus
+              type="text"
+              placeholder="Search fonts..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full p-1.5 text-xs border border-gray-200 rounded bg-white outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+            />
+          </div>
+          <div className="overflow-y-auto flex-1 custom-scrollbar">
+            {filteredFonts.map(font => (
+              <button
+                key={font}
+                onClick={async () => {
+                  setIsOpen(false);
+                  setSearch('');
+                  
+                  // Wait for font to fully load before telling the canvas to update!
+                  await loadGoogleFont(font);
+                  onChange(font);
+                  
+                  // Re-apply variable styles after font change (different fonts have different char widths)
+                  const { selectedObject, members } = useDesignerStore.getState();
+                  if (selectedObject && members) {
+                    applyVariableStyles(selectedObject, members);
+                    if ((selectedObject as any).canvas) (selectedObject as any).canvas.renderAll();
+                  }
+                }}
+                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-green-50 transition-colors ${value === font ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-700'}`}
+                style={{ fontFamily: font }}
+              >
+                {font}
+              </button>
+            ))}
+            {filteredFonts.length === 0 && (
+              <div className="p-3 text-xs text-gray-400 text-center">No fonts found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const CardOptionsPanel = () => {
   const { config, setConfig, canvas } = useDesignerStore();
 
@@ -175,21 +313,131 @@ export const CardOptionsPanel = () => {
 
 export const getPreviewText = (rawText: string, members: any[]) => {
   if (!members || members.length === 0) return rawText;
-  const firstMember = members[0];
+  const { previewMemberId } = useDesignerStore.getState();
+  const targetMember = previewMemberId ? members.find(m => m.id === previewMemberId) || members[0] : members[0];
   let text = rawText;
   const matches = text.match(/{{([^}]+)}}/g);
   if (matches) {
     matches.forEach((match: string) => {
       const key = match.replace(/[{}]/g, '').trim();
-      if (firstMember[key] !== undefined) {
-        text = text.replace(match, firstMember[key]);
-      } else if (firstMember.customFields && firstMember.customFields[key] !== undefined) {
-        text = text.replace(match, firstMember.customFields[key]);
+      if (targetMember[key as keyof typeof targetMember] !== undefined) {
+        text = text.replace(match, targetMember[key as keyof typeof targetMember]);
+      } else if (targetMember.customFields && targetMember.customFields[key] !== undefined) {
+        text = text.replace(match, targetMember.customFields[key]);
       }
     });
   }
   return text;
 };
+
+export const applyVariableStyles = (obj: any, members: any[]) => {
+  if (!obj) return;
+  
+  // If no variable colors set, wipe any existing styles and exit cleanly
+  if (!obj.variableColors || Object.keys(obj.variableColors).length === 0) {
+    obj.set('styles', {});
+    obj.dirty = true;
+    return;
+  }
+  
+  let rawTemplate = obj.placeholder || '';
+  if (!rawTemplate.includes('{{')) {
+    obj.set('styles', {});
+    obj.dirty = true;
+    return;
+  }
+
+  // CRITICAL KERNING FIX: Convert logical spaces to non-breaking spaces (\u00A0).
+  // Heavy fonts often collapse logical spaces to 0-width during Fabric's chunk measurement,
+  // causing swallowed spaces (e.g. "WilliamAnderson"). \u00A0 forces a tangible physical width.
+  if (obj.text && obj.text.includes(' ')) {
+    obj.set('text', obj.text.replace(/ /g, '\u00A0'));
+  }
+  if (rawTemplate.includes(' ')) {
+    rawTemplate = rawTemplate.replace(/ /g, '\u00A0');
+    obj.placeholder = rawTemplate;
+  }
+
+  const { previewMemberId } = useDesignerStore.getState();
+  const targetMember = previewMemberId ? members.find(m => m.id === previewMemberId) || members[0] : members[0];
+  if (!targetMember) return;
+
+  // Build a character-position map by walking through the template
+  // and tracking where each variable's value lands in the FINAL rendered string
+  const charStyles: Record<number, { fill: string }> = {};
+  let charPos = 0;
+
+  // Split template into segments: either a variable {{key}} or literal text
+  const segments = rawTemplate.split(/({{[^}]+}})/g);
+  
+  let lastColor: string | null = null;
+  for (const segment of segments) {
+    if (!segment) continue;
+    
+    const varMatch = segment.match(/^{{([^}]+)}}$/);
+    if (varMatch) {
+      const varKey = varMatch[1].trim();
+      const varValue = String(
+        targetMember[varKey] ??
+        (targetMember.customFields && targetMember.customFields[varKey]) ??
+        ''
+      );
+      const varColor = obj.variableColors[varKey];
+      if (varColor) lastColor = varColor;
+      
+      if (varColor && varValue.length > 0) {
+        for (let i = 0; i < varValue.length; i++) {
+          charStyles[charPos + i] = { fill: varColor };
+        }
+      }
+      charPos += varValue.length;
+    } else {
+      // literal text segment (e.g. the space between first and last name)
+      // We apply the previous variable's color to the space to merge them into a single Canvas chunk.
+      // This physically prevents HTML5 Canvas from mis-measuring isolated space characters!
+      if (lastColor) {
+        for (let i = 0; i < segment.length; i++) {
+          charStyles[charPos + i] = { fill: lastColor };
+        }
+      }
+      charPos += segment.length;
+    }
+  }
+
+  // Build newStyles in the format Fabric expects: { lineIndex: { charIndex: styleObj } }
+  const newStyles: any = { 0: charStyles };
+  
+  // Apply using Fabric's proper setter - this invalidates internal caches correctly
+  obj.set('styles', newStyles);
+  
+  // Explicitly force layout recalculation
+  if (obj.initDimensions) {
+    obj.initDimensions();
+  }
+  
+  obj.dirty = true;
+  
+  // CRITICAL FIX FOR "Alfa Slab One" AND HEAVY FONTS:
+  // Sometimes the browser's Canvas 2D engine hasn't physically swapped the custom font in yet,
+  // causing Fabric to permanently cache thin "fallback font" widths, which causes thick letters to overlap!
+  // We force a complete cache wipe and re-measure 150ms later when the browser is guaranteed to be ready.
+  setTimeout(() => {
+    if (obj._charWidthsCache) {
+      obj._charWidthsCache = {};
+    }
+    if (obj._clearCache) {
+      obj._clearCache();
+    }
+    if (obj.initDimensions) {
+      obj.initDimensions();
+    }
+    obj.dirty = true;
+    if (obj.canvas) {
+      obj.canvas.renderAll();
+    }
+  }, 150);
+};
+
 
 export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }) => {
   const { canvas, formConfig, organizationType } = useDesignerStore();
@@ -316,6 +564,19 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Standard Variables</label>
             </div>
             <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => addText('{{firstName}} {{lastName}}', true)}
+                className="flex flex-col items-center justify-center p-5 border border-purple-100 bg-purple-50/30 rounded-3xl hover:border-purple-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95 col-span-2"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mb-2 group-hover:bg-purple-100 transition-colors shadow-sm">
+                  <Type size={18} className="text-purple-400 group-hover:text-purple-600" />
+                </div>
+                <span className="text-[11px] font-black text-purple-700 text-center leading-tight">
+                  Full Name (First + Last)
+                </span>
+                <span className="text-[9px] text-purple-400 font-bold mt-1 uppercase tracking-tighter">Prevents Overlapping</span>
+              </button>
+
               {activeStandardFields.filter(f => fieldToKeyMap[f]).map(field => (
                 <button
                   key={field}
@@ -392,6 +653,8 @@ export const CustomizePanel = () => {
             top: Math.round(selectedObject.top || 0),
             strokeWidth: selectedObject.strokeWidth || 0,
             stroke: selectedObject.stroke || '#000000',
+            rx: (selectedObject as any).rx || 0,
+            ry: (selectedObject as any).ry || 0,
             securityData: (selectedObject as any).securityData || ((selectedObject as any).placeholder === '{{qr_code}}' ? 'https://idcreator.com' : '1234567890'),
             securityFormat: (selectedObject as any).securityFormat || 'code128',
             securityType: (selectedObject as any).securityType || 'URL',
@@ -400,11 +663,20 @@ export const CustomizePanel = () => {
             fontStyle: (selectedObject as any).fontStyle || 'normal',
             underline: (selectedObject as any).underline || false,
             qrFields: (selectedObject as any).qrFields || {},
+            variableColors: (selectedObject as any).variableColors || {},
           });
         };
         update();
         selectedObject.on('modified', update);
-        return () => { selectedObject.off('modified', update); };
+        selectedObject.on('moving', update);
+        selectedObject.on('scaling', update);
+        selectedObject.on('changed', update);
+        return () => { 
+          selectedObject.off('modified', update); 
+          selectedObject.off('moving', update);
+          selectedObject.off('scaling', update);
+          selectedObject.off('changed', update);
+        };
       }
     }, [selectedObject]);
 
@@ -425,7 +697,7 @@ export const CustomizePanel = () => {
         (selectedObject as any).set('text', val);
       }
     } else if (key === 'textAlign') {
-      selectedObject.set('textAlign', val);
+      (selectedObject as any).set('textAlign', val);
       if (val === 'center') {
         const center = selectedObject.getCenterPoint();
         selectedObject.set({
@@ -445,8 +717,16 @@ export const CustomizePanel = () => {
           left: boundingRect.left
         });
       }
+    } else if (key === 'variableColors') {
+      (selectedObject as any).variableColors = val;
+      const { members } = useDesignerStore.getState();
+      applyVariableStyles(selectedObject, members);
     } else {
       selectedObject.set(key as any, val);
+      if (key === 'text') {
+        const { members } = useDesignerStore.getState();
+        applyVariableStyles(selectedObject, members);
+      }
     }
     
     selectedObject.setCoords();
@@ -715,6 +995,22 @@ export const CustomizePanel = () => {
                 <span className="ml-2 text-[10px] font-mono text-gray-400 uppercase">{props.fill || '#000000'}</span>
               </div>
             </div>
+
+            {selectedObject.type === 'rect' && (
+              <NumberInput
+                label="Corner Radius"
+                value={props.rx || 0}
+                onChange={(v: number) => { 
+                  if (!selectedObject || !canvas) return;
+                  (selectedObject as any).set({ rx: v, ry: v });
+                  selectedObject.setCoords();
+                  canvas.renderAll();
+                  setProps((prev: Record<string, any>) => ({ ...prev, rx: v, ry: v }));
+                  saveState();
+                }}
+                max={999}
+              />
+            )}
           </section>
 
           <section className="space-y-2">
@@ -1150,13 +1446,133 @@ export const CustomizePanel = () => {
                 }}
                 className="w-full p-2 border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-green-500"
               >
-                <option>Select a Smart field...</option>
-                <option value="{{name}}">Full Name</option>
-                <option value="{{id}}">ID Number</option>
-                <option value="{{department}}">Department</option>
-                <option value="{{title}}">Job Title</option>
+                <option value="Select a Smart field...">Select a Smart field...</option>
+                {(() => {
+                  const { formConfig, members } = useDesignerStore.getState();
+                  const enabled = formConfig?.enabledFields;
+                  
+                  const showField = (label: string) => {
+                    return !enabled || enabled.includes(label);
+                  };
+
+                  return (
+                    <>
+                      {['First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Gender'].some(showField) && (
+                        <optgroup label="Personal Info">
+                          {showField('First Name') && <option value="{{firstName}}">First Name</option>}
+                          {showField('Last Name') && <option value="{{lastName}}">Last Name</option>}
+                          {showField('Nickname') && <option value="{{nickname}}">Nickname</option>}
+                          {showField('Date of Birth') && <option value="{{dob}}">Date of Birth</option>}
+                          {showField('Gender') && <option value="{{gender}}">Gender</option>}
+                        </optgroup>
+                      )}
+                      {['Title', 'ID number', 'Employee ID', 'Department', 'Hire Date'].some(showField) && (
+                        <optgroup label="Employment Info">
+                          {showField('Title') && <option value="{{title}}">Job Title</option>}
+                          {showField('ID number') && <option value="{{idNumber}}">ID Number</option>}
+                          {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
+                          {showField('Department') && <option value="{{department}}">Department</option>}
+                          {showField('Hire Date') && <option value="{{hireDate}}">Hire Date</option>}
+                        </optgroup>
+                      )}
+                      {['Email', 'Phone 1', 'Phone 2', 'Fax', 'Website'].some(showField) && (
+                        <optgroup label="Contact Info">
+                          {showField('Email') && <option value="{{email}}">Email</option>}
+                          {showField('Phone 1') && <option value="{{phone1}}">Phone 1</option>}
+                          {showField('Phone 2') && <option value="{{phone2}}">Phone 2</option>}
+                          {showField('Fax') && <option value="{{fax}}">Fax</option>}
+                          {showField('Website') && <option value="{{website}}">Website</option>}
+                        </optgroup>
+                      )}
+                      {['Street 1', 'Street 2', 'City', 'State', 'Postal Code', 'Country'].some(showField) && (
+                        <optgroup label="Address Info">
+                          {showField('Street 1') && <option value="{{street1}}">Street 1</option>}
+                          {showField('Street 2') && <option value="{{street2}}">Street 2</option>}
+                          {showField('City') && <option value="{{city}}">City</option>}
+                          {showField('State') && <option value="{{state}}">State</option>}
+                          {showField('Postal Code') && <option value="{{postalCode}}">Postal Code</option>}
+                          {showField('Country') && <option value="{{country}}">Country</option>}
+                        </optgroup>
+                      )}
+                      {['Issue Date', 'Expiration Date', 'Grade Level', 'Security Level'].some(showField) && (
+                        <optgroup label="Card Details">
+                          {showField('Issue Date') && <option value="{{issueDate}}">Issue Date</option>}
+                          {showField('Expiration Date') && <option value="{{expirationDate}}">Expiration Date</option>}
+                          {showField('Grade Level') && <option value="{{gradeLevel}}">Grade Level</option>}
+                          {showField('Security Level') && <option value="{{securityLevel}}">Security Level</option>}
+                        </optgroup>
+                      )}
+                      {['Height', 'Weight', 'Eye color', 'Hair color'].some(showField) && (
+                        <optgroup label="Physical Attributes">
+                          {showField('Height') && <option value="{{height}}">Height</option>}
+                          {showField('Weight') && <option value="{{weight}}">Weight</option>}
+                          {showField('Eye color') && <option value="{{eyeColor}}">Eye Color</option>}
+                          {showField('Hair color') && <option value="{{hairColor}}">Hair Color</option>}
+                        </optgroup>
+                      )}
+                      
+                      {/* Dynamically append Custom Text Fields */}
+                      {members && members.length > 0 && members[0].customFields && Object.keys(members[0].customFields).filter(f => !formConfig?.customImageFields?.includes(f)).length > 0 && (
+                        <optgroup label="Custom Fields">
+                          {Object.keys(members[0].customFields)
+                            .filter(f => !formConfig?.customImageFields?.includes(f))
+                            .map(field => (
+                              <option key={field} value={`{{${field}}}`}>{field}</option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </>
+                  );
+                })()}
               </select>
             </div>
+
+            {/* Variable Coloring Section */}
+            {(() => {
+              const textValue = props.text as string | undefined;
+              const matches = textValue?.match(/{{([^}]+)}}/g);
+              if (!matches || matches.length === 0) return null;
+              
+              const uniqueVars = Array.from(new Set(matches.map((m: string) => m.replace(/[{}]/g, '').trim())));
+              
+              return (
+                <div className="mt-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles size={14} className="text-purple-500" />
+                    <label className="text-[11px] font-black text-gray-700 uppercase tracking-wider">Variable Colors</label>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                     {uniqueVars.map((varKey: string) => {
+                       const colorMap: Record<string, string> = props.variableColors || {};
+                       return (
+                       <div key={varKey} className="flex items-center justify-between bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                         <span className="text-[10px] font-bold text-gray-500 truncate max-w-[100px]">{varKey}</span>
+                         <div className="flex items-center gap-2">
+                           <input
+                             type="color"
+                             value={colorMap[varKey] || props.fill || '#000000'}
+                             onChange={(e) => {
+                               const newColors: Record<string, string> = { ...colorMap, [varKey]: e.target.value };
+                               updateSelected('variableColors', newColors);
+                             }}
+                             className="w-6 h-6 rounded-md border-none cursor-pointer overflow-hidden"
+                           />
+                           <button 
+                             onClick={() => {
+                               const newColors: Record<string, string> = { ...colorMap };
+                               delete newColors[varKey];
+                               updateSelected('variableColors', newColors);
+                             }}
+                             className="text-[10px] text-gray-400 hover:text-red-500 font-bold"
+                           >Reset</button>
+                         </div>
+                       </div>
+                       );
+                     })}
+                  </div>
+                </div>
+              );
+            })()}
           </section>
         )}
 
@@ -1164,16 +1580,10 @@ export const CustomizePanel = () => {
           <label className="text-xs font-bold text-gray-700 block mb-3">Text Style</label>
           <div className="space-y-3">
             <div className="flex gap-2">
-              <select
-                value={props.fontFamily}
-                onChange={(e) => updateSelected('fontFamily', e.target.value)}
-                className="flex-1 p-2 border border-gray-200 rounded-lg text-xs outline-none"
-              >
-                <option value="Inter">Inter</option>
-                <option value="Arimo">Arimo</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Arial">Arial</option>
-              </select>
+              <FontSelect 
+                value={props.fontFamily} 
+                onChange={(val) => updateSelected('fontFamily', val)} 
+              />
               <div className="w-24 flex items-center border border-gray-200 rounded-lg overflow-hidden">
                 <input
                   type="number"
@@ -1309,8 +1719,8 @@ export const CustomizePanel = () => {
     if (!canvas) return;
 
     let dataUrl = '';
-    const { members } = useDesignerStore.getState();
-    const firstMember = members && members.length > 0 ? members[0] : null;
+    const { members, previewMemberId } = useDesignerStore.getState();
+    const firstMember = previewMemberId ? members.find(m => m.id === previewMemberId) || members[0] : members[0];
 
     try {
       if (ph === '{{qr_code}}') {

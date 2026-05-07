@@ -7,6 +7,7 @@ import { DesignerView } from "./views/DesignerView";
 import { UploadView } from "./views/UploadView";
 import { GenerateView } from "./views/GenerateView";
 import { PrintView } from "./views/PrintView";
+import { GlobalModal } from "./designer/GlobalModal";
 
 const pages: Array<{ id: DesktopPage; label: string; icon: typeof BarChart3 }> = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -62,6 +63,7 @@ export default function App() {
         {page === "generate" ? <GenerateView /> : null}
         {page === "print" ? <PrintView /> : null}
       </main>
+      <GlobalModal />
     </div>
   );
 }

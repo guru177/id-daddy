@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, ChevronUp, Image as ImageIcon, X, Settings } from 'lucide-react';
+import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useDesignerStore } from './store';
 
 const initialFormState = {
@@ -76,6 +77,332 @@ export const DataUpload = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [customFieldsList, setCustomFieldsList] = useState<{label: string, value: string}[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
+  const bulkImageInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredMembers = members.filter(m => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    const fullName = `${m.firstName || ''} ${m.lastName || ''}`.toLowerCase();
+    const idNum = (m.idNumber || '').toLowerCase();
+    const empId = (m.employeeId || '').toLowerCase();
+    return fullName.includes(query) || idNum.includes(query) || empId.includes(query);
+  });
+
+  const handleDownloadTemplate = () => {
+    const config = formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] };
+    
+    const row: any = {};
+    row['First Name'] = 'John';
+    
+    STANDARD_FIELDS.forEach(f => {
+      if (f !== 'First Name' && config.enabledFields.includes(f)) {
+        row[getLabel(f, organizationType)] = '';
+      }
+    });
+
+    config.customFields.forEach(cf => {
+      if (config.enabledFields.includes(cf)) {
+        row[cf] = '';
+      }
+    });
+
+    row['Profile Image'] = 'john_doe.jpg';
+    
+    STANDARD_IMAGE_FIELDS.forEach(f => {
+      if (config.enabledImageFields?.includes(f)) {
+        row[f] = '';
+      }
+    });
+    
+    config.customImageFields?.forEach(cf => {
+      if (config.enabledImageFields?.includes(cf)) {
+        row[cf] = '';
+      }
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet([row]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    XLSX.writeFile(workbook, "ID_Daddy_Template.xlsx");
+  };
+
+  const handleExportExcel = () => {
+    if (members.length === 0) return;
+    
+    const exportData = members.map(m => {
+      const row: any = {
+        'First Name': m.firstName,
+        'Last Name': m.lastName,
+        'Nickname': m.nickname,
+        'Date of Birth': m.dob,
+        'Title': m.title,
+        'ID number': m.idNumber,
+        'Employee ID': m.employeeId,
+        'Department': m.department,
+        'Hire Date': m.hireDate,
+        'Issue Date': m.issueDate,
+        'Expiration Date': m.expirationDate,
+        'Phone 1': m.phone1,
+        'Phone 2': m.phone2,
+        'Fax': m.fax,
+        'Email': m.email,
+        'Website': m.website,
+        'Country': m.country,
+        'Postal Code': m.postalCode,
+        'State': m.state,
+        'City': m.city,
+        'Street 1': m.street1,
+        'Street 2': m.street2,
+        'Grade Level': m.gradeLevel,
+        'Security Level': m.securityLevel,
+        'Height': m.height,
+        'Weight': m.weight,
+        'Gender': m.gender,
+        'Eye Color': m.eyeColor,
+        'Hair Color': m.hairColor,
+        'Profile Image': m.profileImage?.startsWith('data:image') ? '[Image Attached]' : m.profileImage,
+        'Signature': m.signature?.startsWith('data:image') ? '[Image Attached]' : m.signature,
+      };
+
+      if (m.customFields) {
+        Object.keys(m.customFields).forEach(key => {
+          const val = m.customFields![key];
+          row[key] = val?.startsWith('data:image') ? '[Image Attached]' : val;
+        });
+      }
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
+    XLSX.writeFile(workbook, "ID_Daddy_Members.xlsx");
+  };
+
+  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+        
+        let importedCount = 0;
+
+        data.forEach((row: any) => {
+          const getVal = (possibleKeys: string[]) => {
+            for (const k of possibleKeys) {
+              const exact = row[k];
+              if (exact) return exact;
+              const keyMatch = Object.keys(row).find(rk => rk.toLowerCase().replace(/\s/g, '') === k.toLowerCase().replace(/\s/g, ''));
+              if (keyMatch) return row[keyMatch];
+            }
+            return '';
+          };
+
+          const newMember = {
+            firstName: getVal(['First Name', 'FirstName', 'First', 'Name']),
+            lastName: getVal(['Last Name', 'LastName', 'Last']),
+            nickname: getVal(['Nickname']),
+            dob: getVal(['Date of Birth', 'DOB', 'Birthday']),
+            title: getVal(['Title', 'Role', 'Position']),
+            idNumber: getVal(['ID number', 'ID', 'IDNumber']),
+            employeeId: getVal(['Employee ID', 'EmployeeID', 'EmpID']),
+            department: getVal(['Department', 'Dept']),
+            hireDate: getVal(['Hire Date', 'HireDate']),
+            issueDate: getVal(['Issue Date', 'IssueDate']),
+            expirationDate: getVal(['Expiration Date', 'ExpDate', 'Expiry']),
+            phone1: getVal(['Phone 1', 'Phone', 'Phone1', 'Mobile']),
+            phone2: getVal(['Phone 2', 'Phone2']),
+            fax: getVal(['Fax']),
+            email: getVal(['Email', 'Email Address']),
+            website: getVal(['Website', 'Web', 'URL']),
+            country: getVal(['Country']),
+            postalCode: getVal(['Postal Code', 'Zip Code', 'Zip']),
+            state: getVal(['State', 'Province']),
+            city: getVal(['City']),
+            street1: getVal(['Street 1', 'Street', 'Address', 'Address 1']),
+            street2: getVal(['Street 2', 'Address 2']),
+            gradeLevel: getVal(['Grade Level', 'Grade']),
+            securityLevel: getVal(['Security Level', 'Clearance']),
+            height: getVal(['Height']),
+            weight: getVal(['Weight']),
+            gender: getVal(['Gender', 'Sex']),
+            eyeColor: getVal(['Eye Color', 'Eyes']),
+            hairColor: getVal(['Hair Color', 'Hair']),
+            profileImage: getVal(['Profile Image', 'Photo', 'Image', 'Picture']),
+            signature: getVal(['Signature', 'Sign']),
+            fingerprint: getVal(['Fingerprint', 'Thumbprint']),
+            divisionLogo: getVal(['Division Logo', 'Logo', 'Dept Logo']),
+            customFields: {} as Record<string, string>
+          };
+
+          const knownFields = ['First Name', 'FirstName', 'First', 'Name', 'Last Name', 'LastName', 'Last', 'Nickname', 'Date of Birth', 'DOB', 'Birthday', 'Title', 'Role', 'Position', 'ID number', 'ID', 'IDNumber', 'Employee ID', 'EmployeeID', 'EmpID', 'Department', 'Dept', 'Hire Date', 'HireDate', 'Issue Date', 'IssueDate', 'Expiration Date', 'ExpDate', 'Expiry', 'Phone 1', 'Phone', 'Phone1', 'Mobile', 'Phone 2', 'Phone2', 'Fax', 'Email', 'Email Address', 'Website', 'Web', 'URL', 'Country', 'Postal Code', 'Zip Code', 'Zip', 'State', 'Province', 'City', 'Street 1', 'Street', 'Address', 'Address 1', 'Street 2', 'Address 2', 'Grade Level', 'Grade', 'Security Level', 'Clearance', 'Height', 'Weight', 'Gender', 'Sex', 'Eye Color', 'Eyes', 'Hair Color', 'Hair', 'Profile Image', 'Photo', 'Image', 'Picture', 'Signature', 'Sign', 'Fingerprint', 'Thumbprint', 'Division Logo', 'Logo', 'Dept Logo'];
+          
+          Object.keys(row).forEach(k => {
+            const val = row[k];
+            const isKnown = knownFields.some(kf => kf.toLowerCase().replace(/\s/g, '') === k.toLowerCase().replace(/\s/g, ''));
+            if (!isKnown && val) {
+              newMember.customFields[k] = String(val);
+            }
+          });
+
+          if (newMember.firstName || newMember.lastName) {
+            const currentMembers = useDesignerStore.getState().members;
+            
+            // Deduplication logic: Match by Employee ID, ID Number, or Full Name
+            const existingMember = currentMembers.find(m => {
+              if (m.employeeId && newMember.employeeId && m.employeeId.toLowerCase() === newMember.employeeId.toLowerCase()) return true;
+              if (m.idNumber && newMember.idNumber && m.idNumber.toLowerCase() === newMember.idNumber.toLowerCase()) return true;
+              
+              const mName = `${m.firstName || ''} ${m.lastName || ''}`.trim().toLowerCase();
+              const newName = `${newMember.firstName || ''} ${newMember.lastName || ''}`.trim().toLowerCase();
+              if (mName && newName && mName === newName) return true;
+              
+              return false;
+            });
+
+            // Prevent overwriting existing images with the "[Image Attached]" export placeholder
+            const cleanNewMember: any = { ...newMember };
+            ['profileImage', 'signature', 'fingerprint', 'divisionLogo'].forEach(imgField => {
+              if (cleanNewMember[imgField] === '[Image Attached]') {
+                delete cleanNewMember[imgField];
+              }
+            });
+
+            if (existingMember) {
+              updateMember(existingMember.id, cleanNewMember);
+            } else {
+              // Ensure we don't save the placeholder text for new members either
+              ['profileImage', 'signature', 'fingerprint', 'divisionLogo'].forEach(imgField => {
+                if (cleanNewMember[imgField] === '[Image Attached]') cleanNewMember[imgField] = '';
+              });
+              addMember({ ...cleanNewMember, customImage: '' });
+            }
+            importedCount++;
+          }
+        });
+
+        showModal({
+          title: 'Import Successful',
+          message: `Successfully imported ${importedCount} members from Excel.`,
+          type: 'info'
+        });
+      } catch (err) {
+        showModal({
+          title: 'Import Failed',
+          message: 'Could not parse the Excel file. Please check the format.',
+          type: 'error'
+        });
+      }
+      if (excelInputRef.current) excelInputRef.current.value = '';
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    let matchCount = 0;
+    const membersUpdates = new Map<string, Partial<typeof initialFormState & { customFields: Record<string, string> }>>();
+
+    // Process all files sequentially to avoid complex race conditions
+    for (const file of Array.from(files)) {
+      const fileName = file.name;
+      const fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+
+      let fieldToUpdate = '';
+
+      let memberToUpdate = members.find(m => {
+        const standardFields = ['profileImage', 'signature', 'fingerprint', 'divisionLogo'];
+        for (const field of standardFields) {
+          const val = m[field as keyof typeof m] as string | undefined;
+          if (val && !val.startsWith('data:image')) {
+            if (val.toLowerCase() === fileName.toLowerCase() || val.toLowerCase() === fileNameWithoutExt.toLowerCase()) {
+              fieldToUpdate = field;
+              return true;
+            }
+          }
+        }
+        
+        if (m.customFields) {
+          for (const key of Object.keys(m.customFields)) {
+            const val = m.customFields[key];
+            if (val && typeof val === 'string' && !val.startsWith('data:image')) {
+               if (val.toLowerCase() === fileName.toLowerCase() || val.toLowerCase() === fileNameWithoutExt.toLowerCase()) {
+                 fieldToUpdate = `custom:${key}`;
+                 return true;
+               }
+            }
+          }
+        }
+        return false;
+      });
+
+      // Fallback: If no explicit field match was found in the Excel data, 
+      // automatically try matching the filename to the member's identity fields
+      if (!memberToUpdate) {
+        memberToUpdate = members.find(m => {
+          const fullName = `${m.firstName || ''} ${m.lastName || ''}`.trim().toLowerCase();
+          const fileLower = fileNameWithoutExt.toLowerCase();
+          if (
+            (m.idNumber && m.idNumber.toLowerCase() === fileLower) ||
+            (m.employeeId && m.employeeId.toLowerCase() === fileLower) ||
+            (fullName && fullName === fileLower)
+          ) {
+            fieldToUpdate = 'profileImage';
+            return true;
+          }
+          return false;
+        });
+      }
+
+      if (memberToUpdate && fieldToUpdate !== '') {
+        // Wait for base64
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (f) => resolve(f.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+
+        // Accumulate
+        const existingUpdate = membersUpdates.get(memberToUpdate.id) || {};
+        if (fieldToUpdate.startsWith('custom:')) {
+          const customKey = fieldToUpdate.split('custom:')[1];
+          const existingCustomFields = existingUpdate.customFields || memberToUpdate.customFields || {};
+          existingUpdate.customFields = {
+            ...existingCustomFields,
+            [customKey]: base64
+          };
+        } else {
+          (existingUpdate as any)[fieldToUpdate] = base64;
+        }
+        membersUpdates.set(memberToUpdate.id, existingUpdate);
+        matchCount++;
+      }
+    }
+
+    // Apply accumulated updates
+    membersUpdates.forEach((update, id) => {
+      updateMember(id, update);
+    });
+
+    showModal({
+      title: 'Bulk Upload Complete',
+      message: `Successfully matched ${matchCount} images to member profiles out of ${files.length} uploaded files.`,
+      type: 'info'
+    });
+
+    if (bulkImageInputRef.current) bulkImageInputRef.current.value = '';
+  };
 
   useEffect(() => {
     if (isModalOpen && !editingMemberId) {
@@ -163,7 +490,19 @@ export const DataUpload = () => {
       
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0 z-10">
-        <h1 className="text-lg font-black text-gray-900">Saved Members ({members.length})</h1>
+        <div className="flex items-center gap-6">
+          <h1 className="text-lg font-black text-gray-900 shrink-0">Saved Members ({members.length})</h1>
+          <div className="relative flex-1 max-w-[300px]">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="Search by name or ID..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded text-xs w-full focus:outline-none focus:border-green-500 focus:bg-white transition-colors"
+            />
+          </div>
+        </div>
         <div className="flex items-center gap-4">
           <button 
             onClick={() => {
@@ -175,6 +514,46 @@ export const DataUpload = () => {
           >
             <Settings size={14} /> Variable Checklist
           </button>
+          <div className="h-6 w-px bg-gray-200 mx-2" />
+          
+          {/* Excel & Image Tools */}
+          <input type="file" ref={excelInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportExcel} />
+          <input type="file" ref={bulkImageInputRef} accept="image/*" multiple className="hidden" onChange={handleBulkImageUpload} />
+          
+          <button 
+            onClick={handleDownloadTemplate}
+            className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
+            title="Download Template"
+          >
+            <FileSpreadsheet size={14} /> Template
+          </button>
+          
+          <button 
+            onClick={() => excelInputRef.current?.click()}
+            className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
+            title="Import Excel"
+          >
+            <Upload size={14} /> Import
+          </button>
+          
+          <button 
+            onClick={handleExportExcel}
+            className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
+            title="Export Excel"
+          >
+            <Download size={14} /> Export
+          </button>
+
+          <button 
+            onClick={() => bulkImageInputRef.current?.click()}
+            className="bg-white border border-blue-200 text-blue-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-blue-50"
+            title="Bulk upload images to match filenames in Excel"
+          >
+            <FolderUp size={14} /> Bulk Images
+          </button>
+
+          <div className="h-6 w-px bg-gray-200 mx-2" />
+
           <button 
             onClick={() => {
               setEditingMemberId(null);
@@ -459,7 +838,7 @@ export const DataUpload = () => {
             <table className="w-full text-left text-sm text-gray-600">
               <thead className="text-xs uppercase bg-gray-50 text-gray-400 font-black border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3">Photo</th>
+                  <th className="px-6 py-3 w-48">Assets</th>
                   <th className="px-6 py-3">Name</th>
                   <th className="px-6 py-3">ID Number</th>
                   <th className="px-6 py-3">Department</th>
@@ -467,15 +846,38 @@ export const DataUpload = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {members.map(member => (
+                {filteredMembers.map(member => (
                   <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-3">
-                      <div className="w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
-                        {member.profileImage ? (
-                          <img src={member.profileImage} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <ImageIcon size={20} className="text-gray-300" />
-                        )}
+                      <div className="flex items-center gap-2">
+                        {/* Profile Image Main Thumbnail */}
+                        <div className="w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200" title="Profile Image">
+                          {member.profileImage && (member.profileImage.startsWith('data:image') || member.profileImage.startsWith('http')) ? (
+                            <img src={member.profileImage} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon size={20} className="text-gray-300" />
+                          )}
+                        </div>
+                        
+                        {/* Badges for other uploaded images */}
+                        <div className="flex flex-col gap-1 justify-center">
+                           {(member.signature && (member.signature.startsWith('data:image') || member.signature.startsWith('http'))) && (
+                             <span className="text-[9px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 leading-none inline-block w-max">Signature</span>
+                           )}
+                           {(member.fingerprint && (member.fingerprint.startsWith('data:image') || member.fingerprint.startsWith('http'))) && (
+                             <span className="text-[9px] uppercase font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 leading-none inline-block w-max">Fingerprint</span>
+                           )}
+                           {(member.divisionLogo && (member.divisionLogo.startsWith('data:image') || member.divisionLogo.startsWith('http'))) && (
+                             <span className="text-[9px] uppercase font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 leading-none inline-block w-max">Logo</span>
+                           )}
+                           {Object.keys(member.customFields || {}).map(k => {
+                             const val = member.customFields![k];
+                             if (val && typeof val === 'string' && (val.startsWith('data:image') || val.startsWith('http'))) {
+                               return <span key={k} className="text-[9px] uppercase font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-100 leading-none whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px] inline-block">{k}</span>
+                             }
+                             return null;
+                           })}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-3 font-bold text-gray-900">
@@ -512,6 +914,13 @@ export const DataUpload = () => {
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-bold">
                       No members added yet. Click "Add New Member" to get started.
+                    </td>
+                  </tr>
+                )}
+                {members.length > 0 && filteredMembers.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-bold">
+                      No members match your search query "{searchQuery}".
                     </td>
                   </tr>
                 )}

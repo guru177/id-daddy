@@ -71,93 +71,183 @@ export interface Member {
 
 export const DEFAULT_MEMBERS: Member[] = [
   {
-    id: 'm1', firstName: 'John', lastName: 'Doe', nickname: 'Johnny', dob: '1990-05-15', title: 'Software Engineer',
-    idNumber: 'EMP-1001', employeeId: 'EMP-1001', department: 'Engineering', hireDate: '2020-03-01', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0101', phone2: '', fax: '', email: 'john.doe@example.com', website: 'johndoe.dev', country: 'USA', postalCode: '90210',
-    state: 'CA', city: 'Beverly Hills', street1: '123 Tech Lane', street2: 'Suite 400', gradeLevel: '', securityLevel: 'Level 4',
-    height: '6\'0"', weight: '180 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
+    id: 'm1', firstName: 'William', lastName: 'Anderson', nickname: 'Will', dob: '1988-03-12', title: 'Sales Director',
+    idNumber: 'EMP-2001', employeeId: 'EMP-2001', department: 'Sales', hireDate: '2019-05-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0201', phone2: '', fax: '', email: 'william.a@example.com', website: '', country: 'USA', postalCode: '10001',
+    state: 'NY', city: 'New York', street1: '123 Business Ave', street2: 'Suite 200', gradeLevel: '', securityLevel: 'Level 5',
+    height: '6\'1"', weight: '185 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm2', firstName: 'Emma', lastName: 'Thompson', nickname: 'Em', dob: '1992-07-24', title: 'Marketing Lead',
+    idNumber: 'EMP-2002', employeeId: 'EMP-2002', department: 'Marketing', hireDate: '2020-08-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0202', phone2: '', fax: '', email: 'emma.t@example.com', website: '', country: 'USA', postalCode: '90210',
+    state: 'CA', city: 'Los Angeles', street1: '456 Creative Blvd', street2: '', gradeLevel: '', securityLevel: 'Level 4',
+    height: '5\'6"', weight: '130 lbs', gender: 'Female', eyeColor: 'Blue', hairColor: 'Blonde',
+    profileImage: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm3', firstName: 'James', lastName: 'Rodriguez', nickname: 'Jim', dob: '1990-11-05', title: 'Senior Engineer',
+    idNumber: 'EMP-2003', employeeId: 'EMP-2003', department: 'Engineering', hireDate: '2018-02-10', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0203', phone2: '', fax: '', email: 'james.r@example.com', website: 'jrodriguez.dev', country: 'USA', postalCode: '78701',
+    state: 'TX', city: 'Austin', street1: '789 Tech Parkway', street2: 'Floor 3', gradeLevel: '', securityLevel: 'Level 5',
+    height: '5\'10"', weight: '170 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm4', firstName: 'Sofia', lastName: 'Patel', nickname: 'Sofi', dob: '1995-04-18', title: 'Product Designer',
+    idNumber: 'EMP-2004', employeeId: 'EMP-2004', department: 'Design', hireDate: '2022-01-20', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0204', phone2: '', fax: '', email: 'sofia.p@example.com', website: 'sofiadesigns.com', country: 'USA', postalCode: '94105',
+    state: 'CA', city: 'San Francisco', street1: '321 Design St', street2: '', gradeLevel: '', securityLevel: 'Level 3',
+    height: '5\'4"', weight: '120 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm5', firstName: 'Alexander', lastName: 'Wright', nickname: 'Alex', dob: '1985-09-30', title: 'Operations Manager',
+    idNumber: 'EMP-2005', employeeId: 'EMP-2005', department: 'Operations', hireDate: '2016-11-05', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0205', phone2: '', fax: '', email: 'alex.w@example.com', website: '', country: 'USA', postalCode: '60601',
+    state: 'IL', city: 'Chicago', street1: '654 Logistics Way', street2: 'Building A', gradeLevel: '', securityLevel: 'Level 5',
+    height: '6\'0"', weight: '195 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm6', firstName: 'Mia', lastName: 'Chen', nickname: 'Mia', dob: '1993-12-12', title: 'Financial Analyst',
+    idNumber: 'EMP-2006', employeeId: 'EMP-2006', department: 'Finance', hireDate: '2021-06-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0206', phone2: '', fax: '', email: 'mia.c@example.com', website: '', country: 'USA', postalCode: '02110',
+    state: 'MA', city: 'Boston', street1: '987 Financial Dist', street2: '', gradeLevel: '', securityLevel: 'Level 4',
+    height: '5\'5"', weight: '125 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1598550874175-4d0ef436c909?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm7', firstName: 'Benjamin', lastName: 'Foster', nickname: 'Ben', dob: '1987-02-28', title: 'System Administrator',
+    idNumber: 'EMP-2007', employeeId: 'EMP-2007', department: 'IT', hireDate: '2017-04-10', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0207', phone2: '', fax: '', email: 'ben.f@example.com', website: '', country: 'USA', postalCode: '98101',
+    state: 'WA', city: 'Seattle', street1: '147 Cloud Ave', street2: 'Server Room 2', gradeLevel: '', securityLevel: 'Level 6',
+    height: '5\'11"', weight: '180 lbs', gender: 'Male', eyeColor: 'Hazel', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm8', firstName: 'Charlotte', lastName: 'Kim', nickname: 'Charli', dob: '1991-08-08', title: 'HR Specialist',
+    idNumber: 'EMP-2008', employeeId: 'EMP-2008', department: 'Human Resources', hireDate: '2020-03-20', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0208', phone2: '', fax: '', email: 'charlotte.k@example.com', website: '', country: 'USA', postalCode: '30303',
+    state: 'GA', city: 'Atlanta', street1: '258 People St', street2: '', gradeLevel: '', securityLevel: 'Level 3',
+    height: '5\'7"', weight: '135 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm9', firstName: 'Daniel', lastName: 'Murphy', nickname: 'Dan', dob: '1984-05-14', title: 'Legal Counsel',
+    idNumber: 'EMP-2009', employeeId: 'EMP-2009', department: 'Legal', hireDate: '2015-09-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0209', phone2: '', fax: '', email: 'daniel.m@example.com', website: '', country: 'USA', postalCode: '20001',
+    state: 'DC', city: 'Washington', street1: '369 Justice Blvd', street2: 'Suite 500', gradeLevel: '', securityLevel: 'Level 6',
+    height: '6\'2"', weight: '205 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Grey',
     profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80',
     signature: '', fingerprint: '', divisionLogo: '', customImage: ''
   },
   {
-    id: 'm2', firstName: 'Jane', lastName: 'Smith', nickname: 'Janey', dob: '1985-08-22', title: 'Marketing Director',
-    idNumber: 'EMP-1002', employeeId: 'EMP-1002', department: 'Marketing', hireDate: '2018-06-15', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0102', phone2: '', fax: '', email: 'jane.smith@example.com', website: 'janesmith.io', country: 'USA', postalCode: '10001',
-    state: 'NY', city: 'New York', street1: '456 Market St', street2: 'Floor 12', gradeLevel: '', securityLevel: 'Level 5',
-    height: '5\'6"', weight: '130 lbs', gender: 'Female', eyeColor: 'Blue', hairColor: 'Blonde',
-    profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm3', firstName: 'Robert', lastName: 'Chen', nickname: 'Rob', dob: '1992-11-30', title: 'Financial Analyst',
-    idNumber: 'EMP-1003', employeeId: 'EMP-1003', department: 'Finance', hireDate: '2021-01-20', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0103', phone2: '', fax: '', email: 'robert.chen@example.com', website: '', country: 'USA', postalCode: '60601',
-    state: 'IL', city: 'Chicago', street1: '789 Loop Ave', street2: '', gradeLevel: '', securityLevel: 'Level 3',
-    height: '5\'10"', weight: '165 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
-    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm4', firstName: 'Emily', lastName: 'Davis', nickname: 'Em', dob: '1988-02-14', title: 'HR Manager',
-    idNumber: 'EMP-1004', employeeId: 'EMP-1004', department: 'Human Resources', hireDate: '2019-09-10', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0104', phone2: '', fax: '', email: 'emily.davis@example.com', website: '', country: 'USA', postalCode: '30301',
-    state: 'GA', city: 'Atlanta', street1: '321 Peach Tree Ln', street2: '', gradeLevel: '', securityLevel: 'Level 4',
-    height: '5\'4"', weight: '125 lbs', gender: 'Female', eyeColor: 'Green', hairColor: 'Red',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm5', firstName: 'Michael', lastName: 'Johnson', nickname: 'Mike', dob: '1982-07-08', title: 'Operations Lead',
-    idNumber: 'EMP-1005', employeeId: 'EMP-1005', department: 'Operations', hireDate: '2015-04-22', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0105', phone2: '', fax: '', email: 'michael.j@example.com', website: '', country: 'USA', postalCode: '75201',
-    state: 'TX', city: 'Dallas', street1: '654 Main St', street2: 'Bldg 2', gradeLevel: '', securityLevel: 'Level 5',
-    height: '6\'2"', weight: '210 lbs', gender: 'Male', eyeColor: 'Hazel', hairColor: 'Brown',
-    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm6', firstName: 'Sarah', lastName: 'Wilson', nickname: 'Sarah', dob: '1995-04-12', title: 'UX Designer',
-    idNumber: 'EMP-1006', employeeId: 'EMP-1006', department: 'Design', hireDate: '2022-02-15', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0106', phone2: '', fax: '', email: 'sarah.w@example.com', website: 'sarahwilson.design', country: 'USA', postalCode: '98101',
-    state: 'WA', city: 'Seattle', street1: '987 Pine St', street2: '', gradeLevel: '', securityLevel: 'Level 3',
-    height: '5\'7"', weight: '135 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Brown',
+    id: 'm10', firstName: 'Ava', lastName: 'Martinez', nickname: 'Ava', dob: '1996-01-22', title: 'Sales Associate',
+    idNumber: 'EMP-2010', employeeId: 'EMP-2010', department: 'Sales', hireDate: '2023-05-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0210', phone2: '', fax: '', email: 'ava.m@example.com', website: '', country: 'USA', postalCode: '33101',
+    state: 'FL', city: 'Miami', street1: '741 Ocean Drive', street2: '', gradeLevel: '', securityLevel: 'Level 2',
+    height: '5\'3"', weight: '115 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Brown',
     profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
     signature: '', fingerprint: '', divisionLogo: '', customImage: ''
   },
   {
-    id: 'm7', firstName: 'David', lastName: 'Kim', nickname: 'Dave', dob: '1989-10-05', title: 'Sales Executive',
-    idNumber: 'EMP-1007', employeeId: 'EMP-1007', department: 'Sales', hireDate: '2020-08-01', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0107', phone2: '', fax: '', email: 'david.kim@example.com', website: '', country: 'USA', postalCode: '33101',
-    state: 'FL', city: 'Miami', street1: '147 Ocean Dr', street2: 'Apt 5B', gradeLevel: '', securityLevel: 'Level 2',
-    height: '5\'11"', weight: '175 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
-    profileImage: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&q=80',
+    id: 'm11', firstName: 'Lucas', lastName: 'Taylor', nickname: 'Luke', dob: '1990-10-18', title: 'Content Strategist',
+    idNumber: 'EMP-2011', employeeId: 'EMP-2011', department: 'Marketing', hireDate: '2021-02-10', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0211', phone2: '', fax: '', email: 'lucas.t@example.com', website: '', country: 'USA', postalCode: '80202',
+    state: 'CO', city: 'Denver', street1: '852 Media Lane', street2: '', gradeLevel: '', securityLevel: 'Level 3',
+    height: '5\'11"', weight: '175 lbs', gender: 'Male', eyeColor: 'Green', hairColor: 'Blonde',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
     signature: '', fingerprint: '', divisionLogo: '', customImage: ''
   },
   {
-    id: 'm8', firstName: 'Laura', lastName: 'Martinez', nickname: 'Lau', dob: '1984-12-18', title: 'Legal Counsel',
-    idNumber: 'EMP-1008', employeeId: 'EMP-1008', department: 'Legal', hireDate: '2017-11-05', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0108', phone2: '', fax: '', email: 'laura.m@example.com', website: '', country: 'USA', postalCode: '02108',
-    state: 'MA', city: 'Boston', street1: '258 Legal Way', street2: '', gradeLevel: '', securityLevel: 'Level 5',
-    height: '5\'5"', weight: '140 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Dark Brown',
+    id: 'm12', firstName: 'Isabella', lastName: 'White', nickname: 'Izzy', dob: '1994-06-05', title: 'Data Scientist',
+    idNumber: 'EMP-2012', employeeId: 'EMP-2012', department: 'Engineering', hireDate: '2022-07-20', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0212', phone2: '', fax: '', email: 'isabella.w@example.com', website: '', country: 'USA', postalCode: '98109',
+    state: 'WA', city: 'Seattle', street1: '963 Algorithm Way', street2: 'Lab 4', gradeLevel: '', securityLevel: 'Level 5',
+    height: '5\'8"', weight: '140 lbs', gender: 'Female', eyeColor: 'Hazel', hairColor: 'Brown',
     profileImage: 'https://images.unsplash.com/photo-1531123897727-8f129e1bf98c?w=400&q=80',
     signature: '', fingerprint: '', divisionLogo: '', customImage: ''
   },
   {
-    id: 'm9', firstName: 'James', lastName: 'Taylor', nickname: 'Jim', dob: '1993-03-25', title: 'IT Support Specialist',
-    idNumber: 'EMP-1009', employeeId: 'EMP-1009', department: 'IT', hireDate: '2021-07-12', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0109', phone2: '', fax: '', email: 'james.t@example.com', website: '', country: 'USA', postalCode: '80202',
-    state: 'CO', city: 'Denver', street1: '369 Mountain Rd', street2: '', gradeLevel: '', securityLevel: 'Level 4',
-    height: '6\'1"', weight: '190 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Blonde',
+    id: 'm13', firstName: 'Henry', lastName: 'Brooks', nickname: 'Hank', dob: '1989-11-30', title: 'Art Director',
+    idNumber: 'EMP-2013', employeeId: 'EMP-2013', department: 'Design', hireDate: '2018-10-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0213', phone2: '', fax: '', email: 'henry.b@example.com', website: 'hankbrooks.art', country: 'USA', postalCode: '11201',
+    state: 'NY', city: 'Brooklyn', street1: '159 Studio St', street2: 'Loft 8', gradeLevel: '', securityLevel: 'Level 4',
+    height: '6\'0"', weight: '180 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm14', firstName: 'Harper', lastName: 'Scott', nickname: 'Harper', dob: '1992-02-14', title: 'Supply Chain Analyst',
+    idNumber: 'EMP-2014', employeeId: 'EMP-2014', department: 'Operations', hireDate: '2020-11-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0214', phone2: '', fax: '', email: 'harper.s@example.com', website: '', country: 'USA', postalCode: '43215',
+    state: 'OH', city: 'Columbus', street1: '753 Warehouse Rd', street2: '', gradeLevel: '', securityLevel: 'Level 4',
+    height: '5\'5"', weight: '135 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm15', firstName: 'Samuel', lastName: 'Green', nickname: 'Sam', dob: '1986-07-09', title: 'Controller',
+    idNumber: 'EMP-2015', employeeId: 'EMP-2015', department: 'Finance', hireDate: '2016-03-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0215', phone2: '', fax: '', email: 'samuel.g@example.com', website: '', country: 'USA', postalCode: '60611',
+    state: 'IL', city: 'Chicago', street1: '852 Audit Ave', street2: 'Floor 10', gradeLevel: '', securityLevel: 'Level 6',
+    height: '5\'11"', weight: '190 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm16', firstName: 'Evelyn', lastName: 'Lee', nickname: 'Evie', dob: '1995-09-25', title: 'Network Security',
+    idNumber: 'EMP-2016', employeeId: 'EMP-2016', department: 'IT', hireDate: '2023-01-10', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0216', phone2: '', fax: '', email: 'evelyn.l@example.com', website: '', country: 'USA', postalCode: '27701',
+    state: 'NC', city: 'Durham', street1: '951 Firewall St', street2: '', gradeLevel: '', securityLevel: 'Level 5',
+    height: '5\'6"', weight: '125 lbs', gender: 'Female', eyeColor: 'Hazel', hairColor: 'Brown',
+    profileImage: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm17', firstName: 'Jackson', lastName: 'Hall', nickname: 'Jack', dob: '1991-04-03', title: 'Recruiter',
+    idNumber: 'EMP-2017', employeeId: 'EMP-2017', department: 'Human Resources', hireDate: '2021-08-20', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0217', phone2: '', fax: '', email: 'jackson.h@example.com', website: '', country: 'USA', postalCode: '37203',
+    state: 'TN', city: 'Nashville', street1: '159 Talent Row', street2: '', gradeLevel: '', securityLevel: 'Level 3',
+    height: '6\'0"', weight: '175 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Blonde',
     profileImage: 'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=400&q=80',
     signature: '', fingerprint: '', divisionLogo: '', customImage: ''
   },
   {
-    id: 'm10', firstName: 'Amanda', lastName: 'White', nickname: 'Mandy', dob: '1980-09-14', title: 'CEO',
-    idNumber: 'EMP-1010', employeeId: 'EMP-1010', department: 'Management', hireDate: '2010-01-01', issueDate: '2023-01-10', expirationDate: '2025-01-10',
-    phone1: '+1 555-0110', phone2: '', fax: '', email: 'amanda.w@example.com', website: '', country: 'USA', postalCode: '94105',
-    state: 'CA', city: 'San Francisco', street1: '741 Silicon Blvd', street2: 'Penthouse', gradeLevel: '', securityLevel: 'Level 6',
-    height: '5\'8"', weight: '145 lbs', gender: 'Female', eyeColor: 'Green', hairColor: 'Black',
-    profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80',
+    id: 'm18', firstName: 'Amelia', lastName: 'Adams', nickname: 'Amy', dob: '1988-12-29', title: 'Paralegal',
+    idNumber: 'EMP-2018', employeeId: 'EMP-2018', department: 'Legal', hireDate: '2019-12-05', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0218', phone2: '', fax: '', email: 'amelia.a@example.com', website: '', country: 'USA', postalCode: '19103',
+    state: 'PA', city: 'Philadelphia', street1: '753 Court Plaza', street2: 'Suite 2A', gradeLevel: '', securityLevel: 'Level 4',
+    height: '5\'7"', weight: '130 lbs', gender: 'Female', eyeColor: 'Green', hairColor: 'Red',
+    profileImage: 'https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm19', firstName: 'Sebastian', lastName: 'King', nickname: 'Seb', dob: '1994-01-17', title: 'Account Manager',
+    idNumber: 'EMP-2019', employeeId: 'EMP-2019', department: 'Sales', hireDate: '2022-03-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0219', phone2: '', fax: '', email: 'sebastian.k@example.com', website: '', country: 'USA', postalCode: '85001',
+    state: 'AZ', city: 'Phoenix', street1: '357 Client Way', street2: '', gradeLevel: '', securityLevel: 'Level 3',
+    height: '5\'11"', weight: '185 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
+    profileImage: 'https://images.unsplash.com/photo-1517070208541-6ddc4d3efbcb?w=400&q=80',
+    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  },
+  {
+    id: 'm20', firstName: 'Grace', lastName: 'Nelson', nickname: 'Gracie', dob: '1983-05-22', title: 'Chief Operating Officer',
+    idNumber: 'EMP-2020', employeeId: 'EMP-2020', department: 'Management', hireDate: '2014-06-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
+    phone1: '+1 555-0220', phone2: '', fax: '', email: 'grace.n@example.com', website: '', country: 'USA', postalCode: '94104',
+    state: 'CA', city: 'San Francisco', street1: '100 Executive Dr', street2: 'Penthouse', gradeLevel: '', securityLevel: 'Level 7',
+    height: '5\'8"', weight: '145 lbs', gender: 'Female', eyeColor: 'Blue', hairColor: 'Grey',
+    profileImage: 'https://images.unsplash.com/photo-1508214751196-bfdd4ca4a72d?w=400&q=80',
     signature: '', fingerprint: '', divisionLogo: '', customImage: ''
   }
 ];
@@ -230,6 +320,8 @@ interface DesignerState {
   setPreviewResults: (results: VdpResult[]) => void;
   isGeneratingPreviews: boolean;
   setIsGeneratingPreviews: (is: boolean) => void;
+  previewMemberId: string | null;
+  setPreviewMemberId: (id: string | null) => void;
   currentDesignId: string | null;
   loadTrigger: number;
   frontThumbnail: string;
@@ -317,6 +409,11 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
   
   members: (() => {
+    // Clear legacy storage once to force seeding 20 new members
+    if (!localStorage.getItem('seeded_v2_members')) {
+      localStorage.removeItem('saved_id_members');
+      localStorage.setItem('seeded_v2_members', 'true');
+    }
     const stored = localStorage.getItem('saved_id_members');
     if (stored) {
       const parsed = JSON.parse(stored);
@@ -348,6 +445,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setPreviewResults: (results) => set({ previewResults: results }),
   isGeneratingPreviews: false,
   setIsGeneratingPreviews: (is) => set({ isGeneratingPreviews: is }),
+  previewMemberId: null,
+  setPreviewMemberId: (id) => set({ previewMemberId: id }),
   
   setSide: (side: 'front' | 'back') => {
     set({ side });
@@ -364,7 +463,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const { canvas, history, isHistoryPaused, side } = get();
     if (!canvas || isHistoryPaused) return;
 
-    const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder']);
+    const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors']);
     const jsonStr = JSON.stringify(json);
     
     // Deduplicate history
@@ -937,7 +1036,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const otherThumb = await generateOtherThumb();
       const isFront = side === 'front';
       
-      const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder']);
+      const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors']);
       const fData = isFront ? currentData : frontData;
       const bData = !isFront ? currentData : backData;
       const fThumb = isFront ? currentThumb : otherThumb;

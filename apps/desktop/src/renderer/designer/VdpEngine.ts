@@ -51,7 +51,11 @@ export async function generatePreviews(
 
           // Load JSON - stringify it to ensure it's treated as fresh data
           await new Promise<void>(resolve => {
-            canvas.loadFromJSON(JSON.stringify(json), () => {
+            canvas.loadFromJSON(JSON.stringify(json), async () => {
+              // Wait for all fonts to be completely ready before letting Fabric measure text chunks
+              if (document.fonts) {
+                await document.fonts.ready;
+              }
               canvas.renderAll();
               resolve();
             });
@@ -116,16 +120,75 @@ export async function generatePreviews(
   return results;
 }
 
+export async function generateSingleHighRes(design: any, member: Member, multiplier: number = 3): Promise<{front: string, back: string}> {
+  const width = design.config.orientation === 'horizontal' ? 1013 : 638;
+  const height = design.config.orientation === 'horizontal' ? 638 : 1013;
+
+  const renderSide = async (json: any, isBack: boolean) => {
+    if (!json) return '';
+    const canvas = new fabric.StaticCanvas(null, {
+      width, height,
+      backgroundColor: isBack ? design.config.backgroundColorBack : design.config.backgroundColorFront
+    });
+
+    await new Promise<void>(resolve => {
+      canvas.loadFromJSON(JSON.stringify(json), () => {
+        canvas.renderAll();
+        resolve();
+      });
+    });
+
+    await processCanvasObjects(canvas, member);
+
+    if (design.config.slotPunch !== 'none') {
+      const punch = new fabric.Rect({
+        width: 160,
+        height: 35,
+        rx: 12,
+        ry: 12,
+        fill: '#d1d5db',
+        left: design.config.slotPunch === 'short' ? width / 2 : 30,
+        top: design.config.slotPunch === 'short' ? 30 : height / 2,
+        angle: design.config.slotPunch === 'long' ? 90 : 0,
+        originX: 'center',
+        originY: 'center',
+        // @ts-ignore
+        name: 'slot-punch-overlay'
+      });
+      canvas.add(punch);
+      punch.bringToFront();
+    }
+
+    canvas.renderAll();
+    canvas.renderAll();
+
+    const dataUrl = canvas.toDataURL({ 
+      format: 'png', 
+      multiplier: multiplier
+    });
+
+    canvas.dispose();
+    return dataUrl;
+  };
+
+  const [front, back] = await Promise.all([
+    renderSide(design.front, false),
+    renderSide(design.back, true)
+  ]);
+
+  return { front, back };
+}
+
 const imageCache = new Map<string, fabric.Image>();
 
 async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member) {
   const objects = canvas.getObjects();
   
   const tasks = objects.map(async (obj) => {
-    // 1. Text Optimization: Only check if it likely contains a variable
     if (obj.type === 'i-text' || obj.type === 'textbox') {
       const textObj = obj as any;
-      let text = textObj.placeholder || textObj.text;
+      const rawTemplate = textObj.placeholder || textObj.text;
+      let text = rawTemplate;
       
       if (text && text.includes('{{')) {
         const matches = text.match(/{{([^}]+)}}/g);
@@ -135,7 +198,49 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member)
             const val = member[key] || (member.customFields && member.customFields[key]) || '';
             text = text.replace(match, val as string);
           });
+          
+          // CRITICAL KERNING FIX: Convert logical spaces to non-breaking spaces (\u00A0).
+          // Heavy fonts collapse standard spaces during Fabric's chunk rendering.
+          if (text.includes(' ')) {
+            text = text.replace(/ /g, '\u00A0');
+          }
+          
           textObj.set('text', text);
+          
+          // Re-calculate variable colors specifically for this member's string length
+          if (textObj.variableColors && Object.keys(textObj.variableColors).length > 0) {
+            const charStyles: Record<number, { fill: string }> = {};
+            let charPos = 0;
+            const segments = rawTemplate.split(/({{[^}]+}})/g);
+            let lastColor: string | null = null;
+            
+            for (const segment of segments) {
+              if (!segment) continue;
+              const varMatch = segment.match(/^{{([^}]+)}}$/);
+              if (varMatch) {
+                const varKey = varMatch[1].trim() as keyof Member;
+                const varValue = String(member[varKey] ?? (member.customFields && member.customFields[varKey as string]) ?? '');
+                const varColor = textObj.variableColors[varKey as string];
+                if (varColor) lastColor = varColor;
+                
+                if (varColor && varValue.length > 0) {
+                  for (let i = 0; i < varValue.length; i++) {
+                    charStyles[charPos + i] = { fill: varColor };
+                  }
+                }
+                charPos += varValue.length;
+              } else {
+                if (lastColor) {
+                  for (let i = 0; i < segment.length; i++) {
+                    charStyles[charPos + i] = { fill: lastColor };
+                  }
+                }
+                charPos += segment.length;
+              }
+            }
+            textObj.set('styles', { 0: charStyles });
+            if (textObj.initDimensions) textObj.initDimensions();
+          }
         }
       }
     }
