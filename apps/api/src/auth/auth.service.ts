@@ -32,6 +32,17 @@ export class AuthService {
       throw new ForbiddenException("Workspace is not active");
     }
 
+    // Check subscription expiration
+    const subscription = await this.prisma.runAsPlatform((tx) =>
+      tx.subscription.findUnique({ where: { workspaceId: user.workspaceId! } })
+    );
+
+    if (subscription?.endDate && new Date() > subscription.endDate) {
+      throw new ForbiddenException(
+        "Your trial or subscription has expired. Please contact the administrator for upgradation or renewal."
+      );
+    }
+
     return this.issueTokens({
       id: user.id,
       workspaceId: user.workspaceId,
@@ -61,7 +72,8 @@ export class AuthService {
           subscription: {
             create: {
               plan: "FREE_TRIAL" as any,
-              startDate: new Date()
+              startDate: new Date(),
+              endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
             }
           }
         }
@@ -139,6 +151,21 @@ export class AuthService {
       })
     ]);
 
-    return { accessToken, refreshToken, user };
+    // Use workspace plan as primary source of truth
+    const workspace = await this.prisma.runAsPlatform((tx) =>
+      tx.workspace.findUnique({ where: { id: user.workspaceId! } })
+    );
+
+    const subscription = await this.prisma.runAsPlatform((tx) =>
+      tx.subscription.findUnique({ where: { workspaceId: user.workspaceId! } })
+    );
+
+    const fullUser: AuthUser = {
+      ...user,
+      plan: (workspace?.plan || subscription?.plan) as any,
+      subscriptionEnd: subscription?.endDate?.toISOString()
+    };
+
+    return { accessToken, refreshToken, user: fullUser };
   }
 }

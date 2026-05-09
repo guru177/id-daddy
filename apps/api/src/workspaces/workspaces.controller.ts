@@ -9,7 +9,33 @@ import { WorkspacesService } from "./workspaces.service";
 @Controller("workspaces")
 @Roles("SUPER_ADMIN")
 export class WorkspacesController {
-  constructor(private readonly workspaces: WorkspacesService) {}
+  constructor(private readonly workspaces: WorkspacesService) { }
+
+  @Get("settings")
+  getSettings() {
+    return this.workspaces.getSettings();
+  }
+
+  @Get("revenue")
+  getRevenue() {
+    return this.workspaces.getRevenueStats();
+  }
+
+  @Get("expiring")
+  @Roles("SUPER_ADMIN")
+  getExpiring() {
+    return this.workspaces.getExpiringWorkspaces();
+  }
+
+  @Get(":id/payments")
+  getPayments(@Param("id") id: string) {
+    return this.workspaces.getWorkspacePayments(id);
+  }
+
+  @Patch("settings")
+  updateSettings(@Body() dto: any) {
+    return this.workspaces.updateSettings(dto);
+  }
 
   @Get()
   list(@CurrentUser() user: AuthUser, @Query("q") q?: string) {

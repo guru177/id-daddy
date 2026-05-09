@@ -16,6 +16,11 @@ export interface WorkspaceRow {
     email: string;
     phone: string | null;
   }[];
+  subscription?: {
+    plan: Plan;
+    startDate: string;
+    endDate: string | null;
+  } | null;
 }
 
 export interface UserRow {

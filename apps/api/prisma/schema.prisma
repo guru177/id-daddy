@@ -55,6 +55,7 @@ model Workspace {
   exports      Export[]
   subscription Subscription?
   usageLogs    UsageLog[]
+  payments     Payment[]
 
   @@index([status])
   @@map("workspaces")
@@ -140,3 +141,24 @@ model UsageLog {
   @@index([workspaceId, action, createdAt])
   @@map("usage_logs")
 }
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model Payment {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId String    @map("workspace_id") @db.Uuid
+  amount      Float
+  currency    String
+  plan        Plan
+  createdAt   DateTime  @default(now()) @map("created_at")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("payments")
+}
+

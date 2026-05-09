@@ -59,6 +59,23 @@ export default function App() {
         >
           <p className="font-semibold group-hover:text-indigo-600 transition-colors">ID Daddy</p>
           <p className="text-xs text-stone-500">{user.email}</p>
+          
+          <div className="mt-3 flex items-center gap-2">
+            <div className={clsx(
+              "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
+              user.plan === "LIFETIME" ? "bg-amber-50 text-amber-600 border-amber-200" :
+              user.plan === "PRO_1Y" ? "bg-indigo-50 text-indigo-600 border-indigo-200" :
+              "bg-stone-50 text-stone-500 border-stone-200"
+            )}>
+              {user.plan === "FREE_TRIAL" ? "3-Day Trial" : 
+               user.plan === "PRO_1Y" ? "Pro (1 Year)" : "Lifetime"}
+            </div>
+            {user.subscriptionEnd && user.plan !== "LIFETIME" && (
+              <span className="text-[10px] font-bold text-stone-400">
+                {Math.ceil((new Date(user.subscriptionEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d left
+              </span>
+            )}
+          </div>
         </button>
         <nav className="flex-1 space-y-1 p-3">
           {pages.map((item) => (

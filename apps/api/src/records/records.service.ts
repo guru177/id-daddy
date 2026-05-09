@@ -6,9 +6,14 @@ import { AuthUser, UploadMapping } from "@id-daddy/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { UploadRecordsDto } from "./dto/upload-records.dto";
 
+import { WorkspacesService } from "../workspaces/workspaces.service";
+
 @Injectable()
 export class RecordsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly workspaces: WorkspacesService
+  ) {}
 
   async list(user: AuthUser) {
     const workspaceId = this.requireWorkspace(user);
@@ -28,6 +33,7 @@ export class RecordsService {
 
   async create(user: AuthUser, data: any) {
     const workspaceId = this.requireWorkspace(user);
+    await this.checkLimit(user, 1);
     return this.prisma.runScoped(user, async (tx) => {
       return tx.record.create({
         data: {
@@ -82,6 +88,8 @@ export class RecordsService {
     if (!mappedRows.length) {
       throw new BadRequestException("No records found in uploaded file");
     }
+
+    await this.checkLimit(user, mappedRows.length);
 
     return this.prisma.runScoped(user, async (tx) => {
       await tx.record.createMany({
@@ -161,5 +169,22 @@ export class RecordsService {
       throw new BadRequestException("Workspace context is required");
     }
     return user.workspaceId;
+  }
+
+  private async checkLimit(user: AuthUser, incoming: number) {
+    const workspaceId = this.requireWorkspace(user);
+    const workspace = await this.prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace) throw new BadRequestException("Workspace not found");
+
+    const settings = this.workspaces.getSettings();
+    const plan = workspace.plan;
+    const limit = settings[`${plan}_LIMIT`];
+
+    if (limit === null) return; // Unlimited
+
+    const current = await this.prisma.record.count({ where: { workspaceId } });
+    if (current + incoming > limit) {
+      throw new BadRequestException(`Record limit reached (${limit}). Please upgrade your plan to add more records.`);
+    }
   }
 }

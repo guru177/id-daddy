@@ -79,6 +79,14 @@ export class BillingService {
       return;
     }
 
+    const now = new Date();
+    let endDate: Date | null = null;
+    if (plan === "FREE_TRIAL") {
+      endDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    } else if (plan === "PRO_1Y") {
+      endDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+    }
+
     await this.prisma.runAsPlatform((tx) =>
       tx.workspace.update({
         where: { id: workspaceId },
@@ -87,8 +95,8 @@ export class BillingService {
           status: "ACTIVE",
           subscription: {
             upsert: {
-              create: { plan: plan as any, startDate: new Date() },
-              update: { plan: plan as any, endDate: null }
+              create: { plan: plan as any, startDate: now, endDate },
+              update: { plan: plan as any, endDate }
             }
           }
         }

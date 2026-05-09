@@ -14,4 +14,8 @@ export class UpdateWorkspaceDto {
   @IsEnum(WORKSPACE_STATUSES)
   @IsOptional()
   status?: WorkspaceStatus;
+
+  @IsString()
+  @IsOptional()
+  endDate?: string;
 }

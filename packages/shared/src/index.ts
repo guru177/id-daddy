@@ -72,6 +72,8 @@ export interface AuthUser {
   workspaceId: string | null;
   email: string;
   role: Role;
+  plan?: Plan;
+  subscriptionEnd?: string | null;
 }
 
 export interface AuthResponse {

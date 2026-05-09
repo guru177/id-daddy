@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, CreditCard, FileText, Users } from "lucide-react";
+import { Building2, CreditCard, FileText, Users, Clock } from "lucide-react";
 import { api } from "../api/client";
 import { Metric } from "../components/Metric";
 import { WorkspaceRow } from "../types";
 
 export function DashboardPage() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
+  const [settings, setSettings] = useState<any>(null);
+  const [revenueStats, setRevenueStats] = useState<any>(null);
+  const [expiring, setExpiring] = useState<WorkspaceRow[]>([]);
 
   useEffect(() => {
     void api<{ data: WorkspaceRow[]; total: number }>("/workspaces").then((result) => setWorkspaces(result.data));
+    void api("/workspaces/settings").then(setSettings);
+    void api("/workspaces/revenue").then(setRevenueStats);
+    void api<WorkspaceRow[]>("/workspaces/expiring").then(setExpiring);
   }, []);
 
   const metrics = useMemo(() => {
@@ -16,15 +22,10 @@ export function DashboardPage() {
     const totalUsers = workspaces.reduce((acc, w) => acc + (w._count?.users ?? 0), 0);
     const freeClients = workspaces.filter(w => w.plan === "FREE_TRIAL").length;
     
-    // Simple revenue calculation in INR: PRO_1Y=₹1999, LIFETIME=₹4999
-    const revenue = workspaces.reduce((acc, w) => {
-      if (w.plan === "PRO_1Y") return acc + 1999;
-      if (w.plan === "LIFETIME") return acc + 4999;
-      return acc;
-    }, 0);
+    const revenue = revenueStats?.[settings?.CURRENCY || 'INR'] || 0;
 
     return { totalRecords, totalUsers, freeClients, revenue };
-  }, [workspaces]);
+  }, [workspaces, settings, revenueStats]);
 
   return (
     <div className="space-y-6">
@@ -34,11 +35,36 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Total Revenue" value={`₹${metrics.revenue.toLocaleString('en-IN')}`} icon={CreditCard} />
+        <Metric 
+          label="Total Revenue" 
+          value={`${settings?.CURRENCY === 'INR' ? '₹' : (settings?.CURRENCY || '')}${metrics.revenue.toLocaleString()}`} 
+          icon={CreditCard} 
+        />
         <Metric label="Total Users" value={metrics.totalUsers} icon={Users} />
         <Metric label="Total Records" value={metrics.totalRecords} icon={FileText} />
         <Metric label="Free Trial Clients" value={metrics.freeClients} icon={Building2} />
       </div>
+
+      {expiring.length > 0 && (
+        <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-bold text-red-900 text-sm">{expiring.length} Subscriptions Expiring Soon</p>
+              <p className="text-xs text-red-600 font-medium">Clients will lose access once their term ends. Please contact for renewal.</p>
+            </div>
+          </div>
+          <div className="flex -space-x-2">
+            {expiring.map((w, i) => (
+              <div key={w.id} className="h-8 w-8 rounded-full bg-white border-2 border-red-50 flex items-center justify-center text-[10px] font-black text-red-600 shadow-sm" title={w.name}>
+                {w.name.charAt(0).toUpperCase()}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="panel overflow-hidden">
         <div className="border-b border-stone-200 px-4 py-3">
