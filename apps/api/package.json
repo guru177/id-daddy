@@ -4,7 +4,7 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/apps/api/src/main.js",
     "lint": "eslint src --ext .ts",

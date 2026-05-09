@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { fabric } from 'fabric';
 import { VdpResult } from './VdpEngine';
+import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api';
 
 interface CardConfig {
   orientation: 'horizontal' | 'vertical';
@@ -19,7 +20,7 @@ interface CardConfig {
   };
 }
 
-interface SavedDesign {
+export interface SavedDesign {
   id: string;
   name: string;
   front: any;
@@ -304,16 +305,19 @@ interface DesignerState {
   showGrid: boolean;
   setShowGrid: (show: boolean) => void;
   downloadCanvas: () => void;
-  saveDesign: () => void;
+  saveDesign: () => Promise<void>;
   loadDesign: (design: SavedDesign) => void;
-  deleteDesign: (id: string) => void;
+  deleteDesign: (id: string) => Promise<void>;
+  loadTemplatesFromDb: () => Promise<void>;
+  syncLocalData: () => Promise<void>;
   exportDesign: (design: any) => void;
   newDesign: () => void;
   savedDesigns: SavedDesign[];
   members: Member[];
-  addMember: (member: Omit<Member, 'id'>) => void;
-  updateMember: (id: string, member: Partial<Member>) => void;
-  deleteMember: (id: string) => void;
+  loadMembersFromDb: () => Promise<void>;
+  addMember: (member: Omit<Member, 'id'>) => Promise<void>;
+  updateMember: (id: string, member: Partial<Member>) => Promise<void>;
+  deleteMember: (id: string) => Promise<void>;
   activeTemplateId: string | null;
   setActiveTemplateId: (id: string) => void;
   previewResults: VdpResult[];
@@ -454,22 +458,75 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     localStorage.setItem('saved_id_members', JSON.stringify(DEFAULT_MEMBERS));
     return DEFAULT_MEMBERS;
   })(),
-  addMember: (member) => set((state) => {
-    const newMember = { ...member, id: Math.random().toString(36).substr(2, 9) };
-    const updated = [newMember, ...state.members];
-    localStorage.setItem('saved_id_members', JSON.stringify(updated));
-    return { members: updated, previewResults: [] };
-  }),
-  updateMember: (id, updatedMember) => set((state) => {
-    const updated = state.members.map(m => m.id === id ? { ...m, ...updatedMember } : m);
-    localStorage.setItem('saved_id_members', JSON.stringify(updated));
-    return { members: updated, previewResults: [] };
-  }),
-  deleteMember: (id) => set((state) => {
-    const updated = state.members.filter(m => m.id !== id);
-    localStorage.setItem('saved_id_members', JSON.stringify(updated));
-    return { members: updated, previewResults: [] };
-  }),
+  loadMembersFromDb: async () => {
+    try {
+      const result = await fetchRecords();
+      if (result && result.data) {
+        // Assume backend records data has 'id' and 'data' object. If the backend uploaded raw rows, it might not exactly match our Member schema if not mapped, but we handle it.
+        const dbMembers = result.data.map((r: any) => ({ ...r.data, id: r.id }));
+        if (dbMembers.length > 0) {
+          set({ members: dbMembers });
+          localStorage.setItem('saved_id_members', JSON.stringify(dbMembers));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch records from DB", e);
+    }
+  },
+  addMember: async (member) => {
+    try {
+      const result = await createRecord(member);
+      const newMember = { ...member, id: result.id };
+      set((state) => {
+        const updated = [newMember, ...state.members];
+        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+        return { members: updated, previewResults: [] };
+      });
+    } catch (e) {
+      console.error("Failed to create record", e);
+      // Fallback
+      const newMember = { ...member, id: Math.random().toString(36).substr(2, 9) };
+      set((state) => {
+        const updated = [newMember, ...state.members];
+        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+        return { members: updated, previewResults: [] };
+      });
+    }
+  },
+  updateMember: async (id, updatedMember) => {
+    try {
+      await updateRecord(id, updatedMember);
+      set((state) => {
+        const updated = state.members.map(m => m.id === id ? { ...m, ...updatedMember } : m);
+        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+        return { members: updated, previewResults: [] };
+      });
+    } catch (e) {
+      console.error("Failed to update record", e);
+      set((state) => {
+        const updated = state.members.map(m => m.id === id ? { ...m, ...updatedMember } : m);
+        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+        return { members: updated, previewResults: [] };
+      });
+    }
+  },
+  deleteMember: async (id) => {
+    try {
+      await deleteRecord(id);
+      set((state) => {
+        const updated = state.members.filter(m => m.id !== id);
+        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+        return { members: updated, previewResults: [] };
+      });
+    } catch (e) {
+      console.error("Failed to delete record", e);
+      set((state) => {
+        const updated = state.members.filter(m => m.id !== id);
+        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+        return { members: updated, previewResults: [] };
+      });
+    }
+  },
   activeTemplateId: null,
   setActiveTemplateId: (id) => set({ activeTemplateId: id, previewResults: [] }),
   previewResults: [],
@@ -1015,8 +1072,67 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
 
   savedDesigns: JSON.parse(localStorage.getItem('saved_id_designs') || '[]'),
+  
+  loadTemplatesFromDb: async () => {
+    try {
+      const result = await fetchTemplates();
+      if (result && result.data) {
+        const dbTemplates = result.data.map((r: any) => ({ ...r.design, id: r.id, name: r.name }));
+        if (dbTemplates.length > 0) {
+          set({ savedDesigns: dbTemplates });
+          localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch templates from DB", e);
+    }
+  },
 
-  saveDesign: () => {
+  syncLocalData: async () => {
+    const { savedDesigns, members } = get();
+    
+    // Sync templates
+    try {
+      const templatesRes = await fetchTemplates();
+      const dbIds = templatesRes.data.map((d: any) => d.id);
+      
+      let updatedDesigns = [...savedDesigns];
+      for (const design of savedDesigns) {
+        if (!dbIds.includes(design.id)) {
+          const res = await createTemplate({ name: design.name, design });
+          updatedDesigns = updatedDesigns.map(d => d.id === design.id ? { ...d, id: res.id } : d);
+        } else {
+          await updateTemplate(design.id, { name: design.name, design });
+        }
+      }
+      if (JSON.stringify(updatedDesigns) !== JSON.stringify(savedDesigns)) {
+        set({ savedDesigns: updatedDesigns });
+        localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
+      }
+    } catch (e) { console.error(e); }
+
+    // Sync members
+    try {
+      const membersRes = await fetchRecords();
+      const dbMemberIds = membersRes.data.map((d: any) => d.id);
+      
+      let updatedMembers = [...members];
+      for (const member of members) {
+        if (!dbMemberIds.includes(member.id)) {
+          const res = await createRecord(member);
+          updatedMembers = updatedMembers.map(m => m.id === member.id ? { ...m, id: res.id } : m);
+        } else {
+          await updateRecord(member.id, member);
+        }
+      }
+      if (JSON.stringify(updatedMembers) !== JSON.stringify(members)) {
+        set({ members: updatedMembers });
+        localStorage.setItem('saved_id_members', JSON.stringify(updatedMembers));
+      }
+    } catch (e) { console.error(e); }
+  },
+
+  saveDesign: async () => {
     const { canvas, side, frontData, backData, config, savedDesigns, currentDesignId } = get();
     if (!canvas) return;
 
@@ -1074,7 +1190,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const bThumb = !isFront ? currentThumb : otherThumb;
 
       let updatedDesigns: SavedDesign[];
-      let designId = currentDesignId;
+      let designId: string = currentDesignId || '';
 
       if (currentDesignId) {
         updatedDesigns = savedDesigns.map(d => 
@@ -1112,9 +1228,29 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         message: currentDesignId ? 'Design updated successfully!' : 'New design saved successfully!',
         type: 'info'
       });
+
+      // Sync to DB
+      try {
+        const payload = {
+          name: currentDesignId ? savedDesigns.find(d => d.id === currentDesignId)?.name || 'Design' : `Design ${savedDesigns.length + 1}`,
+          design: updatedDesigns.find(d => d.id === designId)
+        };
+        if (currentDesignId) {
+          await updateTemplate(designId, payload);
+        } else {
+          const result = await createTemplate(payload);
+          // Update ID to match backend
+          const actualId = result.id;
+          const mappedDesigns = updatedDesigns.map(d => d.id === designId ? { ...d, id: actualId } : d);
+          set({ savedDesigns: mappedDesigns, currentDesignId: actualId, activeTemplateId: actualId });
+          localStorage.setItem('saved_id_designs', JSON.stringify(mappedDesigns));
+        }
+      } catch (e) {
+        console.error("Failed to sync template to DB", e);
+      }
     };
 
-    runSave();
+    await runSave();
   },
 
   loadDesign: (design) => {
@@ -1132,7 +1268,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     }));
   },
 
-  deleteDesign: (id) => {
+  deleteDesign: async (id) => {
     const design = get().savedDesigns.find(d => d.id === id);
     const updated = get().savedDesigns.filter(d => d.id !== id);
     set({ savedDesigns: updated });
@@ -1142,6 +1278,12 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       message: `"${design?.name || 'Design'}" has been removed from your library.`,
       type: 'info'
     });
+
+    try {
+      await deleteTemplate(id);
+    } catch (e) {
+      console.error("Failed to delete template from DB", e);
+    }
   },
 
   newDesign: () => {

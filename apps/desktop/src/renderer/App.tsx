@@ -1,4 +1,4 @@
-import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, Printer } from "lucide-react";
+import { BarChart3, Database, FileDown, LayoutTemplate, LogOut } from "lucide-react";
 import clsx from "clsx";
 import { DesktopPage, useAuthStore } from "./store";
 import { LoginView } from "./views/LoginView";
@@ -6,15 +6,13 @@ import { DashboardView } from "./views/DashboardView";
 import { DesignerView } from "./views/DesignerView";
 import { UploadView } from "./views/UploadView";
 import { GenerateView } from "./views/GenerateView";
-import { PrintView } from "./views/PrintView";
 import { GlobalModal } from "./designer/GlobalModal";
 
 const pages: Array<{ id: DesktopPage; label: string; icon: typeof BarChart3 }> = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
   { id: "designer", label: "Designer", icon: LayoutTemplate },
   { id: "upload", label: "Data Upload", icon: Database },
-  { id: "generate", label: "Bulk Generator", icon: FileDown },
-  { id: "print", label: "Print Manager", icon: Printer }
+  { id: "generate", label: "Bulk Generator", icon: FileDown }
 ];
 
 export default function App() {
@@ -61,7 +59,6 @@ export default function App() {
         {page === "designer" ? <DesignerView /> : null}
         {page === "upload" ? <UploadView /> : null}
         {page === "generate" ? <GenerateView /> : null}
-        {page === "print" ? <PrintView /> : null}
       </main>
       <GlobalModal />
     </div>

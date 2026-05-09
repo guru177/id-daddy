@@ -459,7 +459,17 @@ export function DesignerView() {
             </button>
           ))}
         </header>
-        <Dashboard onSelect={() => setView('editor')} />
+        <Dashboard onSelect={(design) => {
+          if (design) {
+            loadDesign(design);
+            setActiveTab('Card Designer');
+            setView('editor');
+          } else {
+            newDesign();
+            setActiveTab('Card Designer');
+            setView('editor');
+          }
+        }} />
       </div>
     );
   }

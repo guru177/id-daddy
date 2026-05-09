@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import { AuthUser, IdCardDesign } from "@id-daddy/shared";
+import { AuthUser } from "@id-daddy/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateTemplateDto } from "./dto/create-template.dto";
 import { UpdateTemplateDto } from "./dto/update-template.dto";
@@ -26,7 +26,6 @@ export class TemplatesService {
 
   async create(user: AuthUser, dto: CreateTemplateDto) {
     const workspaceId = this.requireWorkspace(user);
-    this.validateDesign(dto.design);
 
     return this.prisma.runScoped(user, (tx) =>
       tx.template.create({
@@ -41,9 +40,6 @@ export class TemplatesService {
 
   async update(user: AuthUser, id: string, dto: UpdateTemplateDto) {
     this.requireWorkspace(user);
-    if (dto.design) {
-      this.validateDesign(dto.design);
-    }
 
     return this.prisma.runScoped(user, (tx) =>
       tx.template.update({
@@ -70,10 +66,5 @@ export class TemplatesService {
     }
     return user.workspaceId;
   }
-
-  private validateDesign(design: IdCardDesign) {
-    if (!design || design.version !== 1 || !design.width || !design.height || !Array.isArray(design.objects)) {
-      throw new BadRequestException("Invalid template design");
-    }
-  }
 }
+

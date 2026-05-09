@@ -1,3 +1,4 @@
+// API server entry point
 import "reflect-metadata";
 import compression from "compression";
 import express from "express";
@@ -13,8 +14,8 @@ async function bootstrap() {
   const config = app.get(ConfigService);
 
   app.use("/billing/webhook", express.raw({ type: "application/json" }));
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "50mb" }));
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(compression());
   app.enableCors({

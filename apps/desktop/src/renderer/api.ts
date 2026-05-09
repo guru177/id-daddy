@@ -20,7 +20,8 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message ?? "Request failed");
+    console.error("API Error details:", error);
+    throw new Error(JSON.stringify(error));
   }
 
   return response.json() as Promise<T>;
@@ -38,4 +39,52 @@ export async function uploadImage(file: File) {
   const body = new FormData();
   body.append("file", file);
   return api<{ fileUrl: string; downloadUrl: string }>("/files/upload", { method: "POST", body });
+}
+
+export function fetchRecords() {
+  return api<{ data: { id: string; data: any }[]; total: number }>("/records");
+}
+
+export function createRecord(data: any) {
+  return api<{ id: string; data: any }>("/records", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export function updateRecord(id: string, data: any) {
+  return api<{ id: string; data: any }>(`/records/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data)
+  });
+}
+
+export function deleteRecord(id: string) {
+  return api<{ success: boolean }>(`/records/${id}`, {
+    method: "DELETE"
+  });
+}
+
+export function fetchTemplates() {
+  return api<{ data: { id: string; name: string; design: any }[]; total: number }>("/templates");
+}
+
+export function createTemplate(data: { name: string; design: any }) {
+  return api<{ id: string; name: string; design: any }>("/templates", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export function updateTemplate(id: string, data: { name?: string; design?: any }) {
+  return api<{ id: string; name: string; design: any }>(`/templates/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data)
+  });
+}
+
+export function deleteTemplate(id: string) {
+  return api<{ success: boolean }>(`/templates/${id}`, {
+    method: "DELETE"
+  });
 }

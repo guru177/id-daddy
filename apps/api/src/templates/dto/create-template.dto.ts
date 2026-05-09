@@ -1,11 +1,12 @@
-import { IsObject, IsString, MinLength } from "class-validator";
-import { IdCardDesign } from "@id-daddy/shared";
+import { Allow, IsDefined, IsObject, IsString, MinLength } from "class-validator";
 
 export class CreateTemplateDto {
   @IsString()
   @MinLength(2)
   name!: string;
 
+  @IsDefined()
   @IsObject()
-  design!: IdCardDesign;
+  @Allow()
+  design!: Record<string, any>;
 }

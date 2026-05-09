@@ -26,6 +26,51 @@ export class RecordsService {
     });
   }
 
+  async create(user: AuthUser, data: any) {
+    const workspaceId = this.requireWorkspace(user);
+    return this.prisma.runScoped(user, async (tx) => {
+      return tx.record.create({
+        data: {
+          workspaceId,
+          data: data as Prisma.InputJsonValue,
+          imageUrl: this.extractImageUrl(data)
+        }
+      });
+    });
+  }
+
+  async update(user: AuthUser, id: string, data: any) {
+    const workspaceId = this.requireWorkspace(user);
+    return this.prisma.runScoped(user, async (tx) => {
+      const existing = await tx.record.findFirst({
+        where: { id, workspaceId }
+      });
+      if (!existing) throw new BadRequestException("Record not found");
+
+      return tx.record.update({
+        where: { id },
+        data: {
+          data: data as Prisma.InputJsonValue,
+          imageUrl: this.extractImageUrl(data)
+        }
+      });
+    });
+  }
+
+  async delete(user: AuthUser, id: string) {
+    const workspaceId = this.requireWorkspace(user);
+    return this.prisma.runScoped(user, async (tx) => {
+      const existing = await tx.record.findFirst({
+        where: { id, workspaceId }
+      });
+      if (!existing) throw new BadRequestException("Record not found");
+
+      return tx.record.delete({
+        where: { id }
+      });
+    });
+  }
+
   async upload(user: AuthUser, file: Express.Multer.File, dto: UploadRecordsDto) {
     const workspaceId = this.requireWorkspace(user);
     this.validateFile(file);

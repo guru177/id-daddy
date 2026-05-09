@@ -1,5 +1,4 @@
-import { IsObject, IsOptional, IsString, MinLength } from "class-validator";
-import { IdCardDesign } from "@id-daddy/shared";
+import { Allow, IsObject, IsOptional, IsString, MinLength } from "class-validator";
 
 export class UpdateTemplateDto {
   @IsString()
@@ -9,5 +8,6 @@ export class UpdateTemplateDto {
 
   @IsObject()
   @IsOptional()
-  design?: IdCardDesign;
+  @Allow()
+  design?: Record<string, any>;
 }

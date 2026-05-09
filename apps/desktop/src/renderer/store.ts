@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { AuthUser } from "@id-daddy/shared";
 
-export type DesktopPage = "dashboard" | "designer" | "upload" | "generate" | "print";
+export type DesktopPage = "dashboard" | "designer" | "upload" | "generate";
 
 interface AuthState {
   accessToken: string | null;

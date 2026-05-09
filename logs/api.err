@@ -4,3 +4,14 @@ Error: read ECONNRESET
   code: 'ECONNRESET',
   syscall: 'read'
 }
+Error: connect ETIMEDOUT
+    at Socket.<anonymous> (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\ioredis@5.10.1\node_modules\ioredis\built\Redis.js:171:41)
+    at Object.onceWrapper (node:events:622:28)
+    at Socket.emit (node:events:508:28)
+    at Socket._onTimeout (node:net:604:8)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7) {
+  errorno: 'ETIMEDOUT',
+  code: 'ETIMEDOUT',
+  syscall: 'connect'
+}
