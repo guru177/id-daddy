@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { fabric } from 'fabric';
 import { VdpResult } from './VdpEngine';
 import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api';
+import { useAuthStore } from '../store';
 
 interface CardConfig {
   orientation: 'horizontal' | 'vertical';
@@ -29,6 +30,7 @@ export interface SavedDesign {
   thumbnailFront: string;
   thumbnailBack: string;
   timestamp: string;
+  isGlobal?: boolean;
 }
 
 export interface Member {
@@ -444,6 +446,9 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
   
   members: (() => {
+    const user = useAuthStore.getState().user;
+    if (user?.role === 'SUPER_ADMIN') return DEFAULT_MEMBERS;
+
     const stored = localStorage.getItem('saved_id_members');
     if (stored) {
       try {
@@ -455,6 +460,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     return [];
   })(),
   loadMembersFromDb: async () => {
+    const user = useAuthStore.getState().user;
+    if (user?.role === 'SUPER_ADMIN') {
+      set({ members: DEFAULT_MEMBERS });
+      localStorage.setItem('saved_id_members', JSON.stringify(DEFAULT_MEMBERS));
+      return;
+    }
+
     try {
       const result = await fetchRecords();
       if (result && result.data) {
@@ -470,7 +482,12 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     try {
       const result = await fetchTemplates();
       if (result && result.data) {
-        const dbTemplates = result.data.map((r: any) => ({ ...r.design, id: r.id, name: r.name }));
+        const dbTemplates = result.data.map((r: any) => ({ 
+          ...r.design, 
+          id: r.id, 
+          name: r.name,
+          isGlobal: r.isGlobal 
+        }));
         set({ savedDesigns: dbTemplates });
         localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
       }
@@ -1211,7 +1228,6 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
           await updateTemplate(designId, payload);
         } else {
           const result = await createTemplate(payload);
-          // Update ID to match backend
           const actualId = result.id;
           const mappedDesigns = updatedDesigns.map(d => d.id === designId ? { ...d, id: actualId } : d);
           set({ savedDesigns: mappedDesigns, currentDesignId: actualId, activeTemplateId: actualId });

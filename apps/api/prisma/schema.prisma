@@ -17,6 +17,9 @@ enum Role {
 }
 
 enum Plan {
+  FREE
+  BASIC
+  PRO
   FREE_TRIAL
   PRO_1Y
   LIFETIME
@@ -45,7 +48,7 @@ enum ExportStatus {
 model Workspace {
   id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name         String
-  plan         Plan            @default(FREE_TRIAL)
+  plan         String          @default("FREE_TRIAL")
   status       WorkspaceStatus @default(ACTIVE)
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
@@ -78,22 +81,24 @@ model User {
 }
 
 model Template {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  workspaceId String    @map("workspace_id") @db.Uuid
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId String?    @map("workspace_id") @db.Uuid
   name        String
-  design      Json      @db.JsonB
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  design      Json       @db.JsonB
+  isGlobal    Boolean    @default(false) @map("is_global")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
+  @@index([isGlobal])
   @@map("templates")
 }
 
 model Record {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   workspaceId String    @map("workspace_id") @db.Uuid
-  data        Json      @db.JsonB
+  data        Json       @db.JsonB
   imageUrl    String?   @map("image_url")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -120,7 +125,7 @@ model Export {
 
 model Subscription {
   workspaceId String    @id @map("workspace_id") @db.Uuid
-  plan        Plan
+  plan        String
   startDate   DateTime  @map("start_date")
   endDate     DateTime? @map("end_date")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -141,6 +146,7 @@ model UsageLog {
   @@index([workspaceId, action, createdAt])
   @@map("usage_logs")
 }
+
 model SystemSetting {
   key       String   @id
   value     String
@@ -154,11 +160,10 @@ model Payment {
   workspaceId String    @map("workspace_id") @db.Uuid
   amount      Float
   currency    String
-  plan        Plan
+  plan        String
   createdAt   DateTime  @default(now()) @map("created_at")
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@map("payments")
 }
-

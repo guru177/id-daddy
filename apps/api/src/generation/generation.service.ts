@@ -51,7 +51,7 @@ export class GenerationService {
         _sum: { count: true }
       });
 
-      const limit = PLAN_LIMITS[workspace.plan];
+      const limit = PLAN_LIMITS[workspace.plan as keyof typeof PLAN_LIMITS];
       if (limit !== null && (used._sum?.count ?? 0) + recordCount > limit) {
         throw new ForbiddenException(`Monthly plan limit exceeded. ${workspace.plan} allows ${limit} IDs.`);
       }

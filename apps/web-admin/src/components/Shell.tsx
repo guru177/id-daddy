@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { BarChart3, Building2, CreditCard, Gauge, LogOut, Users } from "lucide-react";
+import { BarChart3, Building2, CreditCard, Gauge, LogOut, Users, LayoutTemplate } from "lucide-react";
 import clsx from "clsx";
 import { useAuthStore } from "../store/auth";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: Gauge },
   { to: "/companies", label: "Clients", icon: Building2 },
-
+  { to: "/templates", label: "Templates", icon: LayoutTemplate },
   { to: "/billing", label: "Billing", icon: CreditCard },
   { to: "/analytics", label: "Analytics", icon: BarChart3 }
 ];

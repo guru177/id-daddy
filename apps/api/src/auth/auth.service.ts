@@ -32,15 +32,17 @@ export class AuthService {
       throw new ForbiddenException("Workspace is not active");
     }
 
-    // Check subscription expiration
-    const subscription = await this.prisma.runAsPlatform((tx) =>
-      tx.subscription.findUnique({ where: { workspaceId: user.workspaceId! } })
-    );
-
-    if (subscription?.endDate && new Date() > subscription.endDate) {
-      throw new ForbiddenException(
-        "Your trial or subscription has expired. Please contact the administrator for upgradation or renewal."
+    // Check subscription expiration only for regular clients
+    if (user.workspaceId && user.workspaceId !== "") {
+      const subscription = await this.prisma.runAsPlatform((tx) =>
+        tx.subscription.findUnique({ where: { workspaceId: user.workspaceId! } })
       );
+
+      if (subscription?.endDate && new Date() > subscription.endDate) {
+        throw new ForbiddenException(
+          "Your trial or subscription has expired. Please contact the administrator for upgradation or renewal."
+        );
+      }
     }
 
     return this.issueTokens({
@@ -152,17 +154,17 @@ export class AuthService {
     ]);
 
     // Use workspace plan as primary source of truth
-    const workspace = await this.prisma.runAsPlatform((tx) =>
+    const workspace = (user.workspaceId && user.workspaceId !== "") ? await this.prisma.runAsPlatform((tx) =>
       tx.workspace.findUnique({ where: { id: user.workspaceId! } })
-    );
+    ) : null;
 
-    const subscription = await this.prisma.runAsPlatform((tx) =>
+    const subscription = (user.workspaceId && user.workspaceId !== "") ? await this.prisma.runAsPlatform((tx) =>
       tx.subscription.findUnique({ where: { workspaceId: user.workspaceId! } })
-    );
+    ) : null;
 
     const fullUser: AuthUser = {
       ...user,
-      plan: (workspace?.plan || subscription?.plan) as any,
+      plan: (workspace?.plan || subscription?.plan || (user.role === "SUPER_ADMIN" ? "LIFETIME" : "FREE_TRIAL")) as any,
       subscriptionEnd: subscription?.endDate?.toISOString()
     };
 

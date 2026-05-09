@@ -24,7 +24,10 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       page: "dashboard",
       isBlocked: false,
-      setSession: (accessToken, refreshToken, user) => set({ accessToken, refreshToken, user, isBlocked: false }),
+      setSession: (accessToken, refreshToken, user) => {
+        const page = user.role === "SUPER_ADMIN" ? "designer" : "dashboard";
+        set({ accessToken, refreshToken, user, page, isBlocked: false });
+      },
       setPage: (page) => set({ page }),
       setIsBlocked: (isBlocked) => set({ isBlocked }),
       logout: () => {

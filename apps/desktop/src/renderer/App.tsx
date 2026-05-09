@@ -78,20 +78,27 @@ export default function App() {
           </div>
         </button>
         <nav className="flex-1 space-y-1 p-3">
-          {pages.map((item) => (
-            <button
-              key={item.id}
-              className={clsx(
-                "flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium",
-                page === item.id ? "bg-teal-50 text-mint" : "text-stone-600 hover:bg-stone-50 hover:text-ink"
-              )}
-              onClick={() => !isBlocked && setPage(item.id)}
-              disabled={isBlocked}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          ))}
+          {pages
+            .filter((item) => {
+              if (user.role === "SUPER_ADMIN") {
+                return !["dashboard", "profile"].includes(item.id);
+              }
+              return true;
+            })
+            .map((item) => (
+              <button
+                key={item.id}
+                className={clsx(
+                  "flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium",
+                  page === item.id ? "bg-teal-50 text-mint" : "text-stone-600 hover:bg-stone-50 hover:text-ink"
+                )}
+                onClick={() => !isBlocked && setPage(item.id)}
+                disabled={isBlocked}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            ))}
         </nav>
         <div className="border-t border-stone-200 p-3">
           <button className="btn-secondary w-full" onClick={logout}>

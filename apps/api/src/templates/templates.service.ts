@@ -10,14 +10,22 @@ export class TemplatesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(user: AuthUser) {
-    const workspaceId = this.requireWorkspace(user);
     return this.prisma.runScoped(user, async (tx) => {
+      const where: Prisma.TemplateWhereInput = user.role === "SUPER_ADMIN"
+        ? {} 
+        : {
+          OR: [
+            { isGlobal: true },
+            user.workspaceId ? { workspaceId: user.workspaceId } : { id: 'none' }
+          ]
+        };
+      
       const [data, total] = await Promise.all([
         tx.template.findMany({
-          where: { workspaceId },
-          orderBy: { updatedAt: "desc" }
+          where,
+          orderBy: [{ isGlobal: "desc" }, { updatedAt: "desc" }]
         }),
-        tx.template.count({ where: { workspaceId } })
+        tx.template.count({ where })
       ]);
 
       return { data, total };
@@ -53,14 +61,34 @@ export class TemplatesService {
   }
 
   async remove(user: AuthUser, id: string) {
-    this.requireWorkspace(user);
     return this.prisma.runScoped(user, async (tx) => {
       await tx.template.delete({ where: { id } });
       return { ok: true };
     });
   }
 
+  async promoteToGlobal(user: AuthUser, id: string) {
+    return this.prisma.runScoped(user, (tx) =>
+      tx.template.update({
+        where: { id },
+        data: { isGlobal: true, workspaceId: null }
+      })
+    );
+  }
+
+  async removeFromGlobal(user: AuthUser, id: string) {
+    // When removing from global, we might want to assign it back to the admin's workspace
+    // or just leave it with null workspace (orphaned but manageable by admin)
+    return this.prisma.runScoped(user, (tx) =>
+      tx.template.update({
+        where: { id },
+        data: { isGlobal: false, workspaceId: user.workspaceId }
+      })
+    );
+  }
+
   private requireWorkspace(user: AuthUser) {
+    if (user.role === "SUPER_ADMIN") return null;
     if (!user.workspaceId) {
       throw new BadRequestException("Workspace context is required");
     }

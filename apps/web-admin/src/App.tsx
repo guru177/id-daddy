@@ -6,6 +6,7 @@ import { BillingPage } from "./pages/BillingPage";
 import { CompaniesPage } from "./pages/CompaniesPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { TemplatesPage } from "./pages/TemplatesPage";
 
 
 export default function App() {
@@ -24,7 +25,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/companies" element={<CompaniesPage />} />
-
+        <Route path="/templates" element={<TemplatesPage />} />
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
