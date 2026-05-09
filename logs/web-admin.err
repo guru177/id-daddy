@@ -1,0 +1,134 @@
+[2m2:12:22 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\ASUS\Pictures\id-daddy\apps\web-admin\src\pages\CompaniesPage.tsx: Missing semicolon. (74:7)
+
+[0m [90m 72 |[31m   }
+ [90m 73 |[31m
+[31m[1m>[22m[31m[90m 74 |[31m   [36masync[31m deleteCompany(id[33m:[31m string) {
+ [90m    |[31m        [31m[1m^[22m[31m
+ [90m 75 |[31m     [36mif[31m ([33m![31mconfirm([32m"Are you sure you want to delete this client? All their templates and records will be permanently removed."[31m)) [36mreturn[31m[33m;[31m
+ [90m 76 |[31m     [36mtry[31m {
+ [90m 77 |[31m       [36mawait[31m api([32m`/workspaces/${id}`[31m[33m,[31m { method[33m:[31m [32m"DELETE"[31m })[33m;[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/ASUS/Pictures/id-daddy/apps/web-admin/src/pages/CompaniesPage.tsx[39m:74:7
+[33m  72 |    }
+  73 |  
+  74 |    async deleteCompany(id: string) {
+     |         ^
+  75 |      if (!confirm("Are you sure you want to delete this client? All their templates and records will be permanently removed.")) return;
+  76 |      try {[39m
+      at constructor (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:6616:19)
+      at TypeScriptParserMixin.semicolon (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:6912:10)
+      at TypeScriptParserMixin.parseExpressionStatement (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13302:10)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12916:19)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9525:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13333:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13326:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13314:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12117:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12103:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9189:18)
+      at C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13462:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12420:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13461:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13142:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9525:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13951:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9646:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13910:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13829:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9402:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12895:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9525:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12761:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13333:36)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13326:10)
+      at TypeScriptParserMixin.parseProgram (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12639:10)
+      at TypeScriptParserMixin.parseTopLevel (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12629:25)
+      at TypeScriptParserMixin.parse (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:14505:25)
+      at TypeScriptParserMixin.parse (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:10143:18)
+      at parse (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:14539:38)
+      at parser (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:261:32)
+      at C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:223:11)
+      at C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:189:28
+[2m2:12:22 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\ASUS\Pictures\id-daddy\apps\web-admin\src\pages\CompaniesPage.tsx: Missing semicolon. (74:7)
+
+[0m [90m 72 |[31m   }
+ [90m 73 |[31m
+[31m[1m>[22m[31m[90m 74 |[31m   [36masync[31m deleteCompany(id[33m:[31m string) {
+ [90m    |[31m        [31m[1m^[22m[31m
+ [90m 75 |[31m     [36mif[31m ([33m![31mconfirm([32m"Are you sure you want to delete this client? All their templates and records will be permanently removed."[31m)) [36mreturn[31m[33m;[31m
+ [90m 76 |[31m     [36mtry[31m {
+ [90m 77 |[31m       [36mawait[31m api([32m`/workspaces/${id}`[31m[33m,[31m { method[33m:[31m [32m"DELETE"[31m })[33m;[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/ASUS/Pictures/id-daddy/apps/web-admin/src/pages/CompaniesPage.tsx[39m:74:7
+[33m  72 |    }
+  73 |  
+  74 |    async deleteCompany(id: string) {
+     |         ^
+  75 |      if (!confirm("Are you sure you want to delete this client? All their templates and records will be permanently removed.")) return;
+  76 |      try {[39m
+      at constructor (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:6616:19)
+      at TypeScriptParserMixin.semicolon (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:6912:10)
+      at TypeScriptParserMixin.parseExpressionStatement (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13302:10)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12916:19)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9525:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13333:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13326:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13314:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12117:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12103:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9189:18)
+      at C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13462:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12420:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13461:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13142:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9525:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13951:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9646:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13910:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13829:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9402:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12895:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:9525:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12761:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13333:36)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:13326:10)
+      at TypeScriptParserMixin.parseProgram (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12639:10)
+      at TypeScriptParserMixin.parseTopLevel (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:12629:25)
+      at TypeScriptParserMixin.parse (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:14505:25)
+      at TypeScriptParserMixin.parse (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:10143:18)
+      at parse (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+parser@7.29.3\node_modules\@babel\parser\lib\index.js:14539:38)
+      at parser (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\@babel+core@7.29.0\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:261:32)
+      at C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:223:11)
+      at C:\Users\ASUS\Pictures\id-daddy\node_modules\.pnpm\gensync@1.0.0-beta.2\node_modules\gensync\index.js:189:28

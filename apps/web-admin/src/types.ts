@@ -12,6 +12,10 @@ export interface WorkspaceRow {
     records: number;
     exports: number;
   };
+  users?: {
+    email: string;
+    phone: string | null;
+  }[];
 }
 
 export interface UserRow {

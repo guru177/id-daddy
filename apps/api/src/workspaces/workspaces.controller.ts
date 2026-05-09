@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { AuthUser } from "@id-daddy/shared";
 import { CurrentUser } from "../common/current-user.decorator";
 import { Roles } from "../common/roles.decorator";
@@ -24,5 +24,20 @@ export class WorkspacesController {
   @Patch(":id")
   update(@CurrentUser() user: AuthUser, @Param("id") id: string, @Body() dto: UpdateWorkspaceDto) {
     return this.workspaces.update(user, id, dto);
+  }
+
+  @Delete(":id")
+  remove(@CurrentUser() user: AuthUser, @Param("id") id: string) {
+    return this.workspaces.remove(user, id);
+  }
+
+  @Patch(":id/reset-password")
+  resetPassword(
+    @CurrentUser() user: AuthUser,
+    @Param("id") id: string,
+    @Body("password") password?: string
+  ) {
+    if (!password) throw new Error("Password is required");
+    return this.workspaces.resetPassword(user, id, password);
   }
 }

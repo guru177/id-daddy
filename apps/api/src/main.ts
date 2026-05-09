@@ -47,7 +47,7 @@ void bootstrap();
 function allowedOrigins(config: ConfigService) {
   const configured = [
     config.get<string>("WEB_ADMIN_URL", "http://localhost:5173"),
-    config.get<string>("DESKTOP_APP_URL", "http://localhost:5174")
+    config.get<string>("DESKTOP_APP_URL", "http://localhost:5180")
   ].flatMap((value) => value.split(",").map((origin) => origin.trim()).filter(Boolean));
 
   if (config.get<string>("NODE_ENV") === "production") {
@@ -59,10 +59,8 @@ function allowedOrigins(config: ConfigService) {
       ...configured,
       "http://localhost:5173",
       "http://127.0.0.1:5173",
-      "http://localhost:5174",
-      "http://127.0.0.1:5174",
-      "http://localhost:5175",
-      "http://127.0.0.1:5175"
+      "http://localhost:5180",
+      "http://127.0.0.1:5180"
     ])
   );
 }

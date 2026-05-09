@@ -17,9 +17,9 @@ enum Role {
 }
 
 enum Plan {
-  FREE
-  BASIC
-  PRO
+  FREE_TRIAL
+  PRO_1Y
+  LIFETIME
 
   @@map("plan")
 }
@@ -45,7 +45,7 @@ enum ExportStatus {
 model Workspace {
   id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name         String
-  plan         Plan            @default(FREE)
+  plan         Plan            @default(FREE_TRIAL)
   status       WorkspaceStatus @default(ACTIVE)
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
@@ -64,6 +64,7 @@ model User {
   id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   workspaceId  String?    @map("workspace_id") @db.Uuid
   email        String     @unique
+  phone        String?
   passwordHash String     @map("password_hash")
   role         Role
   createdAt    DateTime   @default(now()) @map("created_at")

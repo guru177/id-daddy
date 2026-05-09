@@ -11,19 +11,20 @@ export function DashboardPage() {
     void api<{ data: WorkspaceRow[]; total: number }>("/workspaces").then((result) => setWorkspaces(result.data));
   }, []);
 
-  const totals = useMemo(
-    () =>
-      workspaces.reduce(
-        (acc, workspace) => {
-          acc.users += workspace._count?.users ?? 0;
-          acc.records += workspace._count?.records ?? 0;
-          acc.exports += workspace._count?.exports ?? 0;
-          return acc;
-        },
-        { users: 0, records: 0, exports: 0 }
-      ),
-    [workspaces]
-  );
+  const metrics = useMemo(() => {
+    const totalRecords = workspaces.reduce((acc, w) => acc + (w._count?.records ?? 0), 0);
+    const totalUsers = workspaces.reduce((acc, w) => acc + (w._count?.users ?? 0), 0);
+    const freeClients = workspaces.filter(w => w.plan === "FREE_TRIAL").length;
+    
+    // Simple revenue calculation in INR: PRO_1Y=₹1999, LIFETIME=₹4999
+    const revenue = workspaces.reduce((acc, w) => {
+      if (w.plan === "PRO_1Y") return acc + 1999;
+      if (w.plan === "LIFETIME") return acc + 4999;
+      return acc;
+    }, 0);
+
+    return { totalRecords, totalUsers, freeClients, revenue };
+  }, [workspaces]);
 
   return (
     <div className="space-y-6">
@@ -33,21 +34,21 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Companies" value={workspaces.length} icon={Building2} />
-        <Metric label="Users" value={totals.users} icon={Users} />
-        <Metric label="Records" value={totals.records} icon={FileText} />
-        <Metric label="Exports" value={totals.exports} icon={CreditCard} />
+        <Metric label="Total Revenue" value={`₹${metrics.revenue.toLocaleString('en-IN')}`} icon={CreditCard} />
+        <Metric label="Total Users" value={metrics.totalUsers} icon={Users} />
+        <Metric label="Total Records" value={metrics.totalRecords} icon={FileText} />
+        <Metric label="Free Trial Clients" value={metrics.freeClients} icon={Building2} />
       </div>
 
       <div className="panel overflow-hidden">
         <div className="border-b border-stone-200 px-4 py-3">
-          <h2 className="font-semibold">Recent Companies</h2>
+          <h2 className="font-semibold">Recent Clients</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-stone-50 text-stone-500">
               <tr>
-                <th className="px-4 py-3">Company</th>
+                <th className="px-4 py-3">Client</th>
                 <th className="px-4 py-3">Plan</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Users</th>

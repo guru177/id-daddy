@@ -1,8 +1,9 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { AuthUser, Role } from "@id-daddy/shared";
+import { PrismaService } from "../prisma/prisma.service";
 
 interface JwtPayload {
   sub: string;
@@ -13,16 +14,29 @@ interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    private readonly prisma: PrismaService
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: config.getOrThrow<string>("JWT_ACCESS_SECRET")
     });
   }
 
-  validate(payload: JwtPayload): AuthUser {
+  async validate(payload: JwtPayload): Promise<AuthUser> {
     if (!payload.sub || !payload.email || !payload.role) {
       throw new UnauthorizedException("Invalid token payload");
+    }
+
+    if (payload.workspaceId && payload.role !== "SUPER_ADMIN") {
+      const workspace = await this.prisma.workspace.findUnique({
+        where: { id: payload.workspaceId },
+        select: { status: true }
+      });
+      if (workspace?.status === "BLOCKED") {
+        throw new ForbiddenException("WORKSPACE_BLOCKED");
+      }
     }
 
     return {

@@ -21,7 +21,12 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
     console.error("API Error details:", error);
-    throw new Error(JSON.stringify(error));
+    
+    if (error.message === "WORKSPACE_BLOCKED") {
+      useAuthStore.getState().setIsBlocked(true);
+    }
+    
+    throw new Error(error.message || response.statusText || "Request failed");
   }
 
   return response.json() as Promise<T>;
@@ -32,6 +37,14 @@ export function login(email: string, password: string) {
     method: "POST",
     auth: false,
     body: JSON.stringify({ email, password })
+  });
+}
+
+export function register(workspaceName: string, adminEmail: string, adminPassword: string, adminPhone?: string) {
+  return api<AuthResponse>("/auth/register", {
+    method: "POST",
+    auth: false,
+    body: JSON.stringify({ workspaceName, adminEmail, adminPassword, adminPhone })
   });
 }
 

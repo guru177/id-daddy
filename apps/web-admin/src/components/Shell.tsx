@@ -6,8 +6,8 @@ import { useAuthStore } from "../store/auth";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: Gauge },
-  { to: "/companies", label: "Companies", icon: Building2 },
-  { to: "/users", label: "Users", icon: Users },
+  { to: "/companies", label: "Clients", icon: Building2 },
+
   { to: "/billing", label: "Billing", icon: CreditCard },
   { to: "/analytics", label: "Analytics", icon: BarChart3 }
 ];
@@ -57,7 +57,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="mx-auto max-w-7xl px-4 py-6 md:px-8">{children}</main>
+        <main className="px-4 py-6 md:px-8">{children}</main>
       </div>
     </div>
   );

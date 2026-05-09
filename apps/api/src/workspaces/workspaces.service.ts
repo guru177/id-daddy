@@ -7,20 +7,20 @@ import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 
 @Injectable()
 export class WorkspacesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async list(user: AuthUser, q?: string) {
-    return this.prisma.runScoped(user, async (tx) => {
+    return this.prisma.runAsPlatform(async (tx) => {
       const where = q
         ? {
-            name: {
-              contains: q,
-              mode: "insensitive" as const
-            }
+          name: {
+            contains: q,
+            mode: "insensitive" as const
           }
+        }
         : {};
 
-      const [data, total] = await Promise.all([
+      const [workspaces, total] = await Promise.all([
         tx.workspace.findMany({
           where,
           orderBy: { createdAt: "desc" },
@@ -31,6 +31,21 @@ export class WorkspacesService {
         }),
         tx.workspace.count({ where })
       ]);
+
+      // Manually fetch admins for these workspaces to ensure they show up
+      const workspaceIds = workspaces.map((w) => w.id);
+      const admins = await tx.user.findMany({
+        where: {
+          workspaceId: { in: workspaceIds },
+          role: "COMPANY_ADMIN"
+        },
+        select: { workspaceId: true, email: true, phone: true }
+      });
+
+      const data = workspaces.map((w) => ({
+        ...w,
+        users: admins.filter((a) => a.workspaceId === w.id)
+      }));
 
       return { data, total };
     });
@@ -60,6 +75,7 @@ export class WorkspacesService {
           users: {
             create: {
               email,
+              phone: dto.adminPhone,
               passwordHash,
               role: "COMPANY_ADMIN"
             }
@@ -80,14 +96,29 @@ export class WorkspacesService {
           plan: dto.plan,
           subscription: dto.plan
             ? {
-                upsert: {
-                  create: { plan: dto.plan, startDate: new Date() },
-                  update: { plan: dto.plan, endDate: null }
-                }
+              upsert: {
+                create: { plan: dto.plan, startDate: new Date() },
+                update: { plan: dto.plan, endDate: null }
               }
+            }
             : undefined
         },
         include: { subscription: true }
+      });
+    });
+  }
+  async remove(user: AuthUser, id: string) {
+    return this.prisma.runAsPlatform(async (tx) => {
+      return tx.workspace.delete({ where: { id } });
+    });
+  }
+
+  async resetPassword(user: AuthUser, id: string, password: string) {
+    const passwordHash = await hash(password, Number(process.env.BCRYPT_ROUNDS ?? 12));
+    return this.prisma.runAsPlatform(async (tx) => {
+      return tx.user.updateMany({
+        where: { workspaceId: id, role: "COMPANY_ADMIN" },
+        data: { passwordHash }
       });
     });
   }

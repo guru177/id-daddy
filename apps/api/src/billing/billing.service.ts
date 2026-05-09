@@ -68,7 +68,7 @@ export class BillingService {
 
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
-      await this.applyPlan(subscription.metadata.workspaceId, "FREE");
+      await this.applyPlan(subscription.metadata.workspaceId, "FREE_TRIAL" as any);
     }
 
     return { received: true };
@@ -83,12 +83,12 @@ export class BillingService {
       tx.workspace.update({
         where: { id: workspaceId },
         data: {
-          plan,
+          plan: plan as any,
           status: "ACTIVE",
           subscription: {
             upsert: {
-              create: { plan, startDate: new Date() },
-              update: { plan, endDate: null }
+              create: { plan: plan as any, startDate: new Date() },
+              update: { plan: plan as any, endDate: null }
             }
           }
         }
@@ -97,12 +97,12 @@ export class BillingService {
   }
 
   private priceForPlan(plan: Plan) {
-    if (plan === "BASIC") {
-      return this.config.getOrThrow<string>("STRIPE_PRICE_BASIC");
+    if (plan === "PRO_1Y") {
+      return this.config.getOrThrow<string>("STRIPE_PRICE_PRO_1Y");
     }
-    if (plan === "PRO") {
-      return this.config.getOrThrow<string>("STRIPE_PRICE_PRO");
+    if (plan === "LIFETIME") {
+      return this.config.getOrThrow<string>("STRIPE_PRICE_LIFETIME");
     }
-    throw new BadRequestException("Free plan does not require checkout");
+    throw new BadRequestException("Free trial does not require checkout");
   }
 }

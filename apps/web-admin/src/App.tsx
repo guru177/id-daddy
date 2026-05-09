@@ -6,7 +6,7 @@ import { BillingPage } from "./pages/BillingPage";
 import { CompaniesPage } from "./pages/CompaniesPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
-import { UsersPage } from "./pages/UsersPage";
+
 
 export default function App() {
   const user = useAuthStore((state) => state.user);
@@ -24,7 +24,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/companies" element={<CompaniesPage />} />
-        <Route path="/users" element={<UsersPage />} />
+
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

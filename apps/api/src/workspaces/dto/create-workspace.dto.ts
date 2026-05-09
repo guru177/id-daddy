@@ -8,7 +8,7 @@ export class CreateWorkspaceDto {
 
   @IsEnum(PLANS)
   @IsOptional()
-  plan: Plan = "FREE";
+  plan: Plan = "FREE_TRIAL";
 
   @IsEmail()
   adminEmail!: string;
@@ -16,4 +16,8 @@ export class CreateWorkspaceDto {
   @IsString()
   @MinLength(8)
   adminPassword!: string;
+
+  @IsString()
+  @IsOptional()
+  adminPhone?: string;
 }

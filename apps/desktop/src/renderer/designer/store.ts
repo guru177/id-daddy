@@ -444,33 +444,38 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
   
   members: (() => {
-    // Clear legacy storage once to force seeding 20 new members
-    if (!localStorage.getItem('seeded_v2_members')) {
-      localStorage.removeItem('saved_id_members');
-      localStorage.setItem('seeded_v2_members', 'true');
-    }
     const stored = localStorage.getItem('saved_id_members');
     if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed.length > 0) return parsed;
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        return [];
+      }
     }
-    // Fallback to default test members
-    localStorage.setItem('saved_id_members', JSON.stringify(DEFAULT_MEMBERS));
-    return DEFAULT_MEMBERS;
+    return [];
   })(),
   loadMembersFromDb: async () => {
     try {
       const result = await fetchRecords();
       if (result && result.data) {
-        // Assume backend records data has 'id' and 'data' object. If the backend uploaded raw rows, it might not exactly match our Member schema if not mapped, but we handle it.
         const dbMembers = result.data.map((r: any) => ({ ...r.data, id: r.id }));
-        if (dbMembers.length > 0) {
-          set({ members: dbMembers });
-          localStorage.setItem('saved_id_members', JSON.stringify(dbMembers));
-        }
+        set({ members: dbMembers });
+        localStorage.setItem('saved_id_members', JSON.stringify(dbMembers));
       }
     } catch (e) {
       console.error("Failed to fetch records from DB", e);
+    }
+  },
+  loadTemplatesFromDb: async () => {
+    try {
+      const result = await fetchTemplates();
+      if (result && result.data) {
+        const dbTemplates = result.data.map((r: any) => ({ ...r.design, id: r.id, name: r.name }));
+        set({ savedDesigns: dbTemplates });
+        localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
+      }
+    } catch (e) {
+      console.error("Failed to fetch templates from DB", e);
     }
   },
   addMember: async (member) => {
@@ -1073,63 +1078,30 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
   savedDesigns: JSON.parse(localStorage.getItem('saved_id_designs') || '[]'),
   
-  loadTemplatesFromDb: async () => {
-    try {
-      const result = await fetchTemplates();
-      if (result && result.data) {
-        const dbTemplates = result.data.map((r: any) => ({ ...r.design, id: r.id, name: r.name }));
-        if (dbTemplates.length > 0) {
-          set({ savedDesigns: dbTemplates });
-          localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
-        }
-      }
-    } catch (e) {
-      console.error("Failed to fetch templates from DB", e);
-    }
-  },
+
 
   syncLocalData: async () => {
-    const { savedDesigns, members } = get();
-    
-    // Sync templates
     try {
-      const templatesRes = await fetchTemplates();
-      const dbIds = templatesRes.data.map((d: any) => d.id);
-      
-      let updatedDesigns = [...savedDesigns];
-      for (const design of savedDesigns) {
-        if (!dbIds.includes(design.id)) {
-          const res = await createTemplate({ name: design.name, design });
-          updatedDesigns = updatedDesigns.map(d => d.id === design.id ? { ...d, id: res.id } : d);
-        } else {
-          await updateTemplate(design.id, { name: design.name, design });
-        }
-      }
-      if (JSON.stringify(updatedDesigns) !== JSON.stringify(savedDesigns)) {
-        set({ savedDesigns: updatedDesigns });
-        localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
-      }
-    } catch (e) { console.error(e); }
+      // Fetch fresh data from DB and update local state
+      const [templatesRes, membersRes] = await Promise.all([
+        fetchTemplates(),
+        fetchRecords()
+      ]);
 
-    // Sync members
-    try {
-      const membersRes = await fetchRecords();
-      const dbMemberIds = membersRes.data.map((d: any) => d.id);
-      
-      let updatedMembers = [...members];
-      for (const member of members) {
-        if (!dbMemberIds.includes(member.id)) {
-          const res = await createRecord(member);
-          updatedMembers = updatedMembers.map(m => m.id === member.id ? { ...m, id: res.id } : m);
-        } else {
-          await updateRecord(member.id, member);
-        }
+      if (templatesRes && templatesRes.data) {
+        const dbTemplates = templatesRes.data.map((r: any) => ({ ...r.design, id: r.id, name: r.name }));
+        set({ savedDesigns: dbTemplates });
+        localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
       }
-      if (JSON.stringify(updatedMembers) !== JSON.stringify(members)) {
-        set({ members: updatedMembers });
-        localStorage.setItem('saved_id_members', JSON.stringify(updatedMembers));
+
+      if (membersRes && membersRes.data) {
+        const dbMembers = membersRes.data.map((r: any) => ({ ...r.data, id: r.id }));
+        set({ members: dbMembers });
+        localStorage.setItem('saved_id_members', JSON.stringify(dbMembers));
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error("Failed to sync local data with DB", e);
+    }
   },
 
   saveDesign: async () => {

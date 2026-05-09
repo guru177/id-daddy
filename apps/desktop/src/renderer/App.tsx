@@ -1,4 +1,4 @@
-import { BarChart3, Database, FileDown, LayoutTemplate, LogOut } from "lucide-react";
+import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, User as UserIcon } from "lucide-react";
 import clsx from "clsx";
 import { DesktopPage, useAuthStore } from "./store";
 import { LoginView } from "./views/LoginView";
@@ -6,18 +6,21 @@ import { DashboardView } from "./views/DashboardView";
 import { DesignerView } from "./views/DesignerView";
 import { UploadView } from "./views/UploadView";
 import { GenerateView } from "./views/GenerateView";
+import { ProfileView } from "./views/ProfileView";
 import { GlobalModal } from "./designer/GlobalModal";
 
 const pages: Array<{ id: DesktopPage; label: string; icon: typeof BarChart3 }> = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
   { id: "designer", label: "Designer", icon: LayoutTemplate },
   { id: "upload", label: "Data Upload", icon: Database },
-  { id: "generate", label: "Bulk Generator", icon: FileDown }
+  { id: "generate", label: "Bulk Generator", icon: FileDown },
+  { id: "profile", label: "Profile", icon: UserIcon as any }
 ];
 
 export default function App() {
   const user = useAuthStore((state) => state.user);
   const page = useAuthStore((state) => state.page);
+  const isBlocked = useAuthStore((state) => state.isBlocked);
   const setPage = useAuthStore((state) => state.setPage);
   const logout = useAuthStore((state) => state.logout);
 
@@ -26,12 +29,37 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-stone-100 text-ink">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-stone-200 bg-white">
-        <div className="border-b border-stone-200 px-5 py-4">
-          <p className="font-semibold">ID Daddy</p>
-          <p className="text-xs text-stone-500">{user.email}</p>
+    <div className="relative flex h-screen bg-stone-100 text-ink">
+      {/* ... (Blocked Notification Overlay remains the same) */}
+      {isBlocked && (
+        <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-6">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-2xl text-center border-2 border-red-500/20 animate-in fade-in zoom-in duration-300">
+            <div className="h-16 w-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <LogOut className="h-8 w-8 text-red-600" />
+            </div>
+            <h2 className="text-xl font-black text-stone-900 mb-3">Account Blocked</h2>
+            <p className="text-stone-500 font-medium leading-relaxed mb-8">
+              Your account has been blocked by the admin. Please contact support for more information.
+            </p>
+            <button 
+              className="w-full h-12 bg-gray-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-lg active:scale-95"
+              onClick={logout}
+            >
+              OK, Log out
+            </button>
+          </div>
         </div>
+      )}
+
+      <aside className={clsx("flex w-64 shrink-0 flex-col border-r border-stone-200 bg-white transition-all", isBlocked && "grayscale")}>
+        <button 
+          className="border-b border-stone-200 px-5 py-4 text-left hover:bg-stone-50 transition-colors group"
+          onClick={() => !isBlocked && setPage("profile")}
+          disabled={isBlocked}
+        >
+          <p className="font-semibold group-hover:text-indigo-600 transition-colors">ID Daddy</p>
+          <p className="text-xs text-stone-500">{user.email}</p>
+        </button>
         <nav className="flex-1 space-y-1 p-3">
           {pages.map((item) => (
             <button
@@ -40,7 +68,8 @@ export default function App() {
                 "flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium",
                 page === item.id ? "bg-teal-50 text-mint" : "text-stone-600 hover:bg-stone-50 hover:text-ink"
               )}
-              onClick={() => setPage(item.id)}
+              onClick={() => !isBlocked && setPage(item.id)}
+              disabled={isBlocked}
             >
               <item.icon className="h-4 w-4" />
               {item.label}
@@ -54,11 +83,12 @@ export default function App() {
           </button>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-hidden">
+      <main className={clsx("min-w-0 flex-1 overflow-hidden transition-all", isBlocked && "grayscale")}>
         {page === "dashboard" ? <DashboardView /> : null}
         {page === "designer" ? <DesignerView /> : null}
         {page === "upload" ? <UploadView /> : null}
         {page === "generate" ? <GenerateView /> : null}
+        {page === "profile" ? <ProfileView /> : null}
       </main>
       <GlobalModal />
     </div>

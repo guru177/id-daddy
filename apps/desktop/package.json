@@ -6,7 +6,7 @@
   "main": "dist-main/index.js",
   "scripts": {
     "build:main": "tsc -p tsconfig.main.json && node scripts/write-main-package.cjs",
-    "dev": "npm run build:main && concurrently -k \"vite --host 0.0.0.0 --port 5174\" \"wait-on http://localhost:5174 && node scripts/launch-electron.cjs\"",
+    "dev": "npm run build:main && concurrently -k \"vite --host 0.0.0.0 --port 5180 --strictPort\" \"wait-on http://localhost:5180 && node scripts/launch-electron.cjs\"",
     "build": "npm run build:main && tsc -p tsconfig.json && vite build && electron-builder",
     "build:renderer": "vite build",
     "lint": "eslint src --ext .ts,.tsx",

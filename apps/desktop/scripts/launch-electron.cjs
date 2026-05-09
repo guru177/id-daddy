@@ -4,7 +4,7 @@ const electronPath = require("electron");
 
 const env = {
   ...process.env,
-  VITE_DEV_SERVER_URL: "http://localhost:5174"
+  VITE_DEV_SERVER_URL: "http://localhost:5180"
 };
 
 delete env.ELECTRON_RUN_AS_NODE;

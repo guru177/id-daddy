@@ -56,11 +56,11 @@ export class AuthService {
       const workspace = await tx.workspace.create({
         data: {
           name: dto.workspaceName.trim(),
-          plan: "FREE",
+          plan: "FREE_TRIAL" as any,
           status: "ACTIVE",
           subscription: {
             create: {
-              plan: "FREE",
+              plan: "FREE_TRIAL" as any,
               startDate: new Date()
             }
           }
@@ -71,6 +71,7 @@ export class AuthService {
         data: {
           workspaceId: workspace.id,
           email,
+          phone: dto.adminPhone,
           passwordHash,
           role: "COMPANY_ADMIN"
         }
@@ -82,6 +83,40 @@ export class AuthService {
       workspaceId: admin.workspaceId,
       email: admin.email,
       role: admin.role
+    });
+  }
+
+  async getProfile(user: AuthUser) {
+    return this.prisma.runAsPlatform(async (tx) => {
+      const dbUser = await tx.user.findUnique({
+        where: { id: user.id },
+        include: { workspace: { select: { name: true } } }
+      });
+      if (!dbUser) throw new UnauthorizedException();
+      return {
+        id: dbUser.id,
+        email: dbUser.email,
+        phone: dbUser.phone,
+        role: dbUser.role,
+        workspaceName: dbUser.workspace?.name ?? "Super Admin"
+      };
+    });
+  }
+
+  async updateProfile(user: AuthUser, dto: { password?: string }) {
+    return this.prisma.runAsPlatform(async (tx) => {
+      const data: any = {};
+      if (dto.password) {
+        data.passwordHash = await hash(
+          dto.password,
+          Number(this.config.get<string>("BCRYPT_ROUNDS", "12"))
+        );
+      }
+
+      return tx.user.update({
+        where: { id: user.id },
+        data
+      });
     });
   }
 
