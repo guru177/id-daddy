@@ -494,7 +494,20 @@ const Canvas = () => {
         position: 'relative'
       }}>
         <canvas ref={canvasRef} />
-        {showGrid && <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '10px 10px' }} />}
+        {showGrid && (
+          <div 
+            className="absolute inset-0 pointer-events-none z-[100]" 
+            style={{ 
+              backgroundImage: `
+                linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)
+              `,
+              backgroundSize: '100px 100px, 100px 100px, 20px 20px, 20px 20px'
+            }} 
+          />
+        )}
       </div>
     </div>
   );

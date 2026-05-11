@@ -24,10 +24,10 @@ const STANDARD_IMAGE_FIELDS = ['Signature', 'Fingerprint', 'Division Logo'];
 // Section Subcomponent
 const Section = ({ title, children }: { title: string, children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(true);
-  
+
   return (
     <div className="pt-2">
-      <div 
+      <div
         className="flex items-center gap-2 mb-6 cursor-pointer group"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -56,8 +56,8 @@ const FormField = ({ label, placeholder, required = false, value, onChange, orig
       <label className="text-[10px] font-black text-gray-800 tracking-wide">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      <input 
-        type="text" 
+      <input
+        type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -72,10 +72,10 @@ export const DataUpload = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [tempConfig, setTempConfig] = useState<{enabledFields: string[], customFields: string[], enabledImageFields: string[], customImageFields: string[]}>({ enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] });
+  const [tempConfig, setTempConfig] = useState<{ enabledFields: string[], customFields: string[], enabledImageFields: string[], customImageFields: string[] }>({ enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] });
   const [tempOrganizationType, setTempOrganizationType] = useState<'corporate' | 'education' | 'healthcare'>('corporate');
   const [formData, setFormData] = useState(initialFormState);
-  const [customFieldsList, setCustomFieldsList] = useState<{label: string, value: string}[]>([]);
+  const [customFieldsList, setCustomFieldsList] = useState<{ label: string, value: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
@@ -90,7 +90,8 @@ export const DataUpload = () => {
     const fullName = `${m.firstName || ''} ${m.lastName || ''}`.toLowerCase();
     const idNum = (m.idNumber || '').toLowerCase();
     const empId = (m.employeeId || '').toLowerCase();
-    return fullName.includes(query) || idNum.includes(query) || empId.includes(query);
+    const dept = (m.department || '').toLowerCase();
+    return fullName.includes(query) || idNum.includes(query) || empId.includes(query) || dept.includes(query);
   });
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,10 +128,10 @@ export const DataUpload = () => {
 
   const handleDownloadTemplate = () => {
     const config = formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] };
-    
+
     const row: any = {};
     row['First Name'] = 'John';
-    
+
     STANDARD_FIELDS.forEach(f => {
       if (f !== 'First Name' && config.enabledFields.includes(f)) {
         row[getLabel(f, organizationType)] = '';
@@ -144,13 +145,13 @@ export const DataUpload = () => {
     });
 
     row['Profile Image'] = 'john_doe.jpg';
-    
+
     STANDARD_IMAGE_FIELDS.forEach(f => {
       if (config.enabledImageFields?.includes(f)) {
         row[f] = '';
       }
     });
-    
+
     config.customImageFields?.forEach(cf => {
       if (config.enabledImageFields?.includes(cf)) {
         row[cf] = '';
@@ -165,7 +166,7 @@ export const DataUpload = () => {
 
   const handleExportExcel = () => {
     if (members.length === 0) return;
-    
+
     const exportData = members.map(m => {
       const row: any = {
         'First Name': m.firstName,
@@ -228,7 +229,7 @@ export const DataUpload = () => {
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
-        
+
         let importedCount = 0;
 
         data.forEach((row: any) => {
@@ -280,7 +281,7 @@ export const DataUpload = () => {
           };
 
           const knownFields = ['First Name', 'FirstName', 'First', 'Name', 'Last Name', 'LastName', 'Last', 'Nickname', 'Date of Birth', 'DOB', 'Birthday', 'Title', 'Role', 'Position', 'ID number', 'ID', 'IDNumber', 'Employee ID', 'EmployeeID', 'EmpID', 'Department', 'Dept', 'Hire Date', 'HireDate', 'Issue Date', 'IssueDate', 'Expiration Date', 'ExpDate', 'Expiry', 'Phone 1', 'Phone', 'Phone1', 'Mobile', 'Phone 2', 'Phone2', 'Fax', 'Email', 'Email Address', 'Website', 'Web', 'URL', 'Country', 'Postal Code', 'Zip Code', 'Zip', 'State', 'Province', 'City', 'Street 1', 'Street', 'Address', 'Address 1', 'Street 2', 'Address 2', 'Grade Level', 'Grade', 'Security Level', 'Clearance', 'Height', 'Weight', 'Gender', 'Sex', 'Eye Color', 'Eyes', 'Hair Color', 'Hair', 'Profile Image', 'Photo', 'Image', 'Picture', 'Signature', 'Sign', 'Fingerprint', 'Thumbprint', 'Division Logo', 'Logo', 'Dept Logo'];
-          
+
           Object.keys(row).forEach(k => {
             const val = row[k];
             const isKnown = knownFields.some(kf => kf.toLowerCase().replace(/\s/g, '') === k.toLowerCase().replace(/\s/g, ''));
@@ -291,16 +292,16 @@ export const DataUpload = () => {
 
           if (newMember.firstName || newMember.lastName) {
             const currentMembers = useDesignerStore.getState().members;
-            
+
             // Deduplication logic: Match by Employee ID, ID Number, or Full Name
             const existingMember = currentMembers.find(m => {
               if (m.employeeId && newMember.employeeId && m.employeeId.toLowerCase() === newMember.employeeId.toLowerCase()) return true;
               if (m.idNumber && newMember.idNumber && m.idNumber.toLowerCase() === newMember.idNumber.toLowerCase()) return true;
-              
+
               const mName = `${m.firstName || ''} ${m.lastName || ''}`.trim().toLowerCase();
               const newName = `${newMember.firstName || ''} ${newMember.lastName || ''}`.trim().toLowerCase();
               if (mName && newName && mName === newName) return true;
-              
+
               return false;
             });
 
@@ -368,16 +369,16 @@ export const DataUpload = () => {
             }
           }
         }
-        
+
         if (m.customFields) {
           for (const key of Object.keys(m.customFields)) {
             const val = m.customFields[key];
             if (val && typeof val === 'string' && !val.startsWith('data:image')) {
-               const cleanVal = val.trim().toLowerCase();
-               if (cleanVal === fileName.toLowerCase() || cleanVal === fileNameWithoutExt.toLowerCase()) {
-                 fieldToUpdate = `custom:${key}`;
-                 return true;
-               }
+              const cleanVal = val.trim().toLowerCase();
+              if (cleanVal === fileName.toLowerCase() || cleanVal === fileNameWithoutExt.toLowerCase()) {
+                fieldToUpdate = `custom:${key}`;
+                return true;
+              }
             }
           }
         }
@@ -447,7 +448,7 @@ export const DataUpload = () => {
     if (isModalOpen && !editingMemberId) {
       const activeCustomFields = formConfig?.customFields?.filter(cf => formConfig.enabledFields.includes(cf)) || [];
       const activeCustomImageFields = formConfig?.customImageFields?.filter(cf => formConfig.enabledImageFields?.includes(cf)) || [];
-      
+
       const combined = [
         ...activeCustomFields.map(cf => ({ label: cf, value: '' })),
         ...activeCustomImageFields.map(cf => ({ label: cf, value: '' }))
@@ -506,8 +507,8 @@ export const DataUpload = () => {
 
     showModal({
       title: 'Success',
-      message: editingMemberId 
-        ? `${formData.firstName}'s data has been updated.` 
+      message: editingMemberId
+        ? `${formData.firstName}'s data has been updated.`
         : `${formData.firstName} has been added to your members list.`,
       type: 'info'
     });
@@ -526,16 +527,16 @@ export const DataUpload = () => {
 
   return (
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-800">
-      
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0 z-10">
         <div className="flex items-center gap-6">
           <h1 className="text-lg font-black text-gray-900 shrink-0">Saved Members ({members.length})</h1>
           <div className="relative flex-1 max-w-[300px]">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search by name or ID..." 
+            <input
+              type="text"
+              placeholder="Search by name, ID, or department/class..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded text-xs w-full focus:outline-none focus:border-green-500 focus:bg-white transition-colors"
@@ -543,7 +544,7 @@ export const DataUpload = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => {
               setTempConfig(formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] });
               setTempOrganizationType(organizationType);
@@ -554,28 +555,28 @@ export const DataUpload = () => {
             <Settings size={14} /> Variable Checklist
           </button>
           <div className="h-6 w-px bg-gray-200 mx-2" />
-          
+
           {/* Excel & Image Tools */}
           <input type="file" ref={excelInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportExcel} />
           <input type="file" ref={bulkImageInputRef} accept="image/*" multiple className="hidden" onChange={handleBulkImageUpload} />
-          
-          <button 
+
+          <button
             onClick={handleDownloadTemplate}
             className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
             title="Download Template"
           >
             <FileSpreadsheet size={14} /> Template
           </button>
-          
-          <button 
+
+          <button
             onClick={() => excelInputRef.current?.click()}
             className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
             title="Import Excel"
           >
             <Upload size={14} /> Import
           </button>
-          
-          <button 
+
+          <button
             onClick={handleExportExcel}
             className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
             title="Export Excel"
@@ -583,7 +584,7 @@ export const DataUpload = () => {
             <Download size={14} /> Export
           </button>
 
-          <button 
+          <button
             onClick={() => bulkImageInputRef.current?.click()}
             className="bg-white border border-blue-200 text-blue-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-blue-50"
             title="Bulk upload images to match filenames in Excel"
@@ -594,7 +595,7 @@ export const DataUpload = () => {
           <div className="h-6 w-px bg-gray-200 mx-2" />
 
           {selectedMembers.size > 0 && (
-            <button 
+            <button
               onClick={() => setIsDeleteConfirmOpen(true)}
               className="bg-red-50 border border-red-200 text-red-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-red-100"
               title="Bulk Delete"
@@ -603,7 +604,7 @@ export const DataUpload = () => {
             </button>
           )}
 
-          <button 
+          <button
             onClick={() => {
               setEditingMemberId(null);
               setFormData(initialFormState);
@@ -623,19 +624,19 @@ export const DataUpload = () => {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
             <div className="bg-gray-50 border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-black text-gray-900">Variable Checklist & Profile</h2>
-              <button 
+              <button
                 onClick={() => setIsSettingsOpen(false)}
                 className="p-2 text-gray-400 hover:bg-gray-200 hover:text-gray-600 rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
               <div className="mb-8">
                 <h3 className="text-sm font-black text-gray-800 mb-4">Organization Profile Type</h3>
                 <p className="text-xs text-gray-500 mb-3">Select the type of organization to automatically adapt the field labels.</p>
-                <select 
+                <select
                   value={tempOrganizationType}
                   onChange={(e) => setTempOrganizationType(e.target.value as any)}
                   className="bg-white border border-gray-200 text-stone-700 px-3 py-2.5 rounded font-bold text-[12px] uppercase tracking-wide focus:outline-none focus:border-green-500 transition-colors shadow-sm w-64"
@@ -656,15 +657,15 @@ export const DataUpload = () => {
                     const disabled = f === 'First Name';
                     return (
                       <label key={f} className={`flex items-center gap-2 text-xs font-bold ${disabled ? 'text-gray-400' : 'text-gray-700 cursor-pointer'}`}>
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           disabled={disabled}
                           checked={isChecked}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setTempConfig({...tempConfig, enabledFields: [...tempConfig.enabledFields, f]});
+                              setTempConfig({ ...tempConfig, enabledFields: [...tempConfig.enabledFields, f] });
                             } else {
-                              setTempConfig({...tempConfig, enabledFields: tempConfig.enabledFields.filter(x => x !== f)});
+                              setTempConfig({ ...tempConfig, enabledFields: tempConfig.enabledFields.filter(x => x !== f) });
                             }
                           }}
                           className="rounded border-gray-300 text-green-600 focus:ring-green-500"
@@ -677,24 +678,24 @@ export const DataUpload = () => {
                     const isChecked = tempConfig.enabledFields.includes(cf);
                     return (
                       <label key={`custom-${idx}`} className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer group">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={isChecked}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setTempConfig({...tempConfig, enabledFields: [...tempConfig.enabledFields, cf]});
+                              setTempConfig({ ...tempConfig, enabledFields: [...tempConfig.enabledFields, cf] });
                             } else {
-                              setTempConfig({...tempConfig, enabledFields: tempConfig.enabledFields.filter(x => x !== cf)});
+                              setTempConfig({ ...tempConfig, enabledFields: tempConfig.enabledFields.filter(x => x !== cf) });
                             }
                           }}
                           className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                         />
                         <span className="text-blue-700">{cf}</span>
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.preventDefault();
                             setTempConfig({
-                              ...tempConfig, 
+                              ...tempConfig,
                               customFields: tempConfig.customFields.filter((_, i) => i !== idx),
                               enabledFields: tempConfig.enabledFields.filter(x => x !== cf)
                             });
@@ -717,14 +718,14 @@ export const DataUpload = () => {
                     const isChecked = tempConfig.enabledImageFields?.includes(f);
                     return (
                       <label key={f} className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={isChecked}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setTempConfig({...tempConfig, enabledImageFields: [...(tempConfig.enabledImageFields || []), f]});
+                              setTempConfig({ ...tempConfig, enabledImageFields: [...(tempConfig.enabledImageFields || []), f] });
                             } else {
-                              setTempConfig({...tempConfig, enabledImageFields: (tempConfig.enabledImageFields || []).filter(x => x !== f)});
+                              setTempConfig({ ...tempConfig, enabledImageFields: (tempConfig.enabledImageFields || []).filter(x => x !== f) });
                             }
                           }}
                           className="rounded border-gray-300 text-green-600 focus:ring-green-500"
@@ -737,24 +738,24 @@ export const DataUpload = () => {
                     const isChecked = tempConfig.enabledImageFields?.includes(cf);
                     return (
                       <label key={`custom-img-${idx}`} className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer group">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={isChecked}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setTempConfig({...tempConfig, enabledImageFields: [...(tempConfig.enabledImageFields || []), cf]});
+                              setTempConfig({ ...tempConfig, enabledImageFields: [...(tempConfig.enabledImageFields || []), cf] });
                             } else {
-                              setTempConfig({...tempConfig, enabledImageFields: (tempConfig.enabledImageFields || []).filter(x => x !== cf)});
+                              setTempConfig({ ...tempConfig, enabledImageFields: (tempConfig.enabledImageFields || []).filter(x => x !== cf) });
                             }
                           }}
                           className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                         />
                         <span className="text-purple-700 underline">{cf}</span>
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.preventDefault();
                             setTempConfig({
-                              ...tempConfig, 
+                              ...tempConfig,
                               customImageFields: (tempConfig.customImageFields || []).filter((_, i) => i !== idx),
                               enabledImageFields: (tempConfig.enabledImageFields || []).filter(x => x !== cf)
                             });
@@ -769,22 +770,22 @@ export const DataUpload = () => {
                   })}
                 </div>
               </div>
-              
+
               <div className="pt-8 border-t border-gray-100 flex gap-12">
                 <div>
                   <h3 className="text-sm font-black text-gray-800 mb-4">Add Custom Text Field</h3>
                   <div className="flex gap-2 w-64">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       id="newCustomFieldInput"
-                      placeholder="e.g. Bus Route" 
+                      placeholder="e.g. Bus Route"
                       className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs focus:border-green-500 focus:outline-none"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           const val = e.currentTarget.value.trim();
                           if (val && !tempConfig.customFields.includes(val)) {
                             setTempConfig({
-                              ...tempConfig, 
+                              ...tempConfig,
                               customFields: [...tempConfig.customFields, val],
                               enabledFields: [...tempConfig.enabledFields, val]
                             });
@@ -793,13 +794,13 @@ export const DataUpload = () => {
                         }
                       }}
                     />
-                    <button 
+                    <button
                       onClick={() => {
                         const input = document.getElementById('newCustomFieldInput') as HTMLInputElement;
                         const val = input.value.trim();
                         if (val && !tempConfig.customFields.includes(val)) {
                           setTempConfig({
-                            ...tempConfig, 
+                            ...tempConfig,
                             customFields: [...tempConfig.customFields, val],
                             enabledFields: [...tempConfig.enabledFields, val]
                           });
@@ -816,17 +817,17 @@ export const DataUpload = () => {
                 <div>
                   <h3 className="text-sm font-black text-gray-800 mb-4">Add Custom Image Field</h3>
                   <div className="flex gap-2 w-64">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       id="newCustomImageInput"
-                      placeholder="e.g. Parent Signature" 
+                      placeholder="e.g. Parent Signature"
                       className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs focus:border-green-500 focus:outline-none"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           const val = e.currentTarget.value.trim();
                           if (val && !tempConfig.customImageFields?.includes(val)) {
                             setTempConfig({
-                              ...tempConfig, 
+                              ...tempConfig,
                               customImageFields: [...(tempConfig.customImageFields || []), val],
                               enabledImageFields: [...(tempConfig.enabledImageFields || []), val]
                             });
@@ -835,13 +836,13 @@ export const DataUpload = () => {
                         }
                       }}
                     />
-                    <button 
+                    <button
                       onClick={() => {
                         const input = document.getElementById('newCustomImageInput') as HTMLInputElement;
                         const val = input.value.trim();
                         if (val && !tempConfig.customImageFields?.includes(val)) {
                           setTempConfig({
-                            ...tempConfig, 
+                            ...tempConfig,
                             customImageFields: [...(tempConfig.customImageFields || []), val],
                             enabledImageFields: [...(tempConfig.enabledImageFields || []), val]
                           });
@@ -858,13 +859,13 @@ export const DataUpload = () => {
             </div>
 
             <div className="bg-gray-50 border-t border-gray-200 px-8 py-4 flex items-center justify-end gap-4 shrink-0">
-              <button 
+              <button
                 onClick={() => setIsSettingsOpen(false)}
                 className="px-6 py-2 rounded font-bold text-xs transition-colors text-gray-500 hover:bg-gray-200"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setOrganizationType(tempOrganizationType);
                   setFormConfig(tempConfig);
@@ -888,8 +889,8 @@ export const DataUpload = () => {
               <thead className="text-xs uppercase bg-gray-50 text-gray-400 font-black border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 w-12 text-center">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
                       checked={filteredMembers.length > 0 && selectedMembers.size === filteredMembers.length}
                       onChange={handleSelectAll}
@@ -906,7 +907,7 @@ export const DataUpload = () => {
                 {filteredMembers.map(member => (
                   <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-3 text-center">
-                      <input 
+                      <input
                         type="checkbox"
                         className="rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
                         checked={selectedMembers.has(member.id)}
@@ -923,25 +924,25 @@ export const DataUpload = () => {
                             <ImageIcon size={20} className="text-gray-300" />
                           )}
                         </div>
-                        
+
                         {/* Badges for other uploaded images */}
                         <div className="flex flex-col gap-1 justify-center">
-                           {(member.signature && (member.signature.startsWith('data:image') || member.signature.startsWith('http'))) && (
-                             <span className="text-[9px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 leading-none inline-block w-max">Signature</span>
-                           )}
-                           {(member.fingerprint && (member.fingerprint.startsWith('data:image') || member.fingerprint.startsWith('http'))) && (
-                             <span className="text-[9px] uppercase font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 leading-none inline-block w-max">Fingerprint</span>
-                           )}
-                           {(member.divisionLogo && (member.divisionLogo.startsWith('data:image') || member.divisionLogo.startsWith('http'))) && (
-                             <span className="text-[9px] uppercase font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 leading-none inline-block w-max">Logo</span>
-                           )}
-                           {Object.keys(member.customFields || {}).map(k => {
-                             const val = member.customFields![k];
-                             if (val && typeof val === 'string' && (val.startsWith('data:image') || val.startsWith('http'))) {
-                               return <span key={k} className="text-[9px] uppercase font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-100 leading-none whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px] inline-block">{k}</span>
-                             }
-                             return null;
-                           })}
+                          {(member.signature && (member.signature.startsWith('data:image') || member.signature.startsWith('http'))) && (
+                            <span className="text-[9px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 leading-none inline-block w-max">Signature</span>
+                          )}
+                          {(member.fingerprint && (member.fingerprint.startsWith('data:image') || member.fingerprint.startsWith('http'))) && (
+                            <span className="text-[9px] uppercase font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 leading-none inline-block w-max">Fingerprint</span>
+                          )}
+                          {(member.divisionLogo && (member.divisionLogo.startsWith('data:image') || member.divisionLogo.startsWith('http'))) && (
+                            <span className="text-[9px] uppercase font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 leading-none inline-block w-max">Logo</span>
+                          )}
+                          {Object.keys(member.customFields || {}).map(k => {
+                            const val = member.customFields![k];
+                            if (val && typeof val === 'string' && (val.startsWith('data:image') || val.startsWith('http'))) {
+                              return <span key={k} className="text-[9px] uppercase font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-100 leading-none whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px] inline-block">{k}</span>
+                            }
+                            return null;
+                          })}
                         </div>
                       </div>
                     </td>
@@ -952,7 +953,7 @@ export const DataUpload = () => {
                     <td className="px-6 py-3">{member.department || '-'}</td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-4">
-                        <button 
+                        <button
                           onClick={() => {
                             setEditingMemberId(member.id);
                             // @ts-ignore
@@ -965,7 +966,7 @@ export const DataUpload = () => {
                         >
                           Edit
                         </button>
-                        <button 
+                        <button
                           onClick={() => deleteMember(member.id)}
                           className="text-red-500 hover:text-red-700 font-bold text-xs"
                         >
@@ -1014,13 +1015,13 @@ export const DataUpload = () => {
               </p>
             </div>
             <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setIsDeleteConfirmOpen(false)}
                 className="px-4 py-2 rounded font-bold text-xs transition-colors text-gray-600 hover:bg-gray-200"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleBulkDelete}
                 className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-bold text-xs transition-colors shadow-sm"
               >
@@ -1039,13 +1040,13 @@ export const DataUpload = () => {
             <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-black text-gray-900">{editingMemberId ? 'Edit Member' : 'Add New Member'}</h2>
               <div className="flex items-center gap-4">
-                <button 
+                <button
                   onClick={handleSave}
                   className="bg-[#34a853] hover:bg-green-600 text-white px-8 py-2 rounded font-bold text-sm transition-colors shadow-sm"
                 >
                   Save Member
                 </button>
-                <button 
+                <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg transition-colors"
                 >
@@ -1068,7 +1069,7 @@ export const DataUpload = () => {
                       )}
                     </div>
                     <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                    <button 
+                    <button
                       onClick={() => fileInputRef.current?.click()}
                       className="bg-[#34a853] hover:bg-green-600 text-white px-6 py-1.5 rounded font-bold text-xs w-full transition-colors flex items-center justify-center gap-1"
                     >
@@ -1148,8 +1149,8 @@ export const DataUpload = () => {
                             return (
                               <div key={idx} className="flex flex-col gap-1.5">
                                 <label className="text-[10px] font-black text-gray-800 tracking-wide">{field.label}</label>
-                                <input 
-                                  type="text" 
+                                <input
+                                  type="text"
                                   placeholder={`Enter ${field.label}...`}
                                   className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                   value={field.value}
@@ -1172,11 +1173,11 @@ export const DataUpload = () => {
                     {/* Standard Image Fields */}
                     {STANDARD_IMAGE_FIELDS.map(field => {
                       if (!formConfig?.enabledImageFields?.includes(field)) return null;
-                      
-                      const key = field === 'Signature' ? 'signature' : 
-                                  field === 'Fingerprint' ? 'fingerprint' : 
-                                  field === 'Division Logo' ? 'divisionLogo' : '';
-                      
+
+                      const key = field === 'Signature' ? 'signature' :
+                        field === 'Fingerprint' ? 'fingerprint' :
+                          field === 'Division Logo' ? 'divisionLogo' : '';
+
                       if (!key) return null;
 
                       return (
@@ -1185,7 +1186,7 @@ export const DataUpload = () => {
                           {(() => {
                             const imageVal = formData[key as keyof typeof initialFormState] as string;
                             return (
-                              <div 
+                              <div
                                 onClick={() => document.getElementById(`upload-${key}`)?.click()}
                                 className={`rounded-lg h-32 relative overflow-hidden cursor-pointer group transition-all duration-200 ${imageVal ? 'bg-white border border-gray-200 shadow-sm' : 'bg-gray-50 flex flex-col items-center justify-center border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50'}`}
                               >
@@ -1206,10 +1207,10 @@ export const DataUpload = () => {
                                     <span className="text-[11px] font-bold text-gray-500 group-hover:text-green-700">Add {field}</span>
                                   </>
                                 )}
-                                <input 
-                                  type="file" 
-                                  accept="image/*" 
-                                  className="hidden" 
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
                                   id={`upload-${key}`}
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
@@ -1237,7 +1238,7 @@ export const DataUpload = () => {
                       return (
                         <div key={field} className="flex flex-col gap-2">
                           <label className="text-[10px] font-black text-gray-800 tracking-wide uppercase">{field}</label>
-                          <div 
+                          <div
                             onClick={() => document.getElementById(`upload-custom-${field.replace(/\s+/g, '-')}`)?.click()}
                             className={`rounded-lg h-32 relative overflow-hidden cursor-pointer group transition-all duration-200 ${imageValue ? 'bg-white border border-gray-200 shadow-sm' : 'bg-gray-50 flex flex-col items-center justify-center border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50'}`}
                           >
@@ -1258,10 +1259,10 @@ export const DataUpload = () => {
                                 <span className="text-[11px] font-bold text-gray-500 group-hover:text-green-700">Add {field}</span>
                               </>
                             )}
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
                               id={`upload-custom-${field.replace(/\s+/g, '-')}`}
                               onChange={(e) => {
                                 const file = e.target.files?.[0];

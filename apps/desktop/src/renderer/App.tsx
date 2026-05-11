@@ -3,6 +3,7 @@ import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, User as UserIcon
 import clsx from "clsx";
 import { api } from "./api";
 import { DesktopPage, useAuthStore } from "./store";
+import { useDesignerStore } from "./designer/store";
 import { LoginView } from "./views/LoginView";
 import { DashboardView } from "./views/DashboardView";
 import { DesignerView } from "./views/DesignerView";
@@ -32,6 +33,15 @@ export default function App() {
       api<any>("/auth/profile")
         .then(data => {
           updateUser({ plan: data.plan, subscriptionEnd: data.subscriptionEnd });
+          if (data.settings) {
+            const designerStore = useDesignerStore.getState();
+            if (data.settings.organizationType) {
+              designerStore.setOrganizationType(data.settings.organizationType);
+            }
+            if (data.settings.formConfig) {
+              designerStore.setFormConfig(data.settings.formConfig);
+            }
+          }
         })
         .catch(err => console.error("Failed to sync profile:", err));
     }

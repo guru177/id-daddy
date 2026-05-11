@@ -45,6 +45,34 @@ export class AuthService {
       }
     }
 
+    // If Super Admin has no workspace, create/assign one for testing/template purposes
+    if (user.role === "SUPER_ADMIN" && !user.workspaceId) {
+      const platformWorkspace = await this.prisma.runAsPlatform(async (tx) => {
+        let ws = await tx.workspace.findFirst({ where: { name: "Platform Admin" } });
+        if (!ws) {
+          ws = await tx.workspace.create({
+            data: {
+              name: "Platform Admin",
+              plan: "LIFETIME" as any,
+              status: "ACTIVE",
+              subscription: {
+                create: {
+                  plan: "LIFETIME" as any,
+                  startDate: new Date()
+                }
+              }
+            }
+          });
+        }
+        await tx.user.update({
+          where: { id: user.id },
+          data: { workspaceId: ws.id }
+        });
+        return ws;
+      });
+      user.workspaceId = platformWorkspace.id;
+    }
+
     return this.issueTokens({
       id: user.id,
       workspaceId: user.workspaceId,
@@ -105,7 +133,7 @@ export class AuthService {
       const dbUser = await tx.user.findUnique({
         where: { id: user.id },
         include: { workspace: { select: { name: true, plan: true } } }
-      });
+      }) as any;
       if (!dbUser) throw new UnauthorizedException();
       
       let subscriptionEnd: string | undefined = undefined;
@@ -119,14 +147,16 @@ export class AuthService {
         email: dbUser.email,
         phone: dbUser.phone,
         role: dbUser.role,
-        workspaceName: dbUser.workspace?.name ?? "Super Admin",
+        workspaceId: dbUser.workspaceId,
+        workspaceName: dbUser.workspace?.name ?? (dbUser.role === "SUPER_ADMIN" ? "Platform Admin" : "No Workspace"),
         plan: dbUser.workspace?.plan || (dbUser.role === "SUPER_ADMIN" ? "LIFETIME" : "FREE_TRIAL"),
-        subscriptionEnd
+        subscriptionEnd,
+        settings: dbUser.settings
       };
     });
   }
 
-  async updateProfile(user: AuthUser, dto: { password?: string }) {
+  async updateProfile(user: AuthUser, dto: { password?: string; settings?: any; workspaceName?: string }) {
     return this.prisma.runAsPlatform(async (tx) => {
       const data: any = {};
       if (dto.password) {
@@ -134,6 +164,16 @@ export class AuthService {
           dto.password,
           Number(this.config.get<string>("BCRYPT_ROUNDS", "12"))
         );
+      }
+      if (dto.settings !== undefined) {
+        data.settings = dto.settings;
+      }
+
+      if (dto.workspaceName && user.workspaceId) {
+        await tx.workspace.update({
+          where: { id: user.workspaceId },
+          data: { name: dto.workspaceName.trim() }
+        });
       }
 
       return tx.user.update({

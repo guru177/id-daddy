@@ -11,31 +11,31 @@ export class RecordsController {
   constructor(private readonly records: RecordsService) {}
 
   @Get()
-  @Roles("COMPANY_ADMIN", "STAFF", "VIEWER")
+  @Roles("SUPER_ADMIN", "COMPANY_ADMIN", "STAFF", "VIEWER")
   list(@CurrentUser() user: AuthUser) {
     return this.records.list(user);
   }
 
   @Post()
-  @Roles("COMPANY_ADMIN", "STAFF")
+  @Roles("SUPER_ADMIN", "COMPANY_ADMIN", "STAFF")
   create(@CurrentUser() user: AuthUser, @Body() data: any) {
     return this.records.create(user, data);
   }
 
   @Put(":id")
-  @Roles("COMPANY_ADMIN", "STAFF")
+  @Roles("SUPER_ADMIN", "COMPANY_ADMIN", "STAFF")
   update(@CurrentUser() user: AuthUser, @Param("id") id: string, @Body() data: any) {
     return this.records.update(user, id, data);
   }
 
   @Delete(":id")
-  @Roles("COMPANY_ADMIN", "STAFF")
+  @Roles("SUPER_ADMIN", "COMPANY_ADMIN", "STAFF")
   delete(@CurrentUser() user: AuthUser, @Param("id") id: string) {
     return this.records.delete(user, id);
   }
 
   @Post("upload")
-  @Roles("COMPANY_ADMIN")
+  @Roles("SUPER_ADMIN", "COMPANY_ADMIN")
   @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 20 * 1024 * 1024 } }))
   upload(
     @CurrentUser() user: AuthUser,

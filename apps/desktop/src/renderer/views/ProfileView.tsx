@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Key, Mail, Phone, Save, Building2 } from "lucide-react";
+import { Key, Mail, Phone, Save, Building2, Edit2, CheckCircle2, X } from "lucide-react";
 import { api } from "../api";
 
 export function ProfileView() {
@@ -19,6 +19,8 @@ export function ProfileView() {
     password: "",
     confirmPassword: ""
   });
+  const [isEditingWorkspaceName, setIsEditingWorkspaceName] = useState(false);
+  const [tempWorkspaceName, setTempWorkspaceName] = useState("");
 
   async function load() {
     try {
@@ -53,9 +55,11 @@ export function ProfileView() {
       await api("/auth/profile", {
         method: "PATCH",
         body: JSON.stringify({
-          password: form.password || undefined
+          password: form.password || undefined,
+          workspaceName: isEditingWorkspaceName ? tempWorkspaceName : undefined
         })
       });
+      setIsEditingWorkspaceName(false);
       setMessage("Profile updated successfully");
       setForm(prev => ({ ...prev, password: "", confirmPassword: "" }));
       await load();
@@ -88,8 +92,47 @@ export function ProfileView() {
                 <div className="h-20 w-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-200 shrink-0">
                   <Building2 size={40} />
                 </div>
-                <div>
-                  <h2 className="text-2xl font-black text-stone-900 leading-tight mb-1">{profile?.workspaceName}</h2>
+                 <div>
+                  {isEditingWorkspaceName ? (
+                    <div className="flex items-center gap-2 mb-1">
+                      <input
+                        autoFocus
+                        className="h-9 px-3 bg-white border-2 border-indigo-500 rounded-xl text-lg font-black text-stone-900 outline-none shadow-sm"
+                        value={tempWorkspaceName}
+                        onChange={(e) => setTempWorkspaceName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") save();
+                          if (e.key === "Escape") setIsEditingWorkspaceName(false);
+                        }}
+                      />
+                      <button 
+                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                        onClick={save}
+                      >
+                        <CheckCircle2 size={18} />
+                      </button>
+                      <button 
+                        className="p-2 text-stone-400 hover:bg-stone-50 rounded-xl transition-colors"
+                        onClick={() => setIsEditingWorkspaceName(false)}
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 group mb-1">
+                      <h2 className="text-2xl font-black text-stone-900 leading-tight">{profile?.workspaceName}</h2>
+                      <button 
+                        className="p-1.5 text-stone-300 opacity-0 group-hover:opacity-100 hover:text-indigo-600 hover:bg-indigo-50 transition-all rounded-lg"
+                        onClick={() => {
+                          setTempWorkspaceName(profile?.workspaceName || "");
+                          setIsEditingWorkspaceName(true);
+                        }}
+                        title="Rename Workspace"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <span className="text-stone-500 font-bold uppercase tracking-widest text-[10px] px-2 py-0.5 bg-stone-100 rounded-md">Enterprise</span>
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span>

@@ -3,6 +3,7 @@ import { fabric } from 'fabric';
 import { VdpResult } from './VdpEngine';
 import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api';
 import { useAuthStore } from '../store';
+import { updateProfile } from '../api';
 
 interface CardConfig {
   orientation: 'horizontal' | 'vertical';
@@ -402,10 +403,19 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   })),
   currentDesignId: null,
   loadTrigger: 0,
-  organizationType: 'corporate',
-  setOrganizationType: (type) => set({ organizationType: type }),
-  formConfig: null,
-  setFormConfig: (config) => set({ formConfig: config }),
+  organizationType: (localStorage.getItem('id_daddy_org_type') as any) || 'corporate',
+  setOrganizationType: (type) => {
+    localStorage.setItem('id_daddy_org_type', type);
+    set({ organizationType: type });
+    updateProfile({ settings: { organizationType: type, formConfig: get().formConfig } }).catch(console.error);
+  },
+  formConfig: localStorage.getItem('id_daddy_form_config') ? (() => { try { return JSON.parse(localStorage.getItem('id_daddy_form_config')!); } catch(e) { return null; } })() : null,
+  setFormConfig: (config) => {
+    if (config) localStorage.setItem('id_daddy_form_config', JSON.stringify(config));
+    else localStorage.removeItem('id_daddy_form_config');
+    set({ formConfig: config });
+    updateProfile({ settings: { organizationType: get().organizationType, formConfig: config } }).catch(console.error);
+  },
   guidelines: { horizontal: [], vertical: [] },
   addGuideline: (type, pos) => set((state) => ({
     guidelines: {
@@ -450,9 +460,6 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
   
   members: (() => {
-    const user = useAuthStore.getState().user;
-    if (user?.role === 'SUPER_ADMIN') return DEFAULT_MEMBERS;
-
     const stored = localStorage.getItem('saved_id_members');
     if (stored) {
       try {
@@ -464,13 +471,6 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     return [];
   })(),
   loadMembersFromDb: async () => {
-    const user = useAuthStore.getState().user;
-    if (user?.role === 'SUPER_ADMIN') {
-      set({ members: DEFAULT_MEMBERS });
-      localStorage.setItem('saved_id_members', JSON.stringify(DEFAULT_MEMBERS));
-      return;
-    }
-
     try {
       const result = await fetchRecords();
       if (result && result.data) {

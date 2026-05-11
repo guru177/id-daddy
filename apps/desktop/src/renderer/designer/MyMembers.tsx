@@ -40,8 +40,8 @@ export const MyMembers = () => {
     let isMounted = true;
     setIsGeneratingHighRes(true);
     
-    // Use multiplier 1 for exact 300 PPI resolution
-    generateSingleHighRes(selectedHighRes.design, selectedHighRes.member, 1).then((res) => {
+    // Use multiplier 4 for ultra-high resolution (~1200 PPI, >1.5MB files)
+    generateSingleHighRes(selectedHighRes.design, selectedHighRes.member, 4).then((res) => {
       if (isMounted) {
         setHighResImages(res);
         setIsGeneratingHighRes(false);
@@ -64,8 +64,8 @@ export const MyMembers = () => {
     if (!highResImages || !selectedHighRes) return;
     const { member } = selectedHighRes;
     const nameStr = `${member.firstName}_${member.lastName}`.replace(/\s+/g, '_');
-    downloadImage(highResImages.front, `${nameStr}_Front_300PPI.png`);
-    downloadImage(highResImages.back, `${nameStr}_Back_300PPI.png`);
+    downloadImage(highResImages.front, `${nameStr}_Front_1200PPI.png`);
+    downloadImage(highResImages.back, `${nameStr}_Back_1200PPI.png`);
   };
 
   const downloadHighResPDF = () => {
@@ -89,7 +89,7 @@ export const MyMembers = () => {
     doc.addPage();
     doc.addImage(highResImages.back, 'PNG', 0, 0, cardWidth, cardHeight);
     
-    doc.save(`${nameStr}_ID_Card_300PPI.pdf`);
+    doc.save(`${nameStr}_ID_Card_1200PPI.pdf`);
   };
 
   useEffect(() => {
@@ -164,7 +164,8 @@ export const MyMembers = () => {
       const member = members[i];
       setIsExporting(prev => ({ ...prev, current: i + 1 }));
       
-      const res = await generateSingleHighRes(design, member, 1);
+      // Use multiplier 4 for ultra-high quality PDF images
+      const res = await generateSingleHighRes(design, member, 4);
       
       const doc = new jsPDF({
         orientation: isHorizontal ? 'l' : 'p',
@@ -205,7 +206,8 @@ export const MyMembers = () => {
       const member = members[i];
       setIsExporting(prev => ({ ...prev, current: i + 1 }));
       
-      const res = await generateSingleHighRes(design, member, 1);
+      // Use multiplier 4 for ultra-high quality PNG exports
+      const res = await generateSingleHighRes(design, member, 4);
       
       const nameStr = `${member.firstName || 'User'}_${member.lastName || i}`.replace(/\s+/g, '_');
       const folder = zip.folder(nameStr);
@@ -370,7 +372,7 @@ export const MyMembers = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-black text-gray-900">{selectedHighRes.member.firstName} {selectedHighRes.member.lastName}</h2>
-                  <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">{selectedHighRes.member.department || 'ID Card'} • 300 PPI HIGH RESOLUTION</p>
+                  <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">{selectedHighRes.member.department || 'ID Card'} • 1200 PPI ULTRA HIGH RESOLUTION</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -400,20 +402,20 @@ export const MyMembers = () => {
               {isGeneratingHighRes ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-400">
                   <Loader2 size={40} className="animate-spin text-green-500" />
-                  <p className="font-bold text-lg text-gray-600 animate-pulse">Rendering 300 PPI Textures...</p>
+                  <p className="font-bold text-lg text-gray-600 animate-pulse">Rendering Ultra HD Textures...</p>
                 </div>
               ) : highResImages ? (
                 <div className="flex flex-row w-full h-full max-w-5xl gap-12 items-center justify-center">
                   <div className="flex flex-col gap-4 h-full min-h-0 flex-1 justify-center items-center w-full">
                     <span className="text-sm font-black text-gray-400 uppercase tracking-widest text-center shrink-0">Front Side</span>
                     <div className="relative min-h-0 flex shrink w-full h-full justify-center items-center">
-                      <img src={highResImages.front} alt="300 PPI Front" className="max-w-full max-h-full object-contain rounded-[24px] shadow-2xl border-4 border-white bg-white" />
+                      <img src={highResImages.front} alt="Ultra HD Front" className="max-w-full max-h-full object-contain rounded-[24px] shadow-2xl border-4 border-white bg-white" />
                     </div>
                   </div>
                   <div className="flex flex-col gap-4 h-full min-h-0 flex-1 justify-center items-center w-full">
                     <span className="text-sm font-black text-gray-400 uppercase tracking-widest text-center shrink-0">Back Side</span>
                     <div className="relative min-h-0 flex shrink w-full h-full justify-center items-center">
-                      <img src={highResImages.back} alt="300 PPI Back" className="max-w-full max-h-full object-contain rounded-[24px] shadow-2xl border-4 border-white bg-white" />
+                      <img src={highResImages.back} alt="Ultra HD Back" className="max-w-full max-h-full object-contain rounded-[24px] shadow-2xl border-4 border-white bg-white" />
                     </div>
                   </div>
                 </div>

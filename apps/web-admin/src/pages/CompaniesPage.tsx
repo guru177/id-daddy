@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Ban, Calendar, CheckCircle2, ChevronDown, Clock, History, Key, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { Ban, Calendar, CheckCircle2, ChevronDown, Clock, Edit2, History, Key, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { Plan } from "@id-daddy/shared";
 import { api } from "../api/client";
 import { WorkspaceRow } from "../types";
@@ -23,6 +23,8 @@ export function CompaniesPage() {
     companyName: string;
     newPlan: Plan;
   } | null>(null);
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [newNameValue, setNewNameValue] = useState("");
   const [historyWorkspace, setHistoryWorkspace] = useState<any>(null);
   const [historyPayments, setHistoryPayments] = useState<any[]>([]);
 
@@ -159,6 +161,21 @@ export function CompaniesPage() {
       await load();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Unable to change plan");
+    }
+  }
+  
+  async function renameCompany() {
+    if (!editingNameId || !newNameValue.trim()) return;
+    try {
+      await api(`/workspaces/${editingNameId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name: newNameValue.trim() })
+      });
+      setEditingNameId(null);
+      setNewNameValue("");
+      await load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Unable to rename company");
     }
   }
 
@@ -549,7 +566,46 @@ export function CompaniesPage() {
                 companies.map((company) => (
                   <tr key={company.id} className="border-t border-stone-100">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-stone-900">{company.name}</div>
+                      {editingNameId === company.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            autoFocus
+                            className="input h-8 text-sm px-2 py-0 min-w-[150px]"
+                            value={newNameValue}
+                            onChange={(e) => setNewNameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") renameCompany();
+                              if (e.key === "Escape") setEditingNameId(null);
+                            }}
+                          />
+                          <button 
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                            onClick={renameCompany}
+                          >
+                            <CheckCircle2 size={16} />
+                          </button>
+                          <button 
+                            className="p-1 text-stone-400 hover:bg-stone-50 rounded"
+                            onClick={() => setEditingNameId(null)}
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center group gap-2">
+                          <div className="font-medium text-stone-900">{company.name}</div>
+                          <button 
+                            className="p-1 text-stone-300 opacity-0 group-hover:opacity-100 hover:text-indigo-600 transition-all rounded"
+                            onClick={() => {
+                              setEditingNameId(company.id);
+                              setNewNameValue(company.name);
+                            }}
+                            title="Rename Company"
+                          >
+                            <Edit2 size={12} /> 
+                          </button>
+                        </div>
+                      )}
                       <div className="text-[10px] text-stone-400 font-bold uppercase tracking-tight">
                         {company.users?.[0]?.email ?? "No Admin Email"}
                       </div>
