@@ -314,6 +314,10 @@ interface DesignerState {
   syncLocalData: () => Promise<void>;
   exportDesign: (design: any) => void;
   newDesign: () => void;
+  resetDesign: () => void;
+  // Loads a global template's content as a fresh copy (currentDesignId = null)
+  // so the user's save never overwrites the global original.
+  loadGlobalTemplateAsCopy: (design: SavedDesign) => void;
   savedDesigns: SavedDesign[];
   members: Member[];
   loadMembersFromDb: () => Promise<void>;
@@ -482,12 +486,20 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     try {
       const result = await fetchTemplates();
       if (result && result.data) {
-        const dbTemplates = result.data.map((r: any) => ({ 
-          ...r.design, 
-          id: r.id, 
-          name: r.name,
-          isGlobal: r.isGlobal 
-        }));
+        const dbTemplates = result.data.map((r: any) => {
+          const design = r.design || {};
+          return {
+            id: r.id,
+            name: r.name,
+            isGlobal: r.isGlobal ?? false,
+            front: design.front ?? null,
+            back: design.back ?? null,
+            config: design.config ?? { orientation: 'horizontal', type: '30 Mil PVC', backsidePrinting: 'none', slotPunch: 'none', backgroundColorFront: '#ffffff', backgroundColorBack: '#ffffff', frontLamination: 'none', backLamination: 'none', magStripeEnabled: false, magStripeTracks: { track1: '', track2: '', track3: '' } },
+            thumbnailFront: design.thumbnailFront ?? '',
+            thumbnailBack: design.thumbnailBack ?? '',
+            timestamp: r.updatedAt ?? r.createdAt ?? new Date().toISOString(),
+          };
+        });
         set({ savedDesigns: dbTemplates });
         localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
       }
@@ -516,17 +528,21 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     }
   },
   updateMember: async (id, updatedMember) => {
+    const currentMember = get().members.find(m => m.id === id);
+    if (!currentMember) return;
+    const mergedMember = { ...currentMember, ...updatedMember };
+    
     try {
-      await updateRecord(id, updatedMember);
+      await updateRecord(id, mergedMember);
       set((state) => {
-        const updated = state.members.map(m => m.id === id ? { ...m, ...updatedMember } : m);
+        const updated = state.members.map(m => m.id === id ? mergedMember : m);
         localStorage.setItem('saved_id_members', JSON.stringify(updated));
         return { members: updated, previewResults: [] };
       });
     } catch (e) {
       console.error("Failed to update record", e);
       set((state) => {
-        const updated = state.members.map(m => m.id === id ? { ...m, ...updatedMember } : m);
+        const updated = state.members.map(m => m.id === id ? mergedMember : m);
         localStorage.setItem('saved_id_members', JSON.stringify(updated));
         return { members: updated, previewResults: [] };
       });
@@ -573,7 +589,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const { canvas, history, isHistoryPaused, side } = get();
     if (!canvas || isHistoryPaused) return;
 
-    const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors']);
+    const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors', 'securityData', 'securityFormat', 'securityType', 'qrFields', 'securityHideText']);
     const jsonStr = JSON.stringify(json);
     
     // Deduplicate history
@@ -1048,13 +1064,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
     const [width, height] = design.config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
     
-    // Front side
-    if (design.front) {
-      const tempFront = document.createElement('canvas');
-      tempFront.width = width;
-      tempFront.height = height;
-      const fabFront = new fabric.StaticCanvas(tempFront, { width, height, backgroundColor: design.config.backgroundColorFront });
-      fabFront.loadFromJSON(design.front, () => {
+    const runExport = (data: any, bgColor: string, isFront: boolean) => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = width;
+      tempCanvas.height = height;
+      const fabricCanvas = new fabric.StaticCanvas(tempCanvas, { width, height, backgroundColor: bgColor });
+      
+      fabricCanvas.loadFromJSON(data, () => {
         if (design.config.slotPunch !== 'none') {
           const punch = new fabric.Rect({
             width: 160, height: 35, rx: 12, ry: 12, fill: '#d1d5db',
@@ -1063,34 +1079,17 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
             angle: design.config.slotPunch === 'long' ? 90 : 0,
             originX: 'center', originY: 'center'
           });
-          fabFront.add(punch);
+          fabricCanvas.add(punch);
+          punch.bringToFront();
         }
-        fabFront.renderAll();
-        downloadLink(fabFront.toDataURL({ format: 'png', multiplier: 3 }), `${design.name.replace(/\s+/g, '-')}-front.png`);
+        fabricCanvas.renderAll();
+        downloadLink(fabricCanvas.toDataURL({ format: 'png', multiplier: 3 }), `${design.name.replace(/\s+/g, '-')}-${isFront ? 'front' : 'back'}.png`);
+        fabricCanvas.dispose();
       });
-    }
+    };
 
-    // Back side
-    if (design.back) {
-      const tempBack = document.createElement('canvas');
-      tempBack.width = width;
-      tempBack.height = height;
-      const fabBack = new fabric.StaticCanvas(tempBack, { width, height, backgroundColor: design.config.backgroundColorBack });
-      fabBack.loadFromJSON(design.back, () => {
-        if (design.config.slotPunch !== 'none') {
-          const punch = new fabric.Rect({
-            width: 160, height: 35, rx: 12, ry: 12, fill: '#d1d5db',
-            left: design.config.slotPunch === 'short' ? width / 2 : 30,
-            top: design.config.slotPunch === 'short' ? 30 : height / 2,
-            angle: design.config.slotPunch === 'long' ? 90 : 0,
-            originX: 'center', originY: 'center'
-          });
-          fabBack.add(punch);
-        }
-        fabBack.renderAll();
-        downloadLink(fabBack.toDataURL({ format: 'png', multiplier: 3 }), `${design.name.replace(/\s+/g, '-')}-back.png`);
-      });
-    }
+    if (design.front) runExport(design.front, design.config.backgroundColorFront, true);
+    if (design.back) runExport(design.back, design.config.backgroundColorBack, false);
   },
 
   savedDesigns: JSON.parse(localStorage.getItem('saved_id_designs') || '[]'),
@@ -1161,7 +1160,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
             punch.bringToFront();
           }
           tempFabric.renderAll();
-          const dataUrl = tempFabric.toDataURL({ format: 'png', multiplier: 1.0 });
+          const dataUrl = tempFabric.toDataURL({ format: 'png', multiplier: 2.0 });
           tempFabric.dispose();
           resolve(dataUrl);
         });
@@ -1172,7 +1171,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const otherThumb = await generateOtherThumb();
       const isFront = side === 'front';
       
-      const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors']);
+      const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors', 'securityData', 'securityFormat', 'securityType', 'qrFields', 'securityHideText']);
       const fData = isFront ? currentData : frontData;
       const bData = !isFront ? currentData : backData;
       const fThumb = isFront ? currentThumb : otherThumb;
@@ -1256,6 +1255,24 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     }));
   },
 
+  // Loads a global template for editing as a brand-new user design.
+  // currentDesignId is intentionally set to null so saving always creates
+  // a new record instead of overwriting the shared global template.
+  loadGlobalTemplateAsCopy: (design) => {
+    set((state) => ({
+      frontData: design.front,
+      backData: design.back,
+      frontThumbnail: design.thumbnailFront,
+      backThumbnail: design.thumbnailBack,
+      config: design.config,
+      currentDesignId: null,   // ← key: forces a new record on save
+      side: 'front',
+      history: [],
+      redoStack: [],
+      loadTrigger: state.loadTrigger + 1
+    }));
+  },
+
   deleteDesign: async (id) => {
     const design = get().savedDesigns.find(d => d.id === id);
     const updated = get().savedDesigns.filter(d => d.id !== id);
@@ -1298,5 +1315,21 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         saveState();
       }
     });
+  },
+
+  // Silent reset used when starting fresh from Get Started screen.
+  // Does NOT touch the canvas directly — it may already be disposed.
+  // The Canvas component will mount fresh and handle null frontData correctly.
+  resetDesign: () => {
+    set((state) => ({
+      frontData: null,
+      backData: null,
+      frontThumbnail: '',
+      backThumbnail: '',
+      currentDesignId: null,
+      history: [],
+      redoStack: [],
+      loadTrigger: state.loadTrigger + 1,
+    }));
   }
 }));

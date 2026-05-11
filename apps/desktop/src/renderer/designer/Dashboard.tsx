@@ -1,10 +1,98 @@
-import React from 'react';
-import { Plus, Sparkles, Globe, Star, Clock } from 'lucide-react';
-import { SavedDesign } from './store';
+import React, { useEffect } from 'react';
+import { Plus, Sparkles, Globe, Clock, Edit2 } from 'lucide-react';
+import { SavedDesign, useDesignerStore } from './store';
+
+// Dual-side card preview — matches the exact same style as My Designs
+const DesignCard = ({
+  design,
+  onClick,
+  accentColor = 'green',
+  badge,
+}: {
+  design: any;
+  onClick: () => void;
+  accentColor?: 'green' | 'amber';
+  badge?: React.ReactNode;
+}) => {
+  const hoverShadow = accentColor === 'green'
+    ? 'group-hover:shadow-[0_32px_64px_-12px_rgba(34,197,94,0.18)]'
+    : 'group-hover:shadow-[0_32px_64px_-12px_rgba(251,191,36,0.18)]';
+  const hoverBorder = accentColor === 'green' ? 'group-hover:border-green-400' : 'group-hover:border-amber-400';
+
+  // Orientation determines split direction:
+  // horizontal card → top/bottom split (flex-col)
+  // vertical card   → left/right split (flex-row)
+  const isHorizontal = design.config?.orientation === 'horizontal';
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col group text-left w-full bg-white rounded-[28px] border border-gray-100 overflow-hidden transition-all duration-500 ${hoverShadow} ${hoverBorder} group-hover:-translate-y-2`}
+    >
+      {/* Dual-side preview — aspect-square to match My Designs */}
+      <div className="relative w-full aspect-square bg-gray-100 overflow-hidden group-hover:bg-green-50/20 transition-colors duration-500">
+        <div className={`w-full h-full flex ${isHorizontal ? 'flex-col' : 'flex-row'}`}>
+          {/* Front */}
+          <div className="flex-1 relative overflow-hidden border-b border-gray-100 last:border-0">
+            {design.thumbnailFront ? (
+              <img src={design.thumbnailFront} alt="Front" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 text-xs font-bold">No Preview</div>
+            )}
+            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-md text-[9px] font-black text-white rounded-md uppercase tracking-wider">
+              Front
+            </div>
+          </div>
+
+          {/* Back */}
+          <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0">
+            {design.thumbnailBack ? (
+              <img src={design.thumbnailBack} alt="Back" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 text-xs font-bold">No Preview</div>
+            )}
+            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-md text-[9px] font-black text-white rounded-md uppercase tracking-wider">
+              Back
+            </div>
+          </div>
+        </div>
+
+        {/* Top-right badge (e.g. Sparkles for official) */}
+        {badge && (
+          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+            {badge}
+          </div>
+        )}
+
+        {/* Hover action overlay */}
+        <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center">
+          <div className="p-4 bg-white text-gray-900 rounded-2xl shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+            <Edit2 size={22} strokeWidth={2.5} />
+          </div>
+        </div>
+      </div>
+
+      {/* Label */}
+      <div className="px-4 py-3 border-t border-gray-50">
+        <h3 className={`text-sm font-black text-gray-900 truncate transition-colors ${accentColor === 'green' ? 'group-hover:text-green-600' : 'group-hover:text-amber-600'}`}>
+          {design.name}
+        </h3>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+          {design.isGlobal ? 'Official Design' : `Modified ${new Date(design.timestamp || design.updatedAt || '').toLocaleDateString()}`}
+        </p>
+      </div>
+    </button>
+  );
+};
 
 export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null) => void }) => {
-  const savedDesigns = JSON.parse(localStorage.getItem('saved_id_designs') || '[]');
-  
+  const savedDesigns = useDesignerStore((s) => s.savedDesigns);
+  const loadTemplatesFromDb = useDesignerStore((s) => s.loadTemplatesFromDb);
+
+  useEffect(() => {
+    void loadTemplatesFromDb();
+  }, []);
+
   const officialTemplates = savedDesigns.filter((d: any) => d.isGlobal);
   const myRecent = savedDesigns.filter((d: any) => !d.isGlobal).slice(0, 4);
 
@@ -19,79 +107,61 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
         {/* Section: Official Templates */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-             <div className="p-2 bg-green-100 text-green-600 rounded-xl">
-               <Globe size={20} strokeWidth={2.5} />
-             </div>
-             <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest text-sm">Official ID Templates</h2>
+            <div className="p-2 bg-green-100 text-green-600 rounded-xl">
+              <Globe size={20} strokeWidth={2.5} />
+            </div>
+            <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest text-sm">Official ID Templates</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-            {/* Blank Canvas Option */}
-            <button 
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {/* Blank Canvas — matches card height via aspect-square */}
+            <button
+              type="button"
               onClick={() => onSelect(null)}
-              className="flex flex-col group"
+              className="flex flex-col group w-full text-left bg-white rounded-[28px] border-2 border-dashed border-gray-200 overflow-hidden transition-all duration-500 hover:border-green-400 hover:shadow-[0_32px_64px_-12px_rgba(34,197,94,0.18)] hover:-translate-y-2"
             >
-              <div className="aspect-[3.5/2] w-full bg-white border-2 border-dashed border-gray-200 rounded-[32px] flex flex-col items-center justify-center gap-4 transition-all duration-500 group-hover:border-green-500 group-hover:bg-green-50/30 group-hover:shadow-[0_20px_50px_rgba(34,197,94,0.15)] group-hover:-translate-y-2">
-                 <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 transition-all duration-500 group-hover:bg-white group-hover:text-green-600 group-hover:shadow-lg group-hover:rotate-90">
-                    <Plus size={32} strokeWidth={2.5} />
-                 </div>
-                 <span className="text-sm font-black text-gray-800 tracking-tight transition-colors group-hover:text-green-700">Blank Canvas</span>
+              <div className="relative w-full aspect-square flex flex-col items-center justify-center gap-4 bg-gray-50/50 group-hover:bg-green-50/30 transition-colors duration-500">
+                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-gray-300 shadow-sm transition-all duration-500 group-hover:text-green-600 group-hover:shadow-lg group-hover:rotate-90">
+                  <Plus size={28} strokeWidth={2.5} />
+                </div>
+              </div>
+              <div className="px-4 py-3 border-t border-gray-100">
+                <h3 className="text-sm font-black text-gray-900 group-hover:text-green-600 transition-colors">Blank Canvas</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Start from scratch</p>
               </div>
             </button>
 
-            {/* Global Templates */}
+            {/* Official template cards */}
             {officialTemplates.map((design: any) => (
-              <button 
+              <DesignCard
                 key={design.id}
+                design={design}
                 onClick={() => onSelect(design)}
-                className="flex flex-col group text-left"
-              >
-                <div className="aspect-[3.5/2] w-full bg-white border border-gray-100 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)] group-hover:border-green-500 group-hover:-translate-y-2 relative">
-                   <img src={design.thumbnailFront} className="w-full h-full object-cover p-2" alt={design.name} />
-                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all" />
-                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm">
-                      <Sparkles size={14} className="text-green-500 fill-green-500" />
-                   </div>
-                </div>
-                <div className="mt-4 px-2">
-                   <h3 className="text-sm font-black text-gray-900 group-hover:text-green-600 transition-colors truncate">{design.name}</h3>
-                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Official Design</p>
-                </div>
-              </button>
+                accentColor="green"
+                badge={<Sparkles size={14} className="text-green-500 fill-green-500" />}
+              />
             ))}
           </div>
         </section>
 
-        {/* Section: Your Recent Work */}
+        {/* Section: Recent Designs */}
         {myRecent.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-8">
-               <div className="p-2 bg-amber-100 text-amber-600 rounded-xl">
-                 <Clock size={20} strokeWidth={2.5} />
-               </div>
-               <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest text-sm">Your Recent Designs</h2>
+              <div className="p-2 bg-amber-100 text-amber-600 rounded-xl">
+                <Clock size={20} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest text-sm">Your Recent Designs</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {myRecent.map((design: any) => (
-                <button 
+                <DesignCard
                   key={design.id}
+                  design={design}
                   onClick={() => onSelect(design)}
-                  className="flex flex-col group text-left"
-                >
-                  <div className="aspect-[3.5/2] w-full bg-white border border-gray-100 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)] group-hover:border-amber-500 group-hover:-translate-y-2 relative">
-                    <img src={design.thumbnailFront} className="w-full h-full object-cover p-2" alt={design.name} />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm">
-                      <Star size={14} className="text-amber-500 fill-amber-500" />
-                    </div>
-                  </div>
-                  <div className="mt-4 px-2">
-                    <h3 className="text-sm font-black text-gray-900 group-hover:text-amber-600 transition-colors truncate">{design.name}</h3>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                      Modified {new Date(design.timestamp).toLocaleDateString()}
-                    </p>
-                  </div>
-                </button>
+                  accentColor="amber"
+                />
               ))}
             </div>
           </section>

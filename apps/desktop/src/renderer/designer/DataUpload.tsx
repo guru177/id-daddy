@@ -81,6 +81,9 @@ export const DataUpload = () => {
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
   const filteredMembers = members.filter(m => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -89,6 +92,38 @@ export const DataUpload = () => {
     const empId = (m.employeeId || '').toLowerCase();
     return fullName.includes(query) || idNum.includes(query) || empId.includes(query);
   });
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const allIds = new Set(filteredMembers.map(m => m.id));
+      setSelectedMembers(allIds);
+    } else {
+      setSelectedMembers(new Set());
+    }
+  };
+
+  const handleSelectMember = (id: string, checked: boolean) => {
+    const next = new Set(selectedMembers);
+    if (checked) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setSelectedMembers(next);
+  };
+
+  const handleBulkDelete = () => {
+    selectedMembers.forEach(id => {
+      deleteMember(id);
+    });
+    setSelectedMembers(new Set());
+    setIsDeleteConfirmOpen(false);
+    showModal({
+      title: 'Success',
+      message: 'Selected members have been deleted.',
+      type: 'info'
+    });
+  };
 
   const handleDownloadTemplate = () => {
     const config = formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] };
@@ -249,7 +284,7 @@ export const DataUpload = () => {
           Object.keys(row).forEach(k => {
             const val = row[k];
             const isKnown = knownFields.some(kf => kf.toLowerCase().replace(/\s/g, '') === k.toLowerCase().replace(/\s/g, ''));
-            if (!isKnown && val) {
+            if (!isKnown && val && !k.startsWith('__EMPTY')) {
               newMember.customFields[k] = String(val);
             }
           });
@@ -326,7 +361,8 @@ export const DataUpload = () => {
         for (const field of standardFields) {
           const val = m[field as keyof typeof m] as string | undefined;
           if (val && !val.startsWith('data:image')) {
-            if (val.toLowerCase() === fileName.toLowerCase() || val.toLowerCase() === fileNameWithoutExt.toLowerCase()) {
+            const cleanVal = val.trim().toLowerCase();
+            if (cleanVal === fileName.toLowerCase() || cleanVal === fileNameWithoutExt.toLowerCase()) {
               fieldToUpdate = field;
               return true;
             }
@@ -337,7 +373,8 @@ export const DataUpload = () => {
           for (const key of Object.keys(m.customFields)) {
             const val = m.customFields[key];
             if (val && typeof val === 'string' && !val.startsWith('data:image')) {
-               if (val.toLowerCase() === fileName.toLowerCase() || val.toLowerCase() === fileNameWithoutExt.toLowerCase()) {
+               const cleanVal = val.trim().toLowerCase();
+               if (cleanVal === fileName.toLowerCase() || cleanVal === fileNameWithoutExt.toLowerCase()) {
                  fieldToUpdate = `custom:${key}`;
                  return true;
                }
@@ -353,10 +390,12 @@ export const DataUpload = () => {
         memberToUpdate = members.find(m => {
           const fullName = `${m.firstName || ''} ${m.lastName || ''}`.trim().toLowerCase();
           const fileLower = fileNameWithoutExt.toLowerCase();
+          const fileLowerSpaces = fileLower.replace(/_/g, ' ').replace(/-/g, ' ');
           if (
             (m.idNumber && m.idNumber.toLowerCase() === fileLower) ||
             (m.employeeId && m.employeeId.toLowerCase() === fileLower) ||
-            (fullName && fullName === fileLower)
+            (fullName && fullName === fileLower) ||
+            (fullName && fullName === fileLowerSpaces)
           ) {
             fieldToUpdate = 'profileImage';
             return true;
@@ -553,6 +592,16 @@ export const DataUpload = () => {
           </button>
 
           <div className="h-6 w-px bg-gray-200 mx-2" />
+
+          {selectedMembers.size > 0 && (
+            <button 
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              className="bg-red-50 border border-red-200 text-red-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-red-100"
+              title="Bulk Delete"
+            >
+              Delete Selected ({selectedMembers.size})
+            </button>
+          )}
 
           <button 
             onClick={() => {
@@ -838,16 +887,32 @@ export const DataUpload = () => {
             <table className="w-full text-left text-sm text-gray-600">
               <thead className="text-xs uppercase bg-gray-50 text-gray-400 font-black border-b border-gray-200">
                 <tr>
+                  <th className="px-6 py-3 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                      checked={filteredMembers.length > 0 && selectedMembers.size === filteredMembers.length}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
                   <th className="px-6 py-3 w-48">Assets</th>
                   <th className="px-6 py-3">Name</th>
-                  <th className="px-6 py-3">ID Number</th>
-                  <th className="px-6 py-3">Department</th>
+                  <th className="px-6 py-3">{getLabel('ID number')}</th>
+                  <th className="px-6 py-3">{getLabel('Department')}</th>
                   <th className="px-6 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredMembers.map(member => (
                   <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-3 text-center">
+                      <input 
+                        type="checkbox"
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                        checked={selectedMembers.has(member.id)}
+                        onChange={(e) => handleSelectMember(member.id, e.target.checked)}
+                      />
+                    </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
                         {/* Profile Image Main Thumbnail */}
@@ -912,14 +977,14 @@ export const DataUpload = () => {
                 ))}
                 {members.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-bold">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-bold">
                       No members added yet. Click "Add New Member" to get started.
                     </td>
                   </tr>
                 )}
                 {members.length > 0 && filteredMembers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-bold">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-bold">
                       No members match your search query "{searchQuery}".
                     </td>
                   </tr>
@@ -929,6 +994,42 @@ export const DataUpload = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-8">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+            <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <X size={16} />
+              </div>
+              <h2 className="text-lg font-black text-red-900">Confirm Deletion</h2>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-700 font-bold mb-2">
+                Are you sure you want to delete {selectedMembers.size} member{selectedMembers.size > 1 ? 's' : ''}?
+              </p>
+              <p className="text-xs text-gray-500">
+                <strong className="text-red-500">WHAT CAN HAPPEN:</strong> The selected members and all their associated data will be permanently deleted from the database. This action cannot be undone.
+              </p>
+            </div>
+            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+              <button 
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className="px-4 py-2 rounded font-bold text-xs transition-colors text-gray-600 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleBulkDelete}
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-bold text-xs transition-colors shadow-sm"
+              >
+                Accept & Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Popup */}
       {isModalOpen && (

@@ -36,6 +36,15 @@ export function CompaniesPage() {
     currentEnd: string | null;
     newEnd: string;
   } | null>(null);
+  const [confirmRenewal, setConfirmRenewal] = useState<{
+    companyId: string;
+    companyName: string;
+    newEnd: string;
+  } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    companyId: string;
+    companyName: string;
+  } | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [form, setForm] = useState({
     adminEmail: "",
@@ -100,10 +109,18 @@ export function CompaniesPage() {
     await load();
   }
 
-  async function deleteCompany(id: string) {
-    if (!confirm("Are you sure you want to delete this client? All their templates and records will be permanently removed.")) return;
+  function deleteCompany(company: WorkspaceRow) {
+    setConfirmDelete({
+      companyId: company.id,
+      companyName: company.name
+    });
+  }
+
+  async function applyDelete() {
+    if (!confirmDelete) return;
     try {
-      await api(`/workspaces/${id}`, { method: "DELETE" });
+      await api(`/workspaces/${confirmDelete.companyId}`, { method: "DELETE" });
+      setConfirmDelete(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to delete client");
@@ -171,7 +188,7 @@ export function CompaniesPage() {
     }
   }
 
-  async function renewPlan(company: WorkspaceRow) {
+  function renewPlan(company: WorkspaceRow) {
     if (company.plan !== "PRO_1Y") return;
     
     const currentEnd = company.subscription?.endDate ? new Date(company.subscription.endDate) : new Date();
@@ -179,16 +196,24 @@ export function CompaniesPage() {
     const baseDate = currentEnd > new Date() ? currentEnd : new Date();
     const newEnd = new Date(baseDate.getTime() + 365 * 24 * 60 * 60 * 1000);
     
-    if (confirm(`Renew ${company.name}'s Pro Plan for another 365 days? (New Expiry: ${newEnd.toLocaleDateString()})`)) {
-      try {
-        await api(`/workspaces/${company.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ endDate: newEnd.toISOString() })
-        });
-        await load();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : "Unable to renew plan");
-      }
+    setConfirmRenewal({
+      companyId: company.id,
+      companyName: company.name,
+      newEnd: newEnd.toISOString()
+    });
+  }
+
+  async function applyRenewal() {
+    if (!confirmRenewal) return;
+    try {
+      await api(`/workspaces/${confirmRenewal.companyId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ endDate: confirmRenewal.newEnd })
+      });
+      setConfirmRenewal(null);
+      await load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Unable to renew plan");
     }
   }
 
@@ -265,6 +290,76 @@ export function CompaniesPage() {
                 onClick={() => setConfirmExtension(null)}
               >
                 Reject / Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Renewal Confirmation Modal */}
+      {confirmRenewal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-stone-900/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] w-full max-w-md p-10 shadow-[0_32px_64px_rgba(0,0,0,0.2)] border border-stone-100 animate-in zoom-in-95 duration-300">
+            <div className="h-20 w-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center text-emerald-600 mb-8 mx-auto shadow-inner border border-emerald-100">
+              <RefreshCw size={40} />
+            </div>
+            
+            <div className="text-center mb-10">
+              <h2 className="text-2xl font-black text-stone-900 mb-3 tracking-tight">Renew Pro Plan?</h2>
+              <p className="text-stone-500 font-medium leading-relaxed">
+                You are adding <span className="text-stone-900 font-bold">365 days</span> of Pro access to 
+                <span className="text-stone-900 font-bold"> {confirmRenewal.companyName}</span>.
+              </p>
+              <div className="mt-6 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest">
+                <div className="px-3 py-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                  New Expiry: {new Date(confirmRenewal.newEnd).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button 
+                className="h-14 w-full bg-stone-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-xl active:scale-95"
+                onClick={applyRenewal}
+              >
+                Approve Renewal
+              </button>
+              <button 
+                className="h-14 w-full bg-stone-50 text-stone-400 font-bold rounded-2xl hover:bg-stone-100 transition-all active:scale-95"
+                onClick={() => setConfirmRenewal(null)}
+              >
+                Reject / Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-stone-900/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] w-full max-w-md p-10 shadow-[0_32px_64px_rgba(0,0,0,0.2)] border border-stone-100 animate-in zoom-in-95 duration-300">
+            <div className="h-20 w-20 bg-red-50 rounded-[2rem] flex items-center justify-center text-red-600 mb-8 mx-auto shadow-inner border border-red-100">
+              <Trash2 size={40} />
+            </div>
+            
+            <div className="text-center mb-10">
+              <h2 className="text-2xl font-black text-stone-900 mb-3 tracking-tight">Delete Client?</h2>
+              <p className="text-stone-500 font-medium leading-relaxed">
+                You are about to permanently delete <span className="text-stone-900 font-bold">{confirmDelete.companyName}</span>. All their templates and records will be lost forever.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button 
+                className="h-14 w-full bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all shadow-xl active:scale-95"
+                onClick={applyDelete}
+              >
+                Yes, Delete Client
+              </button>
+              <button 
+                className="h-14 w-full bg-stone-50 text-stone-400 font-bold rounded-2xl hover:bg-stone-100 transition-all active:scale-95"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -527,7 +622,7 @@ export function CompaniesPage() {
                         <button className="btn-secondary h-9 w-9 p-0 text-amber-600 hover:bg-amber-50 hover:border-amber-100" onClick={() => void setResettingId(company.id)} title="Reset admin password">
                           <Key className="h-4 w-4" />
                         </button>
-                        <button className="btn-secondary h-9 w-9 p-0 text-red-600 hover:bg-red-50 hover:border-red-100" onClick={() => void deleteCompany(company.id)} title="Delete company">
+                        <button className="btn-secondary h-9 w-9 p-0 text-red-600 hover:bg-red-50 hover:border-red-100" onClick={() => deleteCompany(company)} title="Delete company">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>

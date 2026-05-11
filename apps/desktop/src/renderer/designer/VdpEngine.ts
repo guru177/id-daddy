@@ -1,5 +1,6 @@
 import { fabric } from 'fabric';
 import { Member } from './store';
+import { generateSecurityImageURL } from './Panels';
 
 export interface VdpResult {
   memberId: string;
@@ -199,12 +200,6 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member)
             text = text.replace(match, val as string);
           });
 
-          // CRITICAL KERNING FIX: Convert logical spaces to non-breaking spaces (\u00A0).
-          // Heavy fonts collapse standard spaces during Fabric's chunk rendering.
-          if (text.includes(' ')) {
-            text = text.replace(/ /g, '\u00A0');
-          }
-
           textObj.set('text', text);
 
           // Re-calculate variable colors specifically for this member's string length
@@ -251,49 +246,82 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member)
     // 2. Image Optimization: Use cache for repeated images (logos, etc)
     const placeholder = (obj as any).placeholder;
     if (placeholder) {
-      const key = placeholder.replace(/[{}]/g, '').trim();
-      let imageUrl = '';
+      if (placeholder === '{{barcode}}' || placeholder === '{{qr_code}}' || placeholder === '{{pdf417}}' || placeholder === '{{datamatrix}}') {
+        const dataUrl = await generateSecurityImageURL(obj, member);
+        if (dataUrl) {
+          await new Promise<void>(resolve => {
+            const options: any = { crossOrigin: 'anonymous' };
+            fabric.Image.fromURL(dataUrl, (img) => {
+              if (img) {
+                const targetW = (obj.width || 0) * (obj.scaleX || 1);
+                const targetH = (obj.height || 0) * (obj.scaleY || 1);
 
-      if (key === 'photo') imageUrl = member.profileImage;
-      else if (key === 'signature') imageUrl = member.signature;
-      else if (key === 'fingerprint') imageUrl = member.fingerprint;
-      else if (key === 'logo') imageUrl = member.divisionLogo;
-      else if (member.customFields && member.customFields[key]) {
-        imageUrl = member.customFields[key];
-      }
+                img.set({
+                  left: obj.left,
+                  top: obj.top,
+                  scaleX: targetW / (img.width || 1),
+                  scaleY: targetH / (img.height || 1),
+                  angle: obj.angle,
+                  originX: obj.originX,
+                  originY: obj.originY,
+                  clipPath: obj.clipPath
+                });
 
-      if (imageUrl) {
-        await new Promise<void>(resolve => {
-          const options: any = {};
-          if (imageUrl.startsWith('http')) {
-            options.crossOrigin = 'anonymous';
-          }
-
-          fabric.Image.fromURL(imageUrl, (img) => {
-            if (img) {
-              const targetW = (obj.width || 0) * (obj.scaleX || 1);
-              const targetH = (obj.height || 0) * (obj.scaleY || 1);
-
-              img.set({
-                left: obj.left,
-                top: obj.top,
-                scaleX: targetW / (img.width || 1),
-                scaleY: targetH / (img.height || 1),
-                angle: obj.angle,
-                originX: obj.originX,
-                originY: obj.originY,
-                clipPath: obj.clipPath
-              });
-
-              const idx = canvas.getObjects().indexOf(obj);
-              if (idx > -1) {
-                canvas.remove(obj);
-                canvas.insertAt(img, idx, false);
+                const idx = canvas.getObjects().indexOf(obj);
+                if (idx > -1) {
+                  canvas.remove(obj);
+                  canvas.insertAt(img, idx, false);
+                }
               }
+              resolve();
+            }, options);
+          });
+        }
+      } else {
+        const key = placeholder.replace(/[{}]/g, '').trim();
+        let imageUrl = '';
+
+        if (key === 'photo') imageUrl = member.profileImage;
+        else if (key === 'signature') imageUrl = member.signature;
+        else if (key === 'fingerprint') imageUrl = member.fingerprint;
+        else if (key === 'logo') imageUrl = member.divisionLogo;
+        else if (member.customFields && member.customFields[key]) {
+          imageUrl = member.customFields[key];
+        }
+
+        if (imageUrl) {
+          await new Promise<void>(resolve => {
+            const options: any = {};
+            if (imageUrl.startsWith('http')) {
+              options.crossOrigin = 'anonymous';
             }
-            resolve();
-          }, options);
-        });
+
+            fabric.Image.fromURL(imageUrl, (img) => {
+              if (img) {
+                const targetW = (obj.width || 0) * (obj.scaleX || 1);
+                const targetH = (obj.height || 0) * (obj.scaleY || 1);
+
+                img.set({
+                  left: obj.left,
+                  top: obj.top,
+                  scaleX: targetW / (img.width || 1),
+                  scaleY: targetH / (img.height || 1),
+                  angle: obj.angle,
+                  originX: obj.originX,
+                  originY: obj.originY,
+                  clipPath: obj.clipPath
+                });
+
+                const idx = canvas.getObjects().indexOf(obj);
+                if (idx > -1) {
+                  canvas.remove(obj);
+                  canvas.insertAt(img, idx, false);
+                }
+              }
+              resolve();
+            }, options);
+          });
+        }
       }
     }
   });

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, User as UserIcon } from "lucide-react";
 import clsx from "clsx";
+import { api } from "./api";
 import { DesktopPage, useAuthStore } from "./store";
 import { LoginView } from "./views/LoginView";
 import { DashboardView } from "./views/DashboardView";
@@ -22,7 +24,18 @@ export default function App() {
   const page = useAuthStore((state) => state.page);
   const isBlocked = useAuthStore((state) => state.isBlocked);
   const setPage = useAuthStore((state) => state.setPage);
+  const updateUser = useAuthStore((state) => state.updateUser);
   const logout = useAuthStore((state) => state.logout);
+
+  useEffect(() => {
+    if (user) {
+      api<any>("/auth/profile")
+        .then(data => {
+          updateUser({ plan: data.plan, subscriptionEnd: data.subscriptionEnd });
+        })
+        .catch(err => console.error("Failed to sync profile:", err));
+    }
+  }, []);
 
   if (!user) {
     return <LoginView />;

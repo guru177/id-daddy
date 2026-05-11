@@ -104,15 +104,24 @@ export class AuthService {
     return this.prisma.runAsPlatform(async (tx) => {
       const dbUser = await tx.user.findUnique({
         where: { id: user.id },
-        include: { workspace: { select: { name: true } } }
+        include: { workspace: { select: { name: true, plan: true } } }
       });
       if (!dbUser) throw new UnauthorizedException();
+      
+      let subscriptionEnd: string | undefined = undefined;
+      if (dbUser.workspaceId && dbUser.workspaceId !== "") {
+        const sub = await tx.subscription.findUnique({ where: { workspaceId: dbUser.workspaceId } });
+        if (sub?.endDate) subscriptionEnd = sub.endDate.toISOString();
+      }
+      
       return {
         id: dbUser.id,
         email: dbUser.email,
         phone: dbUser.phone,
         role: dbUser.role,
-        workspaceName: dbUser.workspace?.name ?? "Super Admin"
+        workspaceName: dbUser.workspace?.name ?? "Super Admin",
+        plan: dbUser.workspace?.plan || (dbUser.role === "SUPER_ADMIN" ? "LIFETIME" : "FREE_TRIAL"),
+        subscriptionEnd
       };
     });
   }

@@ -13,6 +13,7 @@ interface AuthState {
   setSession: (accessToken: string, refreshToken: string, user: AuthUser) => void;
   setPage: (page: DesktopPage) => void;
   setIsBlocked: (isBlocked: boolean) => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
 }
 
@@ -30,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
       },
       setPage: (page) => set({ page }),
       setIsBlocked: (isBlocked) => set({ isBlocked }),
+      updateUser: (updates) => set((state) => ({ user: state.user ? { ...state.user, ...updates } : null })),
       logout: () => {
         localStorage.removeItem("saved_id_members");
         localStorage.removeItem("saved_id_designs");

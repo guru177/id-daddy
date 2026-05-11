@@ -12,7 +12,7 @@ export class TemplatesService {
   async list(user: AuthUser) {
     return this.prisma.runScoped(user, async (tx) => {
       const where: Prisma.TemplateWhereInput = user.role === "SUPER_ADMIN"
-        ? {} 
+        ? { workspaceId: null } 
         : {
           OR: [
             { isGlobal: true },

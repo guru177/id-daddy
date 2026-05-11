@@ -348,16 +348,7 @@ export const applyVariableStyles = (obj: any, members: any[]) => {
     return;
   }
 
-  // CRITICAL KERNING FIX: Convert logical spaces to non-breaking spaces (\u00A0).
-  // Heavy fonts often collapse logical spaces to 0-width during Fabric's chunk measurement,
-  // causing swallowed spaces (e.g. "WilliamAnderson"). \u00A0 forces a tangible physical width.
-  if (obj.text && obj.text.includes(' ')) {
-    obj.set('text', obj.text.replace(/ /g, '\u00A0'));
-  }
-  if (rawTemplate.includes(' ')) {
-    rawTemplate = rawTemplate.replace(/ /g, '\u00A0');
-    obj.placeholder = rawTemplate;
-  }
+
 
   // Force native kerning (spacing = 0)
   obj.set('charSpacing', 0);
@@ -634,6 +625,105 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
   );
 };
 
+export const formatQRData = (type: string, fields: any, data: string) => {
+  if (!data && type === 'URL') return 'https://idcreator.com';
+  switch (type) {
+    case 'URL':
+      if (!data) return 'https://idcreator.com';
+      return data.startsWith('http') ? data : `https://${data}`;
+    case 'Email':
+      return `mailto:${fields.email || ''}?subject=${encodeURIComponent(fields.subject || '')}&body=${encodeURIComponent(fields.body || '')}`;
+    case 'Phone':
+      return `tel:${fields.country || ''}${fields.area || ''}${fields.number || ''}`;
+    case 'VCard':
+      return `BEGIN:VCARD\nVERSION:3.0\nN:${fields.lastName || ''};${fields.firstName || ''}\nFN:${fields.firstName || ''} ${fields.lastName || ''}\nORG:${fields.org || ''}\nTITLE:${fields.position || ''}\nADR:;;${fields.address || ''}\nTEL;TYPE=WORK,VOICE:${fields.phone || ''}\nEMAIL;TYPE=PREF,INTERNET:${fields.email || ''}\nURL:${fields.website || ''}\nNOTE:${fields.notes || ''}\nEND:VCARD`;
+    default: return data || 'Empty';
+  }
+};
+
+export const generateSecurityImageURL = async (obj: any, member: any): Promise<string> => {
+  try {
+    let dataUrl = '';
+    const format = obj.securityFormat || 'code128';
+    const ph = obj.placeholder;
+    let data = obj.securityData || '';
+
+    if (data && data.includes('{{') && member) {
+      const matches = data.match(/{{([^}]+)}}/g);
+      if (matches) {
+        matches.forEach((match: string) => {
+          const key = match.replace(/[{}]/g, '').trim();
+          const val = member[key] || (member.customFields && member.customFields[key]) || '';
+          data = data.replace(match, val);
+        });
+      }
+    }
+
+    if (!data) {
+      if (ph === '{{qr_code}}') data = 'http://idcreator.com';
+      else data = '1234567890';
+    }
+
+    if (ph === '{{qr_code}}' || format === 'qrcode') {
+      const qrFields: any = { ...(obj.qrFields || {}) };
+      if (member) {
+        for (const [k, v] of Object.entries(qrFields)) {
+          let fieldVal = String(v);
+          if (fieldVal && fieldVal.includes('{{')) {
+             const matches = fieldVal.match(/{{([^}]+)}}/g);
+             if (matches) {
+               matches.forEach((match: string) => {
+                 const key = match.replace(/[{}]/g, '').trim();
+                 const val = member[key] || (member.customFields && member.customFields[key]) || '';
+                 fieldVal = fieldVal.replace(match, val);
+               });
+             }
+          }
+          qrFields[k] = fieldVal;
+        }
+      }
+      const qrData = formatQRData(obj.securityType, qrFields, data);
+      dataUrl = await QRCode.toDataURL(qrData || 'http://idcreator.com');
+    } else {
+      if (format === 'upca') data = data.replace(/\D/g, '').slice(0, 11).padStart(11, '0');
+      else if (format === 'ean13') data = data.replace(/\D/g, '').slice(0, 12).padStart(12, '0');
+      else if (format === 'ean8') data = data.replace(/\D/g, '').slice(0, 7).padStart(7, '0');
+
+      if (!data) data = '1234567890';
+
+      const opts: any = { bcid: format, text: data, scale: 3, backgroundcolor: 'ffffff' };
+      if (format === 'pdf417') opts.columns = 4;
+      if (format !== 'pdf417' && format !== 'datamatrix') {
+        opts.height = 10; 
+        opts.includetext = !obj.securityHideText; 
+        opts.textxalign = 'center';
+      }
+
+      const canvas_ = document.createElement('canvas');
+      try {
+        // @ts-ignore
+        bwipjs.toCanvas(canvas_, opts);
+        dataUrl = canvas_.toDataURL();
+      } catch (e) {
+        console.error('BWIP Sync Error:', e);
+        const ctx = canvas_.getContext('2d');
+        if (ctx) {
+          canvas_.width = 200; canvas_.height = 100;
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 200, 100);
+          ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.strokeRect(5, 5, 190, 90);
+          ctx.fillStyle = '#ef4444'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'center';
+          ctx.fillText('INVALID DATA FOR ' + format.toUpperCase(), 100, 55);
+        }
+        dataUrl = canvas_.toDataURL();
+      }
+    }
+    return dataUrl;
+  } catch (err) {
+    console.error('Error in generateSecurityImageURL:', err);
+    return '';
+  }
+};
+
 export const CustomizePanel = () => {
   const {
     selectedObject,
@@ -671,6 +761,7 @@ export const CustomizePanel = () => {
           fontStyle: (selectedObject as any).fontStyle || 'normal',
           underline: (selectedObject as any).underline || false,
           qrFields: (selectedObject as any).qrFields || {},
+          securityHideText: (selectedObject as any).securityHideText || false,
           variableColors: (selectedObject as any).variableColors || {},
         });
       };
@@ -760,28 +851,11 @@ export const CustomizePanel = () => {
   const isPDF417 = (selectedObject as any).placeholder === '{{pdf417}}';
   const isDataMatrix = (selectedObject as any).placeholder === '{{datamatrix}}';
 
-  const formatQRData = (type: string, fields: any, data: string) => {
-    if (!data && type === 'URL') return 'https://idcreator.com';
-    switch (type) {
-      case 'URL':
-        if (!data) return 'https://idcreator.com';
-        return data.startsWith('http') ? data : `https://${data}`;
-      case 'Email':
-        return `mailto:${fields.email || ''}?subject=${encodeURIComponent(fields.subject || '')}&body=${encodeURIComponent(fields.body || '')}`;
-      case 'Phone':
-        return `tel:${fields.country || ''}${fields.area || ''}${fields.number || ''}`;
-      case 'VCard':
-        return `BEGIN:VCARD\nVERSION:3.0\nN:${fields.lastName || ''};${fields.firstName || ''}\nFN:${fields.firstName || ''} ${fields.lastName || ''}\nORG:${fields.org || ''}\nTITLE:${fields.position || ''}\nADR:;;${fields.address || ''}\nTEL;TYPE=WORK,VOICE:${fields.phone || ''}\nEMAIL;TYPE=PREF,INTERNET:${fields.email || ''}\nURL:${fields.website || ''}\nNOTE:${fields.notes || ''}\nEND:VCARD`;
-      default: return data || 'Empty';
-    }
-  };
-
   const handleSecurityPropChange = (key: string, value: any) => {
     const newProps = { ...props, [key]: value };
     setProps(newProps);
 
-    // Auto-apply security changes for format, data, and qrFields
-    if (key === 'securityFormat' || key === 'securityData' || key === 'securityType' || key === 'qrFields') {
+    if (key === 'securityFormat' || key === 'securityData' || key === 'securityType' || key === 'qrFields' || key === 'securityHideText') {
       setTimeout(() => applySecurityChanges(newProps), 0);
     }
   };
@@ -790,67 +864,19 @@ export const CustomizePanel = () => {
     if (!selectedObject || !canvas) return;
 
     try {
-      let dataUrl = '';
-      const format = currentProps.securityFormat || 'code128';
-      const ph = (selectedObject as any).placeholder;
+      const { members, previewMemberId } = useDesignerStore.getState();
+      const targetMember = previewMemberId ? members.find((m: any) => m.id === previewMemberId) || members[0] : members[0];
 
-      if (ph === '{{qr_code}}' || format === 'qrcode') {
-        const qrData = formatQRData(currentProps.securityType, currentProps.qrFields, currentProps.securityData);
-        dataUrl = await QRCode.toDataURL(qrData || 'http://idcreator.com');
-      } else {
-        let data = currentProps.securityData || '1234567890';
+      const dataUrl = await generateSecurityImageURL({
+        placeholder: (selectedObject as any).placeholder,
+        securityFormat: currentProps.securityFormat,
+        securityData: currentProps.securityData,
+        securityType: currentProps.securityType,
+        qrFields: currentProps.qrFields,
+        securityHideText: currentProps.securityHideText
+      }, targetMember);
 
-        // Format-specific data handling
-        if (format === 'upca') {
-          data = data.replace(/\D/g, '').slice(0, 11).padStart(11, '0');
-        } else if (format === 'ean13') {
-          data = data.replace(/\D/g, '').slice(0, 12).padStart(12, '0');
-        } else if (format === 'ean8') {
-          data = data.replace(/\D/g, '').slice(0, 7).padStart(7, '0');
-        }
 
-        const opts: any = {
-          bcid: format,
-          text: data,
-          scale: 3,
-          backgroundcolor: 'ffffff',
-        };
-
-        if (format === 'pdf417') {
-          opts.columns = 4;
-        }
-
-        if (format !== 'pdf417' && format !== 'datamatrix') {
-          opts.height = 10;
-          opts.includetext = true;
-          opts.textxalign = 'center';
-        }
-
-        const canvas_ = document.createElement('canvas');
-        try {
-          // @ts-ignore
-          bwipjs.toCanvas(canvas_, opts);
-          dataUrl = canvas_.toDataURL();
-        } catch (e) {
-          console.error('BWIP Sync Error:', e);
-          // Fallback visual for errors
-          const ctx = canvas_.getContext('2d');
-          if (ctx) {
-            canvas_.width = 200;
-            canvas_.height = 100;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, 200, 100);
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(5, 5, 190, 90);
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 12px Inter';
-            ctx.textAlign = 'center';
-            ctx.fillText('INVALID DATA FOR ' + format.toUpperCase(), 100, 55);
-          }
-          dataUrl = canvas_.toDataURL();
-        }
-      }
 
       if (dataUrl) {
         // If it's already an image, just update the source to prevent re-selection and state reset
@@ -865,6 +891,8 @@ export const CustomizePanel = () => {
             img.securityType = currentProps.securityType;
             // @ts-ignore
             img.qrFields = currentProps.qrFields;
+            // @ts-ignore
+            img.securityHideText = currentProps.securityHideText;
 
             canvas.renderAll();
             saveState();
@@ -894,6 +922,8 @@ export const CustomizePanel = () => {
             newImg.securityType = currentProps.securityType;
             // @ts-ignore
             newImg.qrFields = currentProps.qrFields;
+            // @ts-ignore
+            newImg.securityHideText = currentProps.securityHideText;
             // @ts-ignore
             newImg.variableType = 'image';
 
@@ -1383,12 +1413,109 @@ export const CustomizePanel = () => {
             <label className="text-[11px] font-bold text-gray-700">Insert Smart Field</label>
             <Info size={12} className="text-gray-300" />
           </div>
-          <select className="w-full p-3 border border-gray-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-green-500 bg-white appearance-none">
-            <option>Select a Smart field...</option>
-            <option>Full Name</option>
-            <option>Employee ID</option>
+          <select 
+            onChange={(e) => {
+              if (e.target.value === 'Select a Smart field...') return;
+              const currentData = props.securityData === '1234567890' || props.securityData === 'http://idcreator.com' || props.securityData === 'https://idcreator.com' ? '' : (props.securityData || '');
+              handleSecurityPropChange('securityData', currentData + e.target.value);
+              e.target.value = 'Select a Smart field...';
+            }}
+            className="w-full p-3 border border-gray-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-green-500 bg-white"
+          >
+            <option value="Select a Smart field...">Select a Smart field...</option>
+            {(() => {
+              const { formConfig } = useDesignerStore.getState();
+              const enabled = formConfig?.enabledFields;
+
+              const showField = (label: string) => {
+                return !enabled || enabled.includes(label);
+              };
+
+              return (
+                <>
+                  {['First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Gender'].some(showField) && (
+                    <optgroup label="Personal Info">
+                      {showField('First Name') && <option value="{{firstName}}">First Name</option>}
+                      {showField('Last Name') && <option value="{{lastName}}">Last Name</option>}
+                      {showField('Nickname') && <option value="{{nickname}}">Nickname</option>}
+                      {showField('Date of Birth') && <option value="{{dob}}">Date of Birth</option>}
+                      {showField('Gender') && <option value="{{gender}}">Gender</option>}
+                    </optgroup>
+                  )}
+                  {['Title', 'ID number', 'Employee ID', 'Department', 'Hire Date'].some(showField) && (
+                    <optgroup label="Employment Info">
+                      {showField('Title') && <option value="{{title}}">Job Title</option>}
+                      {showField('ID number') && <option value="{{idNumber}}">ID Number</option>}
+                      {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
+                      {showField('Department') && <option value="{{department}}">Department</option>}
+                      {showField('Hire Date') && <option value="{{hireDate}}">Hire Date</option>}
+                    </optgroup>
+                  )}
+                  {['Email', 'Phone 1', 'Phone 2', 'Fax', 'Website'].some(showField) && (
+                    <optgroup label="Contact Info">
+                      {showField('Email') && <option value="{{email}}">Email</option>}
+                      {showField('Phone 1') && <option value="{{phone1}}">Phone 1</option>}
+                      {showField('Phone 2') && <option value="{{phone2}}">Phone 2</option>}
+                      {showField('Fax') && <option value="{{fax}}">Fax</option>}
+                      {showField('Website') && <option value="{{website}}">Website</option>}
+                    </optgroup>
+                  )}
+                  {['Street 1', 'Street 2', 'City', 'State', 'Postal Code', 'Country'].some(showField) && (
+                    <optgroup label="Address Info">
+                      {showField('Street 1') && <option value="{{street1}}">Street 1</option>}
+                      {showField('Street 2') && <option value="{{street2}}">Street 2</option>}
+                      {showField('City') && <option value="{{city}}">City</option>}
+                      {showField('State') && <option value="{{state}}">State</option>}
+                      {showField('Postal Code') && <option value="{{postalCode}}">Postal Code</option>}
+                      {showField('Country') && <option value="{{country}}">Country</option>}
+                    </optgroup>
+                  )}
+                  {['Issue Date', 'Expiration Date', 'Grade Level', 'Security Level'].some(showField) && (
+                    <optgroup label="Card Details">
+                      {showField('Issue Date') && <option value="{{issueDate}}">Issue Date</option>}
+                      {showField('Expiration Date') && <option value="{{expirationDate}}">Expiration Date</option>}
+                      {showField('Grade Level') && <option value="{{gradeLevel}}">Grade Level</option>}
+                      {showField('Security Level') && <option value="{{securityLevel}}">Security Level</option>}
+                    </optgroup>
+                  )}
+                  {['Height', 'Weight', 'Eye color', 'Hair color'].some(showField) && (
+                    <optgroup label="Physical Attributes">
+                      {showField('Height') && <option value="{{height}}">Height</option>}
+                      {showField('Weight') && <option value="{{weight}}">Weight</option>}
+                      {showField('Eye color') && <option value="{{eyeColor}}">Eye Color</option>}
+                      {showField('Hair color') && <option value="{{hairColor}}">Hair Color</option>}
+                    </optgroup>
+                  )}
+
+                  {formConfig?.customFields && formConfig.customFields.filter(f => !formConfig?.customImageFields?.includes(f)).length > 0 && (
+                    <optgroup label="Custom Fields">
+                      {formConfig.customFields
+                        .filter(f => !formConfig?.customImageFields?.includes(f))
+                        .map(field => (
+                          <option key={field} value={`{{${field}}}`}>{field}</option>
+                        ))}
+                    </optgroup>
+                  )}
+                </>
+              );
+            })()}
           </select>
         </section>
+
+        {!isQRCode && (
+          <section className="flex items-center gap-2 mt-2 mb-4">
+            <input
+              type="checkbox"
+              id="securityHideText"
+              checked={props.securityHideText || false}
+              onChange={(e) => handleSecurityPropChange('securityHideText', e.target.checked)}
+              className="w-4 h-4 text-green-500 rounded border-gray-300 focus:ring-green-500 cursor-pointer"
+            />
+            <label htmlFor="securityHideText" className="text-xs font-bold text-gray-700 cursor-pointer">
+              Hide Text Under Barcode
+            </label>
+          </section>
+        )}
 
         <button
           onClick={() => applySecurityChanges(props)}

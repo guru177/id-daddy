@@ -6,7 +6,7 @@ import { useDesignerStore } from '../designer/store';
 import { ImageLibraryModal } from '../designer/ImageLibrary';
 import LayersPanel from '../designer/LayersPanel';
 import { ContextMenu } from '../designer/ContextMenu';
-import { getPreviewText, applyVariableStyles } from '../designer/Panels';
+import { getPreviewText, applyVariableStyles, generateSecurityImageURL } from '../designer/Panels';
 import { Ruler } from '../designer/Rulers';
 import {
   Undo2,
@@ -56,7 +56,7 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
     if (!canvas) return;
     const targetMember = id ? members.find((m: any) => m.id === id) || members[0] : members[0];
     
-    canvas.getObjects().forEach((obj: any) => {
+    canvas.getObjects().forEach(async (obj: any) => {
       if (obj.placeholder || obj.isVariable) {
         if (obj.type === 'i-text' || obj.type === 'textbox') {
           const rawText = obj.placeholder || obj.text;
@@ -64,20 +64,30 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
           obj.set('text', previewText);
           applyVariableStyles(obj, members);
         } else if (obj.type === 'image' && obj.placeholder) {
-          const key = obj.placeholder.replace(/[{}]/g, '').trim();
-          let url = '';
-          if (key === 'photo') url = targetMember.profileImage;
-          else if (key === 'signature') url = targetMember.signature;
-          else if (key === 'fingerprint') url = targetMember.fingerprint;
-          else if (key === 'logo') url = targetMember.divisionLogo;
-          else if (targetMember.customFields && targetMember.customFields[key]) {
-            url = targetMember.customFields[key];
-          }
-          
-          if (url) {
-            obj.setSrc(url, () => {
-               canvas.renderAll();
-            }, { crossOrigin: 'anonymous' });
+          const ph = obj.placeholder;
+          if (ph === '{{barcode}}' || ph === '{{qr_code}}' || ph === '{{pdf417}}' || ph === '{{datamatrix}}') {
+            const dataUrl = await generateSecurityImageURL(obj, targetMember);
+            if (dataUrl) {
+              obj.setSrc(dataUrl, () => {
+                canvas.renderAll();
+              }, { crossOrigin: 'anonymous' });
+            }
+          } else {
+            const key = obj.placeholder.replace(/[{}]/g, '').trim();
+            let url = '';
+            if (key === 'photo') url = targetMember.profileImage;
+            else if (key === 'signature') url = targetMember.signature;
+            else if (key === 'fingerprint') url = targetMember.fingerprint;
+            else if (key === 'logo') url = targetMember.divisionLogo;
+            else if (targetMember.customFields && targetMember.customFields[key]) {
+              url = targetMember.customFields[key];
+            }
+            
+            if (url) {
+              obj.setSrc(url, () => {
+                 canvas.renderAll();
+              }, { crossOrigin: 'anonymous' });
+            }
           }
         }
       }
@@ -147,6 +157,9 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
 
 export function DesignerView() {
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+  // Pending action while unsaved-changes dialog is shown
+  const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
+
   const {
     canvas,
     undo,
@@ -161,9 +174,12 @@ export function DesignerView() {
     downloadCanvas,
     saveDesign,
     newDesign,
+    resetDesign,
     savedDesigns,
     loadDesign,
+    loadGlobalTemplateAsCopy,
     deleteDesign,
+    loadTemplatesFromDb,
     modal,
     closeModal,
     showModal,
@@ -179,11 +195,33 @@ export function DesignerView() {
     zoom
   } = useDesignerStore();
 
+  // Sync templates from DB whenever the designer view opens
+  useEffect(() => {
+    void loadTemplatesFromDb();
+  }, []);
+
+  // True when the user has made changes that haven't been saved yet.
+  // history[0] is the initial blank state; anything beyond that is a real edit.
+  const hasUnsavedChanges = history.length > 1;
+
+  /**
+   * Intercepts a navigation action (load template / blank canvas).
+   * If there are unsaved changes, shows a 3-button warning dialog.
+   * Otherwise runs the action immediately.
+   */
+  const interceptAction = (action: () => void) => {
+    if (hasUnsavedChanges) {
+      setPendingAction(() => action);
+    } else {
+      action();
+    }
+  };
+
   const [draggingGuideline, setDraggingGuideline] = useState<{ type: 'horizontal' | 'vertical', pos: number, index?: number } | null>(null);
   const [workspaceOffset, setWorkspaceOffset] = useState({ x: 0, y: 0 });
   const workspaceRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState<'dashboard' | 'editor'>('dashboard');
+
 
   useEffect(() => {
     const updateOffset = () => {
@@ -201,7 +239,7 @@ export function DesignerView() {
     window.addEventListener('resize', updateOffset);
     // Also update when side/config changes as card size might change
     return () => window.removeEventListener('resize', updateOffset);
-  }, [side, config.orientation, view]);
+  }, [side, config.orientation]);
 
   useEffect(() => {
     if (!draggingGuideline) return;
@@ -244,247 +282,148 @@ export function DesignerView() {
     setDraggingGuideline({ type, pos: -100 }); // Start off-screen
   };
 
-
   const [activeTab, setActiveTab] = useState('Get Started');
-
   const navItems = ['Get Started', 'Card Designer', 'My Designs'];
 
-  const MyDesigns = () => (
-    <div className="p-10 max-w-[1600px] mx-auto min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Design Library</h1>
-          <p className="text-gray-500 text-base font-medium">You have {savedDesigns.length} saved templates in your library</p>
-        </div>
-        <button
-          onClick={() => {
-            newDesign();
-            setActiveTab('Card Designer');
-            setView('editor');
-          }}
-          className="flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-sm font-black rounded-2xl shadow-2xl shadow-green-200 transition-all hover:-translate-y-1 active:scale-95"
-        >
-          <Plus size={20} strokeWidth={3} />
-          Create New Design
-        </button>
-      </div>
-
-      {savedDesigns.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-40 bg-white/50 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-gray-200">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-            <Plus size={40} className="text-gray-300" />
+  const MyDesigns = () => {
+    // Only show user-owned designs; global templates live in Get Started only
+    const userDesigns = savedDesigns.filter((d: any) => !d.isGlobal);
+    return (
+      <div className="p-10 max-w-[1600px] mx-auto min-h-screen">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Design Library</h1>
+            <p className="text-gray-500 text-base font-medium">You have {userDesigns.length} saved templates in your library</p>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Your library is empty</h2>
-          <p className="text-gray-400 font-medium text-lg mb-8 text-center max-w-sm">
-            Start creating your professional ID cards and they'll appear here for easy management.
-          </p>
           <button
-            onClick={() => {
-              newDesign();
-              setActiveTab('Card Designer');
-              setView('editor');
-            }}
-            className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200"
+            onClick={() => { interceptAction(() => { resetDesign(); setActiveTab('Card Designer'); }); }}
+            className="flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-sm font-black rounded-2xl shadow-2xl shadow-green-200 transition-all hover:-translate-y-1 active:scale-95"
           >
-            Start Designing Now
+            <Plus size={20} strokeWidth={3} />
+            Create New Design
           </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-          {savedDesigns.map((design) => (
-            <div
-              key={design.id}
-              className="group relative bg-white rounded-[32px] border border-gray-100 overflow-hidden hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)] transition-all duration-500 flex flex-col"
+
+        {userDesigns.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-40 bg-white/50 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-gray-200">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <Plus size={40} className="text-gray-300" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your library is empty</h2>
+            <p className="text-gray-400 font-medium text-lg mb-8 text-center max-w-sm">
+              Start creating your professional ID cards and they will appear here for easy management.
+            </p>
+            <button
+              onClick={() => { interceptAction(() => { resetDesign(); setActiveTab('Card Designer'); }); }}
+              className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200"
             >
-              {/* Preview Image Container - Dual Side */}
-              <div className="relative aspect-square w-full bg-gray-100 flex items-center justify-center overflow-hidden group-hover:bg-green-50/30 transition-colors duration-500">
-                <div className={`w-full h-full flex ${design.config.orientation === 'horizontal' ? 'flex-col' : 'flex-row'}`}>
-                  {/* Front Side Preview */}
-                  <div className="flex-1 relative overflow-hidden border-b border-gray-100 last:border-0">
-                    <img
-                      src={design.thumbnailFront}
-                      alt="Front"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Front</div>
+              Start Designing Now
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+            {userDesigns.map((design) => (
+              <div
+                key={design.id}
+                className="group relative bg-white rounded-[32px] border border-gray-100 overflow-hidden hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)] transition-all duration-500 flex flex-col"
+              >
+                {/* Preview: Dual Side */}
+                <div className="relative aspect-square w-full bg-gray-100 flex items-center justify-center overflow-hidden group-hover:bg-green-50/30 transition-colors duration-500">
+                  <div className={`w-full h-full flex ${design.config.orientation === 'horizontal' ? 'flex-col' : 'flex-row'}`}>
+                    <div className="flex-1 relative overflow-hidden border-b border-gray-100 last:border-0">
+                      <img src={design.thumbnailFront} alt="Front" className="w-full h-full object-cover" />
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Front</div>
+                    </div>
+                    <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0">
+                      <img src={design.thumbnailBack} alt="Back" className="w-full h-full object-cover" />
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Back</div>
+                    </div>
                   </div>
-                  {/* Back Side Preview */}
-                  <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0">
-                    <img
-                      src={design.thumbnailBack}
-                      alt="Back"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Back</div>
-                  </div>
-                </div>
-
-                {activeTemplateId === design.id && (
-                  <div className="absolute top-4 right-4 z-30 bg-amber-500 text-white p-2 rounded-xl shadow-lg animate-in zoom-in-50 duration-300">
-                    <Star size={16} fill="white" />
-                  </div>
-                )}
-
-                {/* Floating Action Overlay */}
-                <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => {
-                      loadDesign(design);
-                      setActiveTab('Card Designer');
-                      setView('editor');
-                    }}
-                    className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-green-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 shadow-xl"
-                    title="Edit Design"
-                  >
-                    <Edit2 size={24} strokeWidth={2.5} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      showModal({
-                        title: 'Delete Design',
-                        message: `Are you sure you want to delete "${design.name}"? This action cannot be undone.`,
-                        type: 'confirm',
-                        onConfirm: () => deleteDesign(design.id)
-                      });
-                    }}
-                    className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-red-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 delay-100 shadow-xl"
-                    title="Delete"
-                  >
-                    <Trash2 size={24} strokeWidth={2.5} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Card Footer */}
-              <div className="p-6 pt-5 bg-white mt-auto border-t border-gray-50">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-black text-gray-900 text-lg truncate flex-1 leading-tight">{design.name}</h3>
-                  <div className="flex gap-1.5">
+                  {activeTemplateId === design.id && (
+                    <div className="absolute top-4 right-4 z-30 bg-amber-500 text-white p-2 rounded-xl shadow-lg animate-in zoom-in-50 duration-300">
+                      <Star size={16} fill="white" />
+                    </div>
+                  )}
+                  {/* Floating Action Overlay */}
+                  <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
                     <button
-                      onClick={() => setActiveTemplateId(design.id)}
-                      className={`p-1.5 rounded-lg transition-all ${activeTemplateId === design.id ? 'bg-amber-100 text-amber-600 ring-1 ring-amber-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
-                      title={activeTemplateId === design.id ? 'Current Default Template' : 'Set as Default Template'}
+                      onClick={() => { loadDesign(design); setActiveTab('Card Designer'); }}
+                      className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-green-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 shadow-xl"
+                      title="Edit Design"
                     >
-                      <Star size={14} fill={activeTemplateId === design.id ? 'currentColor' : 'none'} />
+                      <Edit2 size={24} strokeWidth={2.5} />
                     </button>
                     <button
-                      onClick={() => {
-                        loadDesign(design);
-                        setActiveTab('Card Designer');
-                        setView('editor');
-                      }}
-                      className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        showModal({
-                          title: 'Delete Design',
-                          message: `Are you sure you want to delete "${design.name}"? This action cannot be undone.`,
-                          type: 'confirm',
-                          onConfirm: () => deleteDesign(design.id)
-                        });
-                      }}
-                      className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
+                      onClick={() => { showModal({ title: 'Delete Design', message: `Are you sure you want to delete "${design.name}"? This action cannot be undone.`, type: 'confirm', onConfirm: () => deleteDesign(design.id) }); }}
+                      className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-red-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 delay-100 shadow-xl"
                       title="Delete"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={24} strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-gray-400 font-bold uppercase tracking-widest">
-                    <Calendar size={14} className="text-gray-300" />
-                    {new Date(design.timestamp).toLocaleDateString()}
+
+                {/* Card Footer */}
+                <div className="p-6 pt-5 bg-white mt-auto border-t border-gray-50">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-black text-gray-900 text-lg truncate flex-1 leading-tight">{design.name}</h3>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setActiveTemplateId(design.id)}
+                        className={`p-1.5 rounded-lg transition-all ${activeTemplateId === design.id ? 'bg-amber-100 text-amber-600 ring-1 ring-amber-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                        title={activeTemplateId === design.id ? 'Current Default Template' : 'Set as Default Template'}
+                      >
+                        <Star size={14} fill={activeTemplateId === design.id ? 'currentColor' : 'none'} />
+                      </button>
+                      <button
+                        onClick={() => { loadDesign(design); setActiveTab('Card Designer'); }}
+                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => { showModal({ title: 'Delete Design', message: `Are you sure you want to delete "${design.name}"? This action cannot be undone.`, type: 'confirm', onConfirm: () => deleteDesign(design.id) }); }}
+                        className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => useDesignerStore.getState().exportDesign(design)}
-                    className="text-xs font-black text-green-600 hover:text-green-700 transition-colors flex items-center gap-1.5"
-                  >
-                    <Download size={14} />
-                    EXPORT PNG
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-gray-400 font-bold uppercase tracking-widest">
+                      <Calendar size={14} className="text-gray-300" />
+                      {new Date(design.timestamp).toLocaleDateString()}
+                    </div>
+                    <button
+                      onClick={() => useDesignerStore.getState().exportDesign(design)}
+                      className="text-xs font-black text-green-600 hover:text-green-700 transition-colors flex items-center gap-1.5"
+                    >
+                      <Download size={14} />
+                      EXPORT PNG
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  // GlobalModal is now handled in App.tsx
-
-  if (activeTab === 'My Designs') {
-    return (
-      <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-800">
-        <header className="h-[73px] bg-green-50/50 border-b border-stone-200 flex items-center justify-center gap-10 px-4 shrink-0">
-          {navItems.map(item => (
-            <button
-              key={item}
-              onClick={() => {
-                setActiveTab(item);
-                if (item === 'Card Designer') setView('editor');
-                if (item === 'Get Started') setView('dashboard');
-              }}
-              className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === item ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-            >
-              {item}
-            </button>
-          ))}
-        </header>
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <MyDesigns />
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
-  }
+  };
 
-  if (view === 'dashboard') {
-    return (
-      <div className="flex flex-col h-full bg-white overflow-hidden text-gray-800">
-        <header className="h-[73px] bg-green-50/50 border-b border-stone-200 flex items-center justify-center gap-10 px-4 shrink-0">
-          {navItems.map(item => (
-            <button
-              key={item}
-              onClick={() => {
-                setActiveTab(item);
-                if (item === 'Card Designer') setView('editor');
-              }}
-              className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === item ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-            >
-              {item}
-            </button>
-          ))}
-        </header>
-        <Dashboard onSelect={(design) => {
-          if (design) {
-            loadDesign(design);
-            setActiveTab('Card Designer');
-            setView('editor');
-          } else {
-            newDesign();
-            setActiveTab('Card Designer');
-            setView('editor');
-          }
-        }} />
-      </div>
-    );
-  }
 
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Single unified return ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tab bar always visible ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   return (
     <div className="flex flex-col h-full bg-stone-100 overflow-hidden font-sans text-gray-800">
-      {/* Top Navigation */}
+
+      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared Tab Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       <header className="h-[73px] bg-green-50/50 border-b border-stone-200 flex items-center justify-center gap-10 px-4 shrink-0 z-20">
         {navItems.map(item => (
           <button
             key={item}
-            onClick={() => {
-              setActiveTab(item);
-              if (item === 'Get Started') setView('dashboard');
-            }}
+            onClick={() => setActiveTab(item)}
             className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === item ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
           >
             {item}
@@ -492,201 +431,194 @@ export function DesignerView() {
         ))}
       </header>
 
-      {/* Utility Toolbar */}
-      <div className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-6 z-50 shrink-0 relative">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <button onClick={undo} disabled={history.length <= 1} className="p-1.5 hover:bg-gray-50 text-gray-400 disabled:opacity-20 transition-all">
-              <Undo2 size={16} />
-            </button>
-            <button onClick={redo} disabled={redoStack.length === 0} className="p-1.5 hover:bg-gray-50 text-gray-400 disabled:opacity-20 transition-all">
-              <Redo2 size={16} />
-            </button>
-          </div>
-          <div className="h-6 w-px bg-gray-100" />
-          
-          <MemberDropdown 
-            members={members} 
-            previewMemberId={previewMemberId} 
-            setPreviewMemberId={setPreviewMemberId} 
-            canvas={canvas} 
-          />
+      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Get Started Tab ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      {activeTab === 'Get Started' && (
+        <Dashboard onSelect={(design) => {
+          const action = () => {
+            if (design) {
+              if ((design as any).isGlobal) {
+                loadGlobalTemplateAsCopy(design);
+              } else {
+                loadDesign(design);
+              }
+            } else {
+              resetDesign();
+            }
+            setActiveTab('Card Designer');
+          };
+          interceptAction(action);
+        }} />
+      )}
 
-          <div className="h-6 w-px bg-gray-100" />
-          
-          <div className="flex items-center gap-4 text-gray-400">
-            <button
-              onClick={() => setShowGrid(!showGrid)}
-              className={`transition-all ${showGrid ? 'text-green-600' : 'hover:text-green-600'}`}
-            >
-              <Grid3X3 size={18} />
-            </button>
-            <button onClick={downloadCanvas} className="hover:text-green-600 transition-all"><Download size={18} /></button>
-            <button onClick={newDesign} className="hover:text-green-600 transition-all"><Plus size={18} /></button>
+      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ My Designs Tab ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      {activeTab === 'My Designs' && (
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-stone-50">
+          <MyDesigns />
+        </div>
+      )}
+
+      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Card Designer Tab ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ always mounted, hidden when on other tabs to preserve canvas state */}
+      <div style={{ display: activeTab === 'Card Designer' ? 'flex' : 'none' }} className="flex-col flex-1 min-h-0">
+
+        {/* Utility Toolbar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â only visible on Card Designer tab */}
+        <div className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-6 z-50 shrink-0 relative">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <button onClick={undo} disabled={history.length <= 1} className="p-1.5 hover:bg-gray-50 text-gray-400 disabled:opacity-20 transition-all">
+                <Undo2 size={16} />
+              </button>
+              <button onClick={redo} disabled={redoStack.length === 0} className="p-1.5 hover:bg-gray-50 text-gray-400 disabled:opacity-20 transition-all">
+                <Redo2 size={16} />
+              </button>
+            </div>
+            <div className="h-6 w-px bg-gray-100" />
+            <MemberDropdown
+              members={members}
+              previewMemberId={previewMemberId}
+              setPreviewMemberId={setPreviewMemberId}
+              canvas={canvas}
+            />
+            <div className="h-6 w-px bg-gray-100" />
+            <div className="flex items-center gap-4 text-gray-400">
+              <button onClick={() => setShowGrid(!showGrid)} className={`transition-all ${showGrid ? 'text-green-600' : 'hover:text-green-600'}`}>
+                <Grid3X3 size={18} />
+              </button>
+              <button onClick={downloadCanvas} className="hover:text-green-600 transition-all"><Download size={18} /></button>
+              <button onClick={newDesign} className="hover:text-green-600 transition-all"><Plus size={18} /></button>
+            </div>
           </div>
+          <button
+            onClick={saveDesign}
+            className="flex items-center gap-2 px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-95"
+          >
+            <Save size={14} />
+            Save
+          </button>
         </div>
 
-        <button
-          onClick={saveDesign}
-          className="flex items-center gap-2 px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-95"
-        >
-          <Save size={14} />
-          Save
-        </button>
-      </div>
+        {/* Main Editor Row */}
+        <div className="flex flex-1 min-h-0">
+          {/* Left Toolbar */}
+          <Toolbar />
 
-      <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        <Toolbar />
-
-        {/* Editor Area */}
-        <div
-          ref={workspaceRef}
-          className="flex-1 flex flex-col items-center bg-stone-100 relative overflow-auto"
-          onContextMenu={(e) => {
-            e.preventDefault();
-            setContextMenu({ x: e.clientX, y: e.clientY });
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              if (canvas) {
-                canvas.discardActiveObject();
-                canvas.requestRenderAll();
-              }
-            }
-          }}
-        >
-          {/* Photoshop-style Rulers Edge-to-Edge */}
-          <div className="absolute top-0 left-5 right-0 h-5 z-30">
-            <Ruler 
-              type="horizontal" 
-              size={workspaceRef.current?.clientWidth || 2000} 
-              scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} 
-              offset={workspaceOffset.x - 20} // -20 for the vertical ruler width
-              onStartDrag={startGuidelineDrag}
-            />
-          </div>
-          <div className="absolute top-5 left-0 bottom-0 w-5 z-30">
-            <Ruler 
-              type="vertical" 
-              size={workspaceRef.current?.clientHeight || 2000} 
-              scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} 
-              offset={workspaceOffset.y - 25} // -25 for ruler/header offset
-              onStartDrag={startGuidelineDrag}
-            />
-          </div>
-          <div className="absolute top-0 left-0 w-5 h-5 bg-stone-100 border-r border-b border-stone-300 z-40" />
-
-          {/* Main Card Workspace */}
-          <div 
-            className="flex-1 w-full flex items-start justify-center p-20 min-h-0"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                if (canvas) {
-                  canvas.discardActiveObject();
-                  canvas.requestRenderAll();
-                }
-              }
-            }}
+          {/* Canvas Workspace Wrapper */}
+          <div className="flex-1 relative flex bg-stone-100 min-h-0">
+            {/* Canvas Workspace */}
+            <div
+              ref={workspaceRef}
+              className="flex-1 flex flex-col items-center relative overflow-auto"
+              onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY }); }}
+            onClick={(e) => { if (e.target === e.currentTarget && canvas) { canvas.discardActiveObject(); canvas.requestRenderAll(); } }}
           >
-            <div 
-              ref={cardRef} 
-              className="relative shadow-2xl"
-              style={{
-                width: (config.orientation === 'horizontal' ? 700 : 400) * zoom,
-                height: (config.orientation === 'horizontal' ? 441 : 633) * zoom,
-              }}
+            {/* Rulers */}
+            <div className="absolute top-0 left-5 right-0 h-5 z-30">
+              <Ruler type="horizontal" size={workspaceRef.current?.clientWidth || 2000} scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} offset={workspaceOffset.x - 20} onStartDrag={startGuidelineDrag} />
+            </div>
+            <div className="absolute top-5 left-0 bottom-0 w-5 z-30">
+              <Ruler type="vertical" size={workspaceRef.current?.clientHeight || 2000} scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} offset={workspaceOffset.y - 25} onStartDrag={startGuidelineDrag} />
+            </div>
+            <div className="absolute top-0 left-0 w-5 h-5 bg-stone-100 border-r border-b border-stone-300 z-40" />
+
+            {/* Card */}
+            <div
+              className="flex-1 w-full flex items-start justify-center pt-20 px-20 pb-40 min-h-0 shrink-0"
+              onClick={(e) => { if (e.target === e.currentTarget && canvas) { canvas.discardActiveObject(); canvas.requestRenderAll(); } }}
             >
-              <Canvas />
+              <div ref={cardRef} className="relative shadow-2xl" style={{ width: (config.orientation === 'horizontal' ? 700 : 400) * zoom, height: (config.orientation === 'horizontal' ? 441 : 633) * zoom }}>
+                <Canvas />
+              </div>
+            </div>
+
+            {/* Guidelines Overlay */}
+            <div className="absolute inset-0 pointer-events-none z-40">
+              {(() => {
+                const scale = config.orientation === 'horizontal' ? 700/1013 : 400/638;
+                return (
+                  <>
+                    {guidelines.horizontal.map((canvasY, i) => {
+                      const y = canvasY * scale + workspaceOffset.y;
+                      return (
+                        <div key={`h-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'horizontal', pos: canvasY, index: i }); }} onDoubleClick={() => removeGuideline('horizontal', i)} className="absolute left-5 right-0 h-2 -mt-1 bg-transparent pointer-events-auto cursor-ns-resize group z-50" style={{ top: y }}>
+                          <div className="h-px w-full bg-red-500/60 group-hover:bg-red-600 mt-1" />
+                          <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                        </div>
+                      );
+                    })}
+                    {guidelines.vertical.map((canvasX, i) => {
+                      const x = canvasX * scale + workspaceOffset.x;
+                      return (
+                        <div key={`v-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'vertical', pos: canvasX, index: i }); }} onDoubleClick={() => removeGuideline('vertical', i)} className="absolute top-5 bottom-0 w-2 -ml-1 bg-transparent pointer-events-auto cursor-ew-resize group z-50" style={{ left: x }}>
+                          <div className="w-px h-full bg-red-500/60 group-hover:bg-red-600 ml-1" />
+                          <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                        </div>
+                      );
+                    })}
+                    {draggingGuideline && (
+                      <div className={`absolute bg-red-400/80 ${draggingGuideline.type === 'horizontal' ? 'left-5 right-0 h-px' : 'top-5 bottom-0 w-px'}`} style={{ [draggingGuideline.type === 'horizontal' ? 'top' : 'left']: draggingGuideline.pos * scale + (draggingGuideline.type === 'horizontal' ? workspaceOffset.y : workspaceOffset.x) }} />
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            </div>
+
+            {/* Front / Back Toggle on Center Right Edge */}
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white shadow-2xl flex flex-col gap-2 z-50 pointer-events-auto">
+              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-500 hover:bg-gray-100'}`}>
+                <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Front</span>
+              </button>
+              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'back' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-500 hover:bg-gray-100'}`}>
+                <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Back</span>
+              </button>
             </div>
           </div>
 
-          {/* Guidelines Overlay - Full Workspace */}
-          <div className="absolute inset-0 pointer-events-none z-40">
-            {(() => {
-              const scale = config.orientation === 'horizontal' ? 700/1013 : 400/638;
-              return (
-                <>
-                  {guidelines.horizontal.map((canvasY, i) => {
-                    const y = canvasY * scale + workspaceOffset.y;
-                    return (
-                      <div 
-                        key={`h-${i}`}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          setDraggingGuideline({ type: 'horizontal', pos: canvasY, index: i });
-                        }}
-                        onDoubleClick={() => removeGuideline('horizontal', i)}
-                        className="absolute left-5 right-0 h-2 -mt-1 bg-transparent pointer-events-auto cursor-ns-resize group z-50"
-                        style={{ top: y }}
-                      >
-                        <div className="h-px w-full bg-red-500/60 group-hover:bg-red-600 mt-1" />
-                        <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move • Dbl-click to delete</div>
-                      </div>
-                    );
-                  })}
-                  {guidelines.vertical.map((canvasX, i) => {
-                    const x = canvasX * scale + workspaceOffset.x;
-                    return (
-                      <div 
-                        key={`v-${i}`}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          setDraggingGuideline({ type: 'vertical', pos: canvasX, index: i });
-                        }}
-                        onDoubleClick={() => removeGuideline('vertical', i)}
-                        className="absolute top-5 bottom-0 w-2 -ml-1 bg-transparent pointer-events-auto cursor-ew-resize group z-50"
-                        style={{ left: x }}
-                      >
-                        <div className="w-px h-full bg-red-500/60 group-hover:bg-red-600 ml-1" />
-                        <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move • Dbl-click to delete</div>
-                      </div>
-                    );
-                  })}
+          {/* Right Sidebar: Layers */}
+          <LayersPanel onContextMenu={(x, y) => setContextMenu({ x, y })} />
+        </div>
+      </div>
 
-                  {/* Dragging Preview */}
-                  {draggingGuideline && (
-                    <div 
-                      className={`absolute bg-red-400/80 ${draggingGuideline.type === 'horizontal' ? 'left-5 right-0 h-px' : 'top-5 bottom-0 w-px'}`}
-                      style={{ 
-                        [draggingGuideline.type === 'horizontal' ? 'top' : 'left']: 
-                          draggingGuideline.pos * scale + (draggingGuideline.type === 'horizontal' ? workspaceOffset.y : workspaceOffset.x)
-                      }}
-                    />
-                  )}
-                </>
-              );
-            })()}
-          </div>
+      {/* Shared overlays */}
+      {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} />}
+      <ImageLibraryModal />
 
-          {/* Side Toggle */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white shadow-2xl flex gap-2 z-10">
-            <button
-              onClick={() => setSide('front')}
-              className={`px-10 py-3 text-xs font-black rounded-xl transition-all ${side === 'front' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-500 hover:bg-gray-100'}`}
-            >
-              Front Side
-            </button>
-            <button
-              onClick={() => setSide('back')}
-              className={`px-10 py-3 text-xs font-black rounded-xl transition-all ${side === 'back' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-500 hover:bg-gray-100'}`}
-            >
-              Back Side
-            </button>
+      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Unsaved Changes Warning Modal ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      {pendingAction && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[3px] animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white rounded-[28px] shadow-[0_40px_80px_rgba(0,0,0,0.18)] border border-gray-100 p-8 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-center mb-5">
+              <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center">
+                <AlertCircle className="h-8 w-8 text-amber-500" strokeWidth={2} />
+              </div>
+            </div>
+            <h3 className="text-xl font-black text-gray-900 text-center mb-2">Unsaved Changes</h3>
+            <p className="text-gray-500 font-medium text-sm text-center mb-8 leading-relaxed">
+              You have unsaved changes on the current design.<br />
+              Would you like to save before continuing?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={async () => { await saveDesign(); const a = pendingAction; setPendingAction(null); a?.(); }}
+                className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-black rounded-2xl transition-all shadow-lg shadow-green-200 active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Save className="h-4 w-4" /> Save & Continue
+              </button>
+              <button
+                onClick={() => { const a = pendingAction; setPendingAction(null); a?.(); }}
+                className="w-full h-12 bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 font-black rounded-2xl transition-all active:scale-95"
+              >
+                Discard & Continue
+              </button>
+              <button onClick={() => setPendingAction(null)} className="w-full h-10 text-gray-400 hover:text-gray-600 font-bold text-sm transition-colors">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Right Sidebar: Layers */}
-        <LayersPanel onContextMenu={(x, y) => setContextMenu({ x, y })} />
-      </div>
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={() => setContextMenu(null)}
-        />
       )}
-      <ImageLibraryModal />
     </div>
   );
 }
+
+
