@@ -49,10 +49,10 @@ export function DashboardView() {
           <p className="text-stone-900 font-bold mt-1 text-base lg:text-lg">Here is your workspace overview.</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => setPage('designer')} className="h-12 lg:h-14 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white flex items-center gap-2 lg:gap-3 rounded-2xl px-6 lg:px-8 shadow-xl shadow-green-900/20 hover:scale-105 transition-all active:scale-95 font-black text-base lg:text-lg">
+          <button onClick={() => setPage('designer')} className="h-12 lg:h-14 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white flex items-center gap-2 lg:gap-3 rounded-2xl px-6 lg:px-8   hover:scale-105 transition-all active:scale-95 font-black text-base lg:text-lg">
             <PlusCircle className="h-5 w-5" /> New Design
           </button>
-          <button onClick={() => setPage('upload')} className="h-12 lg:h-14 bg-white text-[#1a5d1a] border-2 border-stone-100 flex items-center gap-2 lg:gap-3 rounded-2xl px-6 lg:px-8 shadow-sm hover:shadow-xl hover:border-[#1a5d1a]/20 transition-all active:scale-95 font-black text-base lg:text-lg">
+          <button onClick={() => setPage('upload')} className="h-12 lg:h-14 bg-white text-[#1a5d1a] border-2 border-stone-100 flex items-center gap-2 lg:gap-3 rounded-2xl px-6 lg:px-8   hover:border-[#1a5d1a]/20 transition-all active:scale-95 font-black text-base lg:text-lg">
             <Upload className="h-5 w-5" /> Upload Data
           </button>
         </div>
@@ -65,7 +65,7 @@ export function DashboardView() {
       </div>
 
       <div className="grid shrink-0 lg:flex-1 lg:min-h-0 gap-4 lg:gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 bg-white rounded-[32px] p-6 lg:p-8 shadow-2xl shadow-stone-200/50 border border-white flex flex-col min-h-[300px]">
+        <div className="md:col-span-2 bg-white rounded-[32px] p-6 lg:p-8   border border-white flex flex-col min-h-[300px]">
           <h2 className="font-black text-xl lg:text-2xl text-stone-900 mb-4 lg:mb-6 shrink-0 flex items-center gap-3">
             <div className="w-1.5 lg:w-2 h-6 lg:h-8 bg-[#1a5d1a] rounded-full" />
             Members by {deptLabel}
@@ -99,7 +99,7 @@ export function DashboardView() {
           </div>
         </div>
 
-        <div className="bg-white rounded-[32px] p-6 lg:p-8 shadow-2xl shadow-stone-200/50 border border-white flex flex-col min-h-[300px]">
+        <div className="bg-white rounded-[32px] p-6 lg:p-8   border border-white flex flex-col min-h-[300px]">
           <div className="flex items-center justify-between mb-4 lg:mb-6 shrink-0">
             <h2 className="font-black text-xl lg:text-2xl text-stone-900">Recent Members</h2>
             <button className="text-sm text-[#1a5d1a] hover:underline font-black transition-all" onClick={() => setPage('upload')}>View All</button>
@@ -107,11 +107,11 @@ export function DashboardView() {
           <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar flex flex-col">
             <div className="flex flex-col gap-3">
               {members.slice(0, 5).map(m => (
-                <div key={m.id} className="flex items-center gap-3 lg:gap-4 bg-[#fdfaf5] hover:bg-white hover:shadow-xl hover:scale-[1.02] border border-stone-100 rounded-[24px] lg:rounded-[28px] p-3 transition-all group">
+                <div key={m.id} className="flex items-center gap-3 lg:gap-4 bg-[#fdfaf5] hover:bg-white  hover:scale-[1.02] border border-stone-100 rounded-[24px] lg:rounded-[28px] p-3 transition-all group">
                   {m.profileImage ? (
-                    <img src={m.profileImage} alt="" className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl object-cover shrink-0 bg-white border-2 border-white shadow-md group-hover:rotate-3 transition-transform" />
+                    <img src={m.profileImage} alt="" className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl object-cover shrink-0 bg-white border-2 border-white  group-hover:rotate-3 transition-transform" />
                   ) : (
-                    <div className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl bg-white flex items-center justify-center shrink-0 border-2 border-white shadow-md text-stone-300">
+                    <div className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl bg-white flex items-center justify-center shrink-0 border-2 border-white  text-stone-300">
                       <User className="h-6 w-6" />
                     </div>
                   )}
@@ -141,8 +141,8 @@ export function DashboardView() {
 
 function Metric({ label, value, icon: Icon }: { label: string; value: number; icon: typeof LayoutTemplate }) {
   return (
-    <div className="bg-white p-5 lg:p-6 rounded-[28px] lg:rounded-[32px] shadow-2xl shadow-stone-200/50 border border-white flex items-center gap-4 lg:gap-5 hover:scale-[1.02] transition-all group">
-      <div className="flex h-14 lg:h-16 w-14 lg:w-16 shrink-0 items-center justify-center rounded-2xl lg:rounded-[24px] bg-[#fdfaf5] text-[#1a5d1a] group-hover:bg-gradient-to-br group-hover:from-[#1a5d1a] group-hover:to-[#2d7a2d] group-hover:text-white transition-all shadow-inner">
+    <div className="bg-white p-5 lg:p-6 rounded-[28px] lg:rounded-[32px]   border border-white flex items-center gap-4 lg:gap-5 hover:scale-[1.02] transition-all group">
+      <div className="flex h-14 lg:h-16 w-14 lg:w-16 shrink-0 items-center justify-center rounded-2xl lg:rounded-[24px] bg-[#fdfaf5] text-[#1a5d1a] group-hover:bg-gradient-to-br group-hover:from-[#1a5d1a] group-hover:to-[#2d7a2d] group-hover:text-white transition-all ">
         <Icon className="h-6 lg:h-8 w-6 lg:h-8" />
       </div>
       <div>
@@ -155,8 +155,8 @@ function Metric({ label, value, icon: Icon }: { label: string; value: number; ic
 
 function QuickLink({ icon: Icon, label, desc, onClick }: { icon: typeof LayoutTemplate; label: string; desc: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="bg-white p-4 lg:p-6 rounded-[28px] lg:rounded-[32px] shadow-2xl shadow-stone-200/50 border border-white hover:scale-[1.05] hover:shadow-green-900/10 transition-all text-left group">
-      <div className="mb-3 lg:mb-4 w-10 lg:w-12 h-10 lg:h-12 bg-[#fdfaf5] rounded-xl flex items-center justify-center text-stone-900 group-hover:bg-[#1a5d1a] group-hover:text-white transition-all shadow-inner">
+    <button onClick={onClick} className="bg-white p-4 lg:p-6 rounded-[28px] lg:rounded-[32px]   border border-white hover:scale-[1.05]  transition-all text-left group">
+      <div className="mb-3 lg:mb-4 w-10 lg:w-12 h-10 lg:h-12 bg-[#fdfaf5] rounded-xl flex items-center justify-center text-stone-900 group-hover:bg-[#1a5d1a] group-hover:text-white transition-all ">
         <Icon className="h-5 lg:h-6 w-5 lg:h-6" />
       </div>
       <h3 className="font-black text-lg lg:text-xl text-stone-900 mb-0.5 tracking-tight">{label}</h3>

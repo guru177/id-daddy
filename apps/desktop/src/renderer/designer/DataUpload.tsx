@@ -546,7 +546,7 @@ export const DataUpload = () => {
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-900">
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 z-10 shadow-sm overflow-hidden">
+      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 z-10  overflow-hidden">
         <div className="flex items-center gap-6 min-w-0">
           <h1 className="text-xl font-black text-gray-900 shrink-0">Members ({members.length})</h1>
           <div className="relative w-48 xl:w-80">
@@ -702,7 +702,7 @@ export const DataUpload = () => {
                   });
                 }}
                 disabled={isProcessingBulkBG}
-                className={`text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 ${isProcessingBulkBG ? 'bg-gray-100 text-gray-900 cursor-not-allowed' : 'bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-100 shadow-sm'}`}
+                className={`text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 ${isProcessingBulkBG ? 'bg-gray-100 text-gray-900 cursor-not-allowed' : 'bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-100 '}`}
                 title="Remove BG and apply color to selected"
               >
                 {isProcessingBulkBG ? (
@@ -742,7 +742,7 @@ export const DataUpload = () => {
                     }
                   }}
                   disabled={isProcessingBulkBG}
-                  className="text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-red-50 hover:text-red-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-red-50 hover:text-red-600  disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Restore original image"
                 >
                   <RotateCcw size={14} /> Restore BG
@@ -764,7 +764,7 @@ export const DataUpload = () => {
           {selectedMembers.size > 0 ? (
             <button
               onClick={() => setIsDeleteConfirmOpen(true)}
-              className="h-11 bg-red-50 border border-red-200 text-red-600 text-[10px] uppercase tracking-widest font-black px-8 rounded-xl transition-all flex items-center gap-2.5 hover:bg-red-100 shadow-lg shadow-red-900/10 animate-in zoom-in-95 duration-200"
+              className="h-11 bg-red-50 border border-red-200 text-red-600 text-[10px] uppercase tracking-widest font-black px-8 rounded-xl transition-all flex items-center gap-2.5 hover:bg-red-100   animate-in zoom-in-95 duration-200"
             >
               <X size={18} /> Delete Selected ({selectedMembers.size})
             </button>
@@ -776,7 +776,7 @@ export const DataUpload = () => {
                 setCustomFieldsList([]);
                 setIsModalOpen(true);
               }}
-              className="h-11 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] hover:scale-[1.02] active:scale-[0.98] text-white px-8 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-green-900/20 flex items-center gap-2.5"
+              className="h-11 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] hover:scale-[1.02] active:scale-[0.98] text-white px-8 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all   flex items-center gap-2.5"
             >
               <Plus size={18} /> Add New Member
             </button>
@@ -787,7 +787,7 @@ export const DataUpload = () => {
       {/* Settings Modal Popup */}
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-8">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+          <div className="bg-white rounded-xl  w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
             <div className="bg-gray-50 border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-black text-gray-900">Variable Checklist & Profile</h2>
               <button
@@ -805,7 +805,7 @@ export const DataUpload = () => {
                 <select
                   value={tempOrganizationType}
                   onChange={(e) => setTempOrganizationType(e.target.value as any)}
-                  className="bg-white border border-gray-200 text-stone-900 px-3 py-2.5 rounded font-bold text-[12px] uppercase tracking-wide focus:outline-none focus:border-green-500 transition-colors shadow-sm w-64"
+                  className="bg-white border border-gray-200 text-stone-900 px-3 py-2.5 rounded font-bold text-[12px] uppercase tracking-wide focus:outline-none focus:border-green-500 transition-colors  w-64"
                 >
                   <option value="corporate">Corporate Profile</option>
                   <option value="education">Education Profile</option>
@@ -1083,7 +1083,7 @@ export const DataUpload = () => {
                       <div className="flex items-center gap-2">
                         {/* Profile Image Main Thumbnail */}
                         <div 
-                          className="w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200 cursor-pointer hover:border-indigo-400 hover:shadow-md transition-all group/img" 
+                          className="w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200 cursor-pointer hover:border-indigo-400  transition-all group/img" 
                           title="Click to view/change image"
                           onClick={() => setImageViewerMemberId(member.id)}
                         >
@@ -1164,7 +1164,7 @@ export const DataUpload = () => {
           </div>
 
           {/* Footer / Pagination */}
-          <div className="mt-auto bg-white border-t border-gray-200 px-8 py-2.5 flex items-center justify-between shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+          <div className="mt-auto bg-white border-t border-gray-200 px-8 py-2.5 flex items-center justify-between shrink-0  z-20">
             <div className="flex items-center gap-4">
               <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Rows per page:</span>
               <div className="flex items-center gap-1.5">
@@ -1172,7 +1172,7 @@ export const DataUpload = () => {
                   <button
                     key={size}
                     onClick={() => setItemsPerPage(size)}
-                    className={`min-w-[40px] h-8 rounded-lg text-[11px] font-black transition-all border ${itemsPerPage === size ? 'bg-[#1a5d1a] border-[#1a5d1a] text-white shadow-md' : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
+                    className={`min-w-[40px] h-8 rounded-lg text-[11px] font-black transition-all border ${itemsPerPage === size ? 'bg-[#1a5d1a] border-[#1a5d1a] text-white ' : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
                   >
                     {size}
                   </button>
@@ -1214,7 +1214,7 @@ export const DataUpload = () => {
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-8">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+          <div className="bg-white rounded-xl  w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-200">
             <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
                 <X size={16} />
@@ -1238,7 +1238,7 @@ export const DataUpload = () => {
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-bold text-xs transition-colors shadow-sm"
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-bold text-xs transition-colors "
               >
                 Accept & Delete
               </button>
@@ -1250,14 +1250,14 @@ export const DataUpload = () => {
       {/* Modal Popup */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-8">
-          <div className="bg-stone-50 rounded-[28px] shadow-2xl w-full max-w-[1200px] h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+          <div className="bg-stone-50 rounded-[28px]  w-full max-w-[1200px] h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
             {/* Modal Header */}
             <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-black text-gray-900">{editingMemberId ? 'Edit Member' : 'Add New Member'}</h2>
               <div className="flex items-center gap-4">
                 <button
                   onClick={handleSave}
-                  className="bg-[#34a853] hover:bg-green-600 text-white px-8 py-2 rounded font-bold text-sm transition-colors shadow-sm"
+                  className="bg-[#34a853] hover:bg-green-600 text-white px-8 py-2 rounded font-bold text-sm transition-colors "
                 >
                   Save Member
                 </button>
@@ -1275,7 +1275,7 @@ export const DataUpload = () => {
               <div className="flex gap-8 mx-auto">
                 {/* Left Column: Image Upload */}
                 <div className="w-[300px] shrink-0">
-                  <div className="bg-white rounded-lg p-6 flex flex-col items-center justify-center gap-6 border border-gray-100 shadow-sm">
+                  <div className="bg-white rounded-lg p-6 flex flex-col items-center justify-center gap-6 border border-gray-100 ">
                     <div className="w-32 h-32 bg-gray-50 flex items-center justify-center rounded text-gray-200 overflow-hidden relative">
                       {formData.profileImage ? (
                         <img src={formData.profileImage} alt="Profile" className="w-full h-full object-cover" />
@@ -1403,7 +1403,7 @@ export const DataUpload = () => {
                             return (
                               <div
                                 onClick={() => document.getElementById(`upload-${key}`)?.click()}
-                                className={`rounded-lg h-32 relative overflow-hidden cursor-pointer group transition-all duration-200 ${imageVal ? 'bg-white border border-gray-200 shadow-sm' : 'bg-gray-50 flex flex-col items-center justify-center border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50'}`}
+                                className={`rounded-lg h-32 relative overflow-hidden cursor-pointer group transition-all duration-200 ${imageVal ? 'bg-white border border-gray-200 ' : 'bg-gray-50 flex flex-col items-center justify-center border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50'}`}
                               >
                                 {imageVal ? (
                                   <>
@@ -1416,7 +1416,7 @@ export const DataUpload = () => {
                                   </>
                                 ) : (
                                   <>
-                                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 text-gray-900 group-hover:text-green-600 group-hover:scale-110 transition-all">
+                                    <div className="w-8 h-8 rounded-full bg-white  flex items-center justify-center mb-2 text-gray-900 group-hover:text-green-600 group-hover:scale-110 transition-all">
                                       <Plus size={16} />
                                     </div>
                                     <span className="text-[11px] font-bold text-gray-900 group-hover:text-green-700">Add {field}</span>
@@ -1455,7 +1455,7 @@ export const DataUpload = () => {
                           <label className="text-[10px] font-black text-gray-900 tracking-wide uppercase">{field}</label>
                           <div
                             onClick={() => document.getElementById(`upload-custom-${field.replace(/\s+/g, '-')}`)?.click()}
-                            className={`rounded-lg h-32 relative overflow-hidden cursor-pointer group transition-all duration-200 ${imageValue ? 'bg-white border border-gray-200 shadow-sm' : 'bg-gray-50 flex flex-col items-center justify-center border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50'}`}
+                            className={`rounded-lg h-32 relative overflow-hidden cursor-pointer group transition-all duration-200 ${imageValue ? 'bg-white border border-gray-200 ' : 'bg-gray-50 flex flex-col items-center justify-center border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50'}`}
                           >
                             {imageValue ? (
                               <>
@@ -1468,7 +1468,7 @@ export const DataUpload = () => {
                               </>
                             ) : (
                               <>
-                                <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 text-gray-900 group-hover:text-green-600 group-hover:scale-110 transition-all">
+                                <div className="w-8 h-8 rounded-full bg-white  flex items-center justify-center mb-2 text-gray-900 group-hover:text-green-600 group-hover:scale-110 transition-all">
                                   <Plus size={16} />
                                 </div>
                                 <span className="text-[11px] font-bold text-gray-900 group-hover:text-green-700">Add {field}</span>
@@ -1512,7 +1512,7 @@ export const DataUpload = () => {
       {/* Image Viewer / Changer Modal */}
       {imageViewerMemberId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-8" onClick={() => setImageViewerMemberId(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl  overflow-hidden max-w-sm w-full animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
               <h3 className="font-black text-gray-900 text-sm uppercase tracking-wider">Profile Photo</h3>
               <button onClick={() => setImageViewerMemberId(null)} className="p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors">
@@ -1521,7 +1521,7 @@ export const DataUpload = () => {
             </div>
             
             <div className="p-6 flex flex-col items-center">
-              <div className="w-48 h-48 rounded-2xl overflow-hidden bg-stone-50 border border-stone-200 flex items-center justify-center mb-6 shadow-inner relative group">
+              <div className="w-48 h-48 rounded-2xl overflow-hidden bg-stone-50 border border-stone-200 flex items-center justify-center mb-6  relative group">
                 {members.find(m => m.id === imageViewerMemberId)?.profileImage ? (
                   <img src={members.find(m => m.id === imageViewerMemberId)?.profileImage} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -1530,7 +1530,7 @@ export const DataUpload = () => {
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                   <button 
                     onClick={() => document.getElementById(`quick-upload-${imageViewerMemberId}`)?.click()}
-                    className="bg-white text-gray-900 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-lg"
+                    className="bg-white text-gray-900 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100 transition-colors "
                   >
                     <Upload size={14} /> Change Photo
                   </button>

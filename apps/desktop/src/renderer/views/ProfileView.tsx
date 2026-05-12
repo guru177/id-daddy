@@ -91,10 +91,10 @@ export function ProfileView() {
 
         <div className="grid gap-8 grid-cols-1 xl:grid-cols-2">
           {/* Workspace Info Card */}
-          <div className="bg-white rounded-[2rem] p-10 shadow-sm border border-stone-200/60 flex flex-col justify-between">
+          <div className="bg-white rounded-[2rem] p-10  border border-stone-200/60 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-6 mb-10 pb-8 border-b border-stone-100">
-                <div className="h-20 w-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-200 shrink-0">
+                <div className="h-20 w-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center text-white   shrink-0">
                   <Building2 size={40} />
                 </div>
                  <div>
@@ -102,7 +102,7 @@ export function ProfileView() {
                     <div className="flex items-center gap-2 mb-1">
                       <input
                         autoFocus
-                        className="h-9 px-3 bg-white border-2 border-indigo-500 rounded-xl text-lg font-black text-stone-900 outline-none shadow-sm"
+                        className="h-9 px-3 bg-white border-2 border-indigo-500 rounded-xl text-lg font-black text-stone-900 outline-none "
                         value={tempWorkspaceName}
                         onChange={(e) => setTempWorkspaceName(e.target.value)}
                         onKeyDown={(e) => {
@@ -184,10 +184,10 @@ export function ProfileView() {
           </div>
 
           {/* Security Card */}
-          <div className="bg-white rounded-[2rem] p-10 shadow-sm border border-stone-200/60 flex flex-col justify-between">
+          <div className="bg-white rounded-[2rem] p-10  border border-stone-200/60 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-10 w-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 shadow-sm">
+                <div className="h-10 w-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 ">
                   <Key size={22} />
                 </div>
                 <h3 className="text-xl font-black text-stone-900">Security & Password</h3>
@@ -198,7 +198,7 @@ export function ProfileView() {
                   <label className="text-xs font-black text-stone-900 uppercase tracking-wider ml-1">New Password</label>
                   <input
                     type="password"
-                    className="w-full h-14 px-5 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-sm"
+                    className="w-full h-14 px-5 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all "
                     placeholder="••••••••"
                     value={form.password}
                     onChange={e => setForm({ ...form, password: e.target.value })}
@@ -209,7 +209,7 @@ export function ProfileView() {
                   <label className="text-xs font-black text-stone-900 uppercase tracking-wider ml-1">Confirm Password</label>
                   <input
                     type="password"
-                    className="w-full h-14 px-5 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-sm"
+                    className="w-full h-14 px-5 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all "
                     placeholder="••••••••"
                     value={form.confirmPassword}
                     onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
@@ -233,7 +233,7 @@ export function ProfileView() {
 
                 <div className="flex justify-end">
                   <button
-                    className="flex items-center gap-2 h-14 px-12 bg-stone-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-xl hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 h-14 px-12 bg-stone-900 text-white font-black rounded-2xl hover:bg-black transition-all  hover:-translate-y-1 active:scale-95 disabled:opacity-50"
                     onClick={save}
                     disabled={saving}
                   >

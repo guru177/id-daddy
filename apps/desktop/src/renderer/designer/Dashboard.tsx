@@ -15,8 +15,8 @@ const DesignCard = ({
   badge?: React.ReactNode;
 }) => {
   const hoverShadow = accentColor === 'green'
-    ? 'group-hover:shadow-[0_32px_64px_-12px_rgba(34,197,94,0.18)]'
-    : 'group-hover:shadow-[0_32px_64px_-12px_rgba(251,191,36,0.18)]';
+    ? ''
+    : '';
   const hoverBorder = accentColor === 'green' ? 'group-hover:border-green-400' : 'group-hover:border-amber-400';
 
   // Orientation determines split direction:
@@ -59,14 +59,14 @@ const DesignCard = ({
 
         {/* Top-right badge (e.g. Sparkles for official) */}
         {badge && (
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ">
             {badge}
           </div>
         )}
 
         {/* Hover action overlay */}
         <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center">
-          <div className="p-4 bg-white text-gray-900 rounded-2xl shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+          <div className="p-4 bg-white text-gray-900 rounded-2xl  transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
             <Edit2 size={22} strokeWidth={2.5} />
           </div>
         </div>
@@ -118,10 +118,10 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
             <button
               type="button"
               onClick={() => onSelect(null)}
-              className="flex flex-col group w-full text-left bg-white rounded-[28px] border-2 border-dashed border-gray-200 overflow-hidden transition-all duration-500 hover:border-green-400 hover:shadow-[0_32px_64px_-12px_rgba(34,197,94,0.18)] hover:-translate-y-2"
+              className="flex flex-col group w-full text-left bg-white rounded-[28px] border-2 border-dashed border-gray-200 overflow-hidden transition-all duration-500 hover:border-green-400  hover:-translate-y-2"
             >
               <div className="relative w-full aspect-square flex flex-col items-center justify-center gap-4 bg-gray-50/50 group-hover:bg-green-50/30 transition-colors duration-500">
-                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-gray-300 shadow-sm transition-all duration-500 group-hover:text-green-600 group-hover:shadow-lg group-hover:rotate-90">
+                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-gray-300  transition-all duration-500 group-hover:text-green-600  group-hover:rotate-90">
                   <Plus size={28} strokeWidth={2.5} />
                 </div>
               </div>

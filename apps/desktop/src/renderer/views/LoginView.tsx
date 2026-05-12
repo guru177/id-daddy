@@ -46,8 +46,8 @@ export function LoginView() {
       {/* Forgot Password Notification Overlay */}
       {showForgotHint && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/5 backdrop-blur-[2px] animate-in fade-in duration-300">
-          <div className="w-full max-w-sm bg-white rounded-[40px] p-10 shadow-[0_40px_80px_rgba(26,93,26,0.15)] border border-stone-100 text-center animate-in zoom-in-95 duration-300">
-            <div className="h-20 w-20 bg-green-50 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-inner">
+          <div className="w-full max-w-sm bg-white rounded-[40px] p-10  border border-stone-100 text-center animate-in zoom-in-95 duration-300">
+            <div className="h-20 w-20 bg-green-50 rounded-[32px] flex items-center justify-center mx-auto mb-6 ">
               <Sparkles className="h-10 w-10 text-[#1a5d1a]" />
             </div>
             <h3 className="text-2xl font-black text-stone-900 mb-3 tracking-tight">Password Reset</h3>
@@ -55,7 +55,7 @@ export function LoginView() {
               Please contact your system administrator to reset your workspace credentials.
             </p>
             <button
-              className="w-full h-14 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white font-black rounded-[24px] hover:shadow-xl hover:shadow-green-900/20 transition-all active:scale-95"
+              className="w-full h-14 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white font-black rounded-[24px]   transition-all active:scale-95"
               onClick={() => setShowForgotHint(false)}
             >
               Got it
@@ -82,7 +82,7 @@ export function LoginView() {
         <div className="w-full max-w-[440px]">
           {/* Mobile Branding */}
           <div className="mb-12 lg:hidden flex flex-col items-center">
-            <div className="h-20 w-20 rounded-[32px] bg-[#1a5d1a] flex items-center justify-center text-white shadow-2xl mb-4">
+            <div className="h-20 w-20 rounded-[32px] bg-[#1a5d1a] flex items-center justify-center text-white  mb-4">
               <Fingerprint size={40} />
             </div>
             <h1 className="text-3xl font-black text-[#1a5d1a] tracking-tighter uppercase">ID DADDY</h1>
@@ -103,7 +103,7 @@ export function LoginView() {
             <div className="space-y-3">
               <label className="text-sm font-black text-stone-900 uppercase tracking-[0.2em] ml-2">Email Address</label>
               <input
-                className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a] focus:shadow-[0_0_0_6px_rgba(26,93,26,0.05)] placeholder:text-stone-200"
+                className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a]  placeholder:text-stone-200"
                 placeholder="admin@company.com"
                 type="email"
                 value={email}
@@ -116,7 +116,7 @@ export function LoginView() {
               <div className="space-y-3">
                 <label className="text-sm font-black text-stone-900 uppercase tracking-[0.2em] ml-2">Phone Number</label>
                 <input
-                  className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a] focus:shadow-[0_0_0_6px_rgba(26,93,26,0.05)] placeholder:text-stone-200"
+                  className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a]  placeholder:text-stone-200"
                   placeholder="+91 00000 00000"
                   type="tel"
                   value={phone}
@@ -140,7 +140,7 @@ export function LoginView() {
                 )}
               </div>
               <input
-                className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a] focus:shadow-[0_0_0_6px_rgba(26,93,26,0.05)] placeholder:text-stone-200"
+                className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a]  placeholder:text-stone-200"
                 type="password"
                 placeholder="••••••••"
                 value={password}
@@ -157,7 +157,7 @@ export function LoginView() {
             ) : null}
 
             <button
-              className="group relative w-full h-16 rounded-[28px] bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white font-black text-xl transition-all hover:shadow-[0_20px_40px_-10px_rgba(26,93,26,0.3)] hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0"
+              className="group relative w-full h-16 rounded-[28px] bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white font-black text-xl transition-all 0_20px_40px_-10px_rgba(26,93,26,0.3)] hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0"
               disabled={loading}
             >
               <span className="relative z-10 flex items-center justify-center gap-3">

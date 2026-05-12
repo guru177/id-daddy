@@ -100,7 +100,7 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
       <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider hidden md:block">Preview:</span>
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all shadow-sm w-48 justify-between"
+        className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all  w-48 justify-between"
       >
         <div className="flex items-center gap-2 truncate">
           {selectedMember?.profileImage ? (
@@ -114,7 +114,7 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
       </div>
       
       {isOpen && (
-        <div className="absolute top-full left-[55px] mt-1 w-64 bg-white border border-gray-100 shadow-xl rounded-xl z-50 overflow-hidden flex flex-col">
+        <div className="absolute top-full left-[55px] mt-1 w-64 bg-white border border-gray-100  rounded-xl z-50 overflow-hidden flex flex-col">
           <div className="p-2 border-b border-gray-100 bg-gray-50/50">
             <div className="relative">
               <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-900" />
@@ -297,7 +297,7 @@ export function DesignerView() {
           </div>
           <button
             onClick={() => { interceptAction(() => { resetDesign(); setActiveTab('Card Designer'); }); }}
-            className="flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-sm font-black rounded-2xl shadow-2xl shadow-green-200 transition-all hover:-translate-y-1 active:scale-95"
+            className="flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-sm font-black rounded-2xl   transition-all hover:-translate-y-1 active:scale-95"
           >
             <Plus size={20} strokeWidth={3} />
             Create New Design
@@ -315,7 +315,7 @@ export function DesignerView() {
             </p>
             <button
               onClick={() => { interceptAction(() => { resetDesign(); setActiveTab('Card Designer'); }); }}
-              className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200"
+              className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 transition-all  "
             >
               Start Designing Now
             </button>
@@ -325,7 +325,7 @@ export function DesignerView() {
             {userDesigns.map((design) => (
               <div
                 key={design.id}
-                className="group relative bg-white rounded-[32px] border border-gray-100 overflow-hidden hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)] transition-all duration-500 flex flex-col"
+                className="group relative bg-white rounded-[32px] border border-gray-100 overflow-hidden  transition-all duration-500 flex flex-col"
               >
                 {/* Preview: Dual Side */}
                 <div className="relative aspect-square w-full bg-gray-100 flex items-center justify-center overflow-hidden group-hover:bg-green-50/30 transition-colors duration-500">
@@ -340,7 +340,7 @@ export function DesignerView() {
                     </div>
                   </div>
                   {activeTemplateId === design.id && (
-                    <div className="absolute top-4 right-4 z-30 bg-amber-500 text-white p-2 rounded-xl shadow-lg animate-in zoom-in-50 duration-300">
+                    <div className="absolute top-4 right-4 z-30 bg-amber-500 text-white p-2 rounded-xl  animate-in zoom-in-50 duration-300">
                       <Star size={16} fill="white" />
                     </div>
                   )}
@@ -348,14 +348,14 @@ export function DesignerView() {
                   <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
                     <button
                       onClick={() => { loadDesign(design); setActiveTab('Card Designer'); }}
-                      className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-green-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 shadow-xl"
+                      className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-green-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 "
                       title="Edit Design"
                     >
                       <Edit2 size={24} strokeWidth={2.5} />
                     </button>
                     <button
                       onClick={() => { showModal({ title: 'Delete Design', message: `Are you sure you want to delete "${design.name}"? This action cannot be undone.`, type: 'confirm', onConfirm: () => deleteDesign(design.id) }); }}
-                      className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-red-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 delay-100 shadow-xl"
+                      className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-red-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 delay-100 "
                       title="Delete"
                     >
                       <Trash2 size={24} strokeWidth={2.5} />
@@ -489,7 +489,7 @@ export function DesignerView() {
           </div>
           <button
             onClick={saveDesign}
-            className="flex items-center gap-2 px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg  transition-all active:scale-95"
           >
             <Save size={14} />
             Save
@@ -524,7 +524,7 @@ export function DesignerView() {
               className="flex-1 w-full flex items-start justify-center pt-20 px-20 pb-40 min-h-0 shrink-0"
               onClick={(e) => { if (e.target === e.currentTarget && canvas) { canvas.discardActiveObject(); canvas.requestRenderAll(); } }}
             >
-              <div ref={cardRef} className="relative shadow-2xl" style={{ width: (config.orientation === 'horizontal' ? 700 : 400) * zoom, height: (config.orientation === 'horizontal' ? 441 : 633) * zoom }}>
+              <div ref={cardRef} className="relative " style={{ width: (config.orientation === 'horizontal' ? 700 : 400) * zoom, height: (config.orientation === 'horizontal' ? 441 : 633) * zoom }}>
                 <Canvas />
               </div>
             </div>
@@ -540,7 +540,7 @@ export function DesignerView() {
                       return (
                         <div key={`h-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'horizontal', pos: canvasY, index: i }); }} onDoubleClick={() => removeGuideline('horizontal', i)} className="absolute left-5 right-0 h-2 -mt-1 bg-transparent pointer-events-auto cursor-ns-resize group z-50" style={{ top: y }}>
                           <div className="h-px w-full bg-red-500/60 group-hover:bg-red-600 mt-1" />
-                          <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                          <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
                         </div>
                       );
                     })}
@@ -549,7 +549,7 @@ export function DesignerView() {
                       return (
                         <div key={`v-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'vertical', pos: canvasX, index: i }); }} onDoubleClick={() => removeGuideline('vertical', i)} className="absolute top-5 bottom-0 w-2 -ml-1 bg-transparent pointer-events-auto cursor-ew-resize group z-50" style={{ left: x }}>
                           <div className="w-px h-full bg-red-500/60 group-hover:bg-red-600 ml-1" />
-                          <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded shadow-lg whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                          <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
                         </div>
                       );
                     })}
@@ -564,11 +564,11 @@ export function DesignerView() {
             </div>
 
             {/* Front / Back Toggle on Center Right Edge */}
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white shadow-2xl flex flex-col gap-2 z-50 pointer-events-auto">
-              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white  flex flex-col gap-2 z-50 pointer-events-auto">
+              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front' ? 'bg-green-500 text-white  scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Front</span>
               </button>
-              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'back' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
+              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'back' ? 'bg-green-500 text-white  scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Back</span>
               </button>
             </div>
@@ -586,7 +586,7 @@ export function DesignerView() {
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Unsaved Changes Warning Modal ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       {pendingAction && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[3px] animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white rounded-[28px] shadow-[0_40px_80px_rgba(0,0,0,0.18)] border border-gray-100 p-8 animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm bg-white rounded-[28px]  border border-gray-100 p-8 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-center mb-5">
               <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center">
                 <AlertCircle className="h-8 w-8 text-amber-500" strokeWidth={2} />
@@ -600,7 +600,7 @@ export function DesignerView() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={async () => { await saveDesign(); const a = pendingAction; setPendingAction(null); a?.(); }}
-                className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-black rounded-2xl transition-all shadow-lg shadow-green-200 active:scale-95 flex items-center justify-center gap-2"
+                className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-black rounded-2xl transition-all   active:scale-95 flex items-center justify-center gap-2"
               >
                 <Save className="h-4 w-4" /> Save & Continue
               </button>

@@ -14,7 +14,7 @@ export function GlobalModal() {
         className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
         onClick={closeModal}
       />
-      <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-sm overflow-hidden z-10 animate-in zoom-in-95 fade-in duration-200">
+      <div className="bg-white rounded-[28px]  w-full max-w-sm overflow-hidden z-10 animate-in zoom-in-95 fade-in duration-200">
         <div className="p-8 flex flex-col items-center text-center">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${modal.type === 'confirm' ? 'bg-amber-50 text-amber-500' :
               modal.type === 'error' ? 'bg-red-50 text-red-500' :
@@ -55,7 +55,7 @@ export function GlobalModal() {
             ) : (
               <button
                 onClick={closeModal}
-                className="w-full py-3.5 bg-green-500 text-white text-sm font-black rounded-2xl hover:bg-green-600 transition-all active:scale-95 shadow-lg shadow-green-200"
+                className="w-full py-3.5 bg-green-500 text-white text-sm font-black rounded-2xl hover:bg-green-600 transition-all active:scale-95  "
               >
                 Got it
               </button>

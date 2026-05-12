@@ -102,7 +102,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       onContextMenu={onContextMenu}
       className={`group flex items-center gap-2 px-2 py-2 cursor-pointer border-b border-gray-50 transition-all ${
         isSelected 
-          ? 'bg-blue-500 text-white border-blue-600 shadow-inner' 
+          ? 'bg-blue-500 text-white border-blue-600 ' 
           : 'bg-white hover:bg-gray-50'
       } ${isClipped ? 'pl-8 bg-gray-50/50' : ''}`}
     >
@@ -311,7 +311,7 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
   };
 
   return (
-    <div className="w-64 bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl z-10">
+    <div className="w-64 bg-white border-l border-gray-200 flex flex-col h-full  z-10">
       {/* Header */}
       <div className="h-12 px-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
         <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[2px] flex items-center gap-2">
@@ -358,13 +358,13 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
 
       {/* Footer Actions */}
       <div className="p-2 border-t border-gray-100 bg-gray-50/50 grid grid-cols-6 gap-1">
-        <button onClick={sendToBack} disabled={!selectedObject} title="Send to Back" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronsDown size={16} /></button>
-        <button onClick={sendBackward} disabled={!selectedObject} title="Send Backward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronDown size={16} /></button>
-        <button onClick={bringForward} disabled={!selectedObject} title="Bring Forward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronUp size={16} /></button>
-        <button onClick={bringToFront} disabled={!selectedObject} title="Bring to Front" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronsUp size={16} /></button>
-        <button onClick={duplicateSelected} disabled={!selectedObject} title="Duplicate Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><Copy size={14} /></button>
-        <button onClick={mergeSelected} disabled={!canvas || canvas.getActiveObjects().length <= 1} title="Merge Layers (Flatten)" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><Layers size={14} /></button>
-        <button onClick={deleteSelected} disabled={!selectedObject} title="Delete Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-red-500 disabled:opacity-20 transition-all"><Trash2 size={14} /></button>
+        <button onClick={sendToBack} disabled={!selectedObject} title="Send to Back" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronsDown size={16} /></button>
+        <button onClick={sendBackward} disabled={!selectedObject} title="Send Backward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronDown size={16} /></button>
+        <button onClick={bringForward} disabled={!selectedObject} title="Bring Forward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronUp size={16} /></button>
+        <button onClick={bringToFront} disabled={!selectedObject} title="Bring to Front" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronsUp size={16} /></button>
+        <button onClick={duplicateSelected} disabled={!selectedObject} title="Duplicate Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><Copy size={14} /></button>
+        <button onClick={mergeSelected} disabled={!canvas || canvas.getActiveObjects().length <= 1} title="Merge Layers (Flatten)" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><Layers size={14} /></button>
+        <button onClick={deleteSelected} disabled={!selectedObject} title="Delete Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-red-500 disabled:opacity-20 transition-all"><Trash2 size={14} /></button>
       </div>
     </div>
   );

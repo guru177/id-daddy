@@ -61,7 +61,7 @@ const Toolbar = () => {
 
       {/* Expanded Panel */}
       {activePanel && (
-        <div className="w-[320px] border-r border-gray-200 flex flex-col shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+        <div className="w-[320px] border-r border-gray-200 flex flex-col  z-10 animate-in slide-in-from-left duration-200">
           <div className="h-14 flex items-center justify-between px-6 border-b border-gray-100">
             <h2 className="text-sm font-bold text-gray-900">
               {menuItems.find(m => m.id === activePanel)?.label}

@@ -121,7 +121,7 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
       />
       <div 
         ref={menuRef}
-        className={`fixed z-[101] w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 transition-opacity duration-75 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed z-[101] w-56 bg-white rounded-xl  border border-gray-100 py-1.5 transition-opacity duration-75 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         style={{ left: pos.left, top: pos.top }}
       >
         {/* Group 1: Basic Management */}
@@ -201,7 +201,7 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
             <span className="flex-1 text-left">Set as Security Layer</span>
             <ChevronUp size={12} className="rotate-90 opacity-40" />
           </button>
-          <div className="hidden group-hover/sub:block absolute left-full top-0 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 -ml-1">
+          <div className="hidden group-hover/sub:block absolute left-full top-0 w-48 bg-white rounded-xl  border border-gray-100 py-1.5 -ml-1">
              <MenuItem label="UV Fluorescent" onClick={() => {}} />
              <MenuItem label="Holographic Overlay" onClick={() => {}} />
              <MenuItem label="Non-Printing Guide" onClick={() => {}} />

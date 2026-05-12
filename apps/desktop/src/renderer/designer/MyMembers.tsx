@@ -234,12 +234,12 @@ export const MyMembers = () => {
   return (
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-900 font-medium">
       {/* Header Toolbar */}
-      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 sticky top-0 z-10 shadow-sm overflow-hidden">
+      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 sticky top-0 z-10  overflow-hidden">
         <div className="flex items-center gap-6 min-w-0">
           <div className="flex items-center gap-4 shrink-0">
             <h1 className="text-xl font-black text-gray-900 shrink-0">Member Previews</h1>
             {isGeneratingPreviews && (
-              <div className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100 shadow-sm animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100  animate-in fade-in zoom-in duration-300">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Rendering {previewResults.length}/{members.length}</span>
               </div>
@@ -274,7 +274,7 @@ export const MyMembers = () => {
             <button 
               onClick={handleExportPDF} 
               disabled={isExporting.active}
-              className="h-11 bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-300"
+              className="h-11 bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all  flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-300"
             >
               {isExporting.active && isExporting.type === 'PDF' ? (
                 <><Loader2 size={16} className="animate-spin text-green-600" /> {isExporting.current}/{isExporting.total} PDFs</>
@@ -285,7 +285,7 @@ export const MyMembers = () => {
             <button 
               onClick={handleExportPNG} 
               disabled={isExporting.active}
-              className="h-11 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] hover:scale-[1.02] active:scale-[0.98] text-white px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-green-900/20 flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-11 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] hover:scale-[1.02] active:scale-[0.98] text-white px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all   flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isExporting.active && isExporting.type === 'PNG' ? (
                 <><Loader2 size={16} className="animate-spin" /> {isExporting.current}/{isExporting.total} Folders</>
@@ -317,7 +317,7 @@ export const MyMembers = () => {
             {filteredPreviews.map((preview, index) => {
               const member = members.find(m => m.id === preview.memberId);
               return (
-                <div key={preview.memberId} className="bg-white rounded-[24px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+                <div key={preview.memberId} className="bg-white rounded-[24px] border border-gray-100 overflow-hidden   transition-all duration-300">
                   <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center justify-between gap-3">
                      <div className="flex items-center gap-3 min-w-0">
                        <div className="w-8 h-8 rounded bg-gray-200 overflow-hidden shrink-0">
@@ -335,7 +335,7 @@ export const MyMembers = () => {
                            setSelectedHighRes({ member, design });
                          }
                        }}
-                       className="px-3 py-1.5 flex items-center gap-1.5 bg-white text-xs font-bold text-gray-900 hover:text-green-600 hover:bg-green-50 rounded-lg shadow-sm border border-gray-200 transition-all shrink-0"
+                       className="px-3 py-1.5 flex items-center gap-1.5 bg-white text-xs font-bold text-gray-900 hover:text-green-600 hover:bg-green-50 rounded-lg  border border-gray-200 transition-all shrink-0"
                        title="Download High Resolution"
                      >
                        <Download size={14} />
@@ -344,12 +344,12 @@ export const MyMembers = () => {
                   </div>
                   
                   <div className="p-4 flex flex-row gap-4">
-                    <div className="flex-1 relative group rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                    <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-200">
                       <img src={preview.front} alt="Front Preview" className="w-full h-auto object-contain bg-white" />
                       <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-[10px] font-black text-white rounded uppercase tracking-widest">Front</div>
                     </div>
                     
-                    <div className="flex-1 relative group rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                    <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-200">
                       <img src={preview.back} alt="Back Preview" className="w-full h-auto object-contain bg-white" />
                       <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-[10px] font-black text-white rounded uppercase tracking-widest">Back</div>
                     </div>
@@ -365,9 +365,9 @@ export const MyMembers = () => {
       {selectedHighRes && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12">
           <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-md transition-opacity animate-in fade-in duration-300" onClick={() => setSelectedHighRes(null)} />
-          <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-stone-100 rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-stone-100 rounded-[32px]  flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Modal Header */}
-            <div className="bg-white px-8 py-5 flex items-center justify-between border-b border-gray-200 shrink-0 shadow-sm z-10">
+            <div className="bg-white px-8 py-5 flex items-center justify-between border-b border-gray-200 shrink-0  z-10">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
                   {selectedHighRes.member?.profileImage && <img src={selectedHighRes.member.profileImage} alt="" className="w-full h-full object-cover" />}
@@ -388,7 +388,7 @@ export const MyMembers = () => {
                 <button
                   onClick={downloadHighResPDF}
                   disabled={!highResImages}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 shadow-md shadow-green-200 transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600   transition-all disabled:opacity-50"
                 >
                   <FileDown size={18} /> Download PDF
                 </button>
@@ -411,13 +411,13 @@ export const MyMembers = () => {
                   <div className="flex flex-col gap-4 h-full min-h-0 flex-1 justify-center items-center w-full">
                     <span className="text-sm font-black text-gray-900 uppercase tracking-widest text-center shrink-0">Front Side</span>
                     <div className="relative min-h-0 flex shrink w-full h-full justify-center items-center">
-                      <img src={highResImages.front} alt="Ultra HD Front" className="max-w-full max-h-full object-contain rounded-[24px] shadow-2xl border-4 border-white bg-white" />
+                      <img src={highResImages.front} alt="Ultra HD Front" className="max-w-full max-h-full object-contain rounded-[24px]  border-4 border-white bg-white" />
                     </div>
                   </div>
                   <div className="flex flex-col gap-4 h-full min-h-0 flex-1 justify-center items-center w-full">
                     <span className="text-sm font-black text-gray-900 uppercase tracking-widest text-center shrink-0">Back Side</span>
                     <div className="relative min-h-0 flex shrink w-full h-full justify-center items-center">
-                      <img src={highResImages.back} alt="Ultra HD Back" className="max-w-full max-h-full object-contain rounded-[24px] shadow-2xl border-4 border-white bg-white" />
+                      <img src={highResImages.back} alt="Ultra HD Back" className="max-w-full max-h-full object-contain rounded-[24px]  border-4 border-white bg-white" />
                     </div>
                   </div>
                 </div>

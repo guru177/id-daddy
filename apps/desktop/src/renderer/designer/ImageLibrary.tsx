@@ -109,10 +109,10 @@ export const ImageLibraryModal = () => {
         multiple
         className="hidden" 
       />
-      <div className="bg-white w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
+      <div className="bg-white w-full max-w-6xl h-[85vh] rounded-3xl  flex flex-col overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
         
         {/* Header */}
-        <div className="bg-green-600 px-6 py-4 flex items-center justify-between shadow-lg">
+        <div className="bg-green-600 px-6 py-4 flex items-center justify-between ">
           <h2 className="text-white font-bold text-lg">My Images</h2>
           <button 
             onClick={() => setIsImageLibraryOpen(false)}
@@ -136,7 +136,7 @@ export const ImageLibraryModal = () => {
                 <button
                   key={folder.name}
                   onClick={() => setActiveFolder(folder.name)}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${activeFolder === folder.name ? 'bg-green-100/50 text-green-700 ring-1 ring-green-200' : 'text-gray-900 hover:bg-white hover:shadow-sm'}`}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${activeFolder === folder.name ? 'bg-green-100/50 text-green-700 ring-1 ring-green-200' : 'text-gray-900 hover:bg-white '}`}
                 >
                   <div className="flex items-center gap-3">
                     <span className={activeFolder === folder.name ? 'text-green-600' : 'text-gray-900'}>{folder.icon}</span>
@@ -158,7 +158,7 @@ export const ImageLibraryModal = () => {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-green-700 transition-all active:scale-95"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold  hover:bg-green-700 transition-all active:scale-95"
                 >
                   <Plus size={18} />
                   <span>Upload files</span>
@@ -185,14 +185,14 @@ export const ImageLibraryModal = () => {
                 <div className="grid grid-cols-4 gap-6">
                   {currentImages.map((url, i) => (
                     <div key={i} className="group relative" onClick={() => addImageToCanvas(url)}>
-                      <div className="aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-green-500 transition-all shadow-sm group-hover:shadow-xl cursor-pointer">
+                      <div className="aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-green-500 transition-all   cursor-pointer">
                         <img 
                           src={url} 
                           alt="Asset" 
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                           <button className="p-2 bg-white rounded-full text-green-600 shadow-lg hover:scale-110 transition-transform">
+                           <button className="p-2 bg-white rounded-full text-green-600  hover:scale-110 transition-transform">
                               <Plus size={20} />
                            </button>
                         </div>
@@ -248,7 +248,7 @@ export const AddImageDialog = ({ isOpen, onClose }: { isOpen: boolean, onClose: 
   return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
       <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" multiple className="hidden" />
-      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-[500px] border border-white/50 animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-2xl  overflow-hidden w-[500px] border border-white/50 animate-in zoom-in-95 duration-200">
         <div className="bg-green-600 px-6 py-3 flex items-center justify-between">
           <h3 className="text-white font-bold text-sm">Add Image</h3>
           <button onClick={onClose} className="text-white hover:opacity-80"><X size={18} /></button>

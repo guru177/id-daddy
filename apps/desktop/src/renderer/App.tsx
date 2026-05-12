@@ -56,7 +56,7 @@ export default function App() {
       {/* ... (Blocked Notification Overlay remains the same) */}
       {isBlocked && (
         <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-6">
-          <div className="w-full max-w-sm bg-white rounded-[40px] p-10 shadow-2xl text-center border-2 border-red-500/20 animate-in fade-in zoom-in duration-300">
+          <div className="w-full max-w-sm bg-white rounded-[40px] p-10  text-center border-2 border-red-500/20 animate-in fade-in zoom-in duration-300">
             <div className="h-20 w-20 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
               <LogOut className="h-10 w-10 text-red-600" />
             </div>
@@ -65,7 +65,7 @@ export default function App() {
               Your account has been blocked by the admin. Please contact support for more information.
             </p>
             <button 
-              className="w-full h-14 bg-gray-900 text-white font-black text-lg rounded-[24px] hover:bg-black transition-all shadow-lg active:scale-95"
+              className="w-full h-14 bg-gray-900 text-white font-black text-lg rounded-[24px] hover:bg-black transition-all  active:scale-95"
               onClick={logout}
             >
               OK, Log out
@@ -87,7 +87,7 @@ export default function App() {
           disabled={isBlocked}
         >
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center shadow-lg shadow-green-900/20">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center  ">
               <span className="text-white font-black text-xl">ID</span>
             </div>
             <div>
@@ -98,7 +98,7 @@ export default function App() {
           
           <div className="mt-4">
             <div className={clsx(
-              "inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-2xl shadow-sm border",
+              "inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-2xl  border",
               user.plan === "LIFETIME" ? "bg-amber-100 text-amber-700 border-amber-200" :
               user.plan === "PRO_1Y" ? "bg-green-100 text-green-700 border-green-200" :
               "bg-stone-100 text-stone-900 border-stone-200"
@@ -166,7 +166,7 @@ export default function App() {
                 </div>
              </div>
             <button 
-              className="w-full h-12 bg-white text-stone-900 font-black rounded-2xl border border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2 shadow-sm" 
+              className="w-full h-12 bg-white text-stone-900 font-black rounded-2xl border border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2 " 
               onClick={logout}
             >
               <LogOut className="h-4 w-4" />

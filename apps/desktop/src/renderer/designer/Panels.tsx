@@ -131,7 +131,7 @@ const FontSelect = ({ value, onChange }: { value: string, onChange: (val: string
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-[200px] mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden flex flex-col" style={{ maxHeight: '300px' }}>
+        <div className="absolute z-50 w-[200px] mt-1 bg-white border border-gray-200 rounded-lg  overflow-hidden flex flex-col" style={{ maxHeight: '300px' }}>
           <div className="p-2 border-b border-gray-100 bg-gray-50 shrink-0">
             <input
               autoFocus
@@ -194,14 +194,14 @@ export const CardOptionsPanel = () => {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => updateOrientation('horizontal')}
-            className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'horizontal' ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+            className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'horizontal' ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
           >
             <div className={`w-12 h-8 border-2 rounded-md mb-2 transition-colors ${config.orientation === 'horizontal' ? 'border-green-600' : 'border-gray-300'}`} />
             <span className={`text-[11px] font-bold ${config.orientation === 'horizontal' ? 'text-green-700' : 'text-gray-900'}`}>Horizontal</span>
           </button>
           <button
             onClick={() => updateOrientation('vertical')}
-            className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'vertical' ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+            className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'vertical' ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
           >
             <div className={`w-8 h-12 border-2 rounded-md mb-2 transition-colors ${config.orientation === 'vertical' ? 'border-green-600' : 'border-gray-300'}`} />
             <span className={`text-[11px] font-bold ${config.orientation === 'vertical' ? 'text-green-700' : 'text-gray-900'}`}>Vertical</span>
@@ -218,7 +218,7 @@ export const CardOptionsPanel = () => {
             <button
               key={type}
               onClick={() => setConfig({ type })}
-              className={`p-4 border rounded-2xl text-center transition-all ${config.type === type ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+              className={`p-4 border rounded-2xl text-center transition-all ${config.type === type ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
               <CreditCard className={`w-6 h-6 mx-auto mb-2 transition-opacity ${config.type === type ? 'text-green-600 opacity-100' : 'text-gray-900 opacity-50'}`} />
               <span className={`text-[10px] font-extrabold block leading-tight ${config.type === type ? 'text-green-700' : 'text-gray-900'}`}>{type}</span>
@@ -234,13 +234,13 @@ export const CardOptionsPanel = () => {
         <div className="grid grid-cols-3 gap-2">
           {[
             { id: 'none', label: 'No Back', icon: <div className="w-10 h-6 border border-gray-400 rounded-sm flex items-center justify-center text-[7px] font-black">ID</div> },
-            { id: 'bw', label: 'B & W', icon: <div className="w-7 h-7 rounded-full bg-gradient-to-r from-black to-white border-2 border-white shadow-sm relative"></div> },
-            { id: 'color', label: 'Full Color', icon: <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-400 via-green-400 to-blue-400 border-2 border-white shadow-sm relative"></div> }
+            { id: 'bw', label: 'B & W', icon: <div className="w-7 h-7 rounded-full bg-gradient-to-r from-black to-white border-2 border-white  relative"></div> },
+            { id: 'color', label: 'Full Color', icon: <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-400 via-green-400 to-blue-400 border-2 border-white  relative"></div> }
           ].map(opt => (
             <button
               key={opt.id}
               onClick={() => setConfig({ backsidePrinting: opt.id as any })}
-              className={`flex flex-col items-center justify-center py-3 border rounded-2xl transition-all relative ${config.backsidePrinting === opt.id ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+              className={`flex flex-col items-center justify-center py-3 border rounded-2xl transition-all relative ${config.backsidePrinting === opt.id ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
               <div className="mb-2">{opt.icon}</div>
               <span className={`text-[9px] font-extrabold text-center leading-none ${config.backsidePrinting === opt.id ? 'text-green-700' : 'text-gray-900'}`}>{opt.label}</span>
@@ -262,7 +262,7 @@ export const CardOptionsPanel = () => {
             <button
               key={opt.id}
               onClick={() => setConfig({ slotPunch: opt.id as any })}
-              className={`flex flex-col items-center justify-center py-3 border rounded-2xl transition-all relative ${config.slotPunch === opt.id ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+              className={`flex flex-col items-center justify-center py-3 border rounded-2xl transition-all relative ${config.slotPunch === opt.id ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
               <div className="mb-2">{opt.icon}</div>
               <span className={`text-[9px] font-extrabold text-center leading-none ${config.slotPunch === opt.id ? 'text-green-700' : 'text-gray-900'}`}>{opt.label}</span>
@@ -277,7 +277,7 @@ export const CardOptionsPanel = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <span className="text-[10px] text-gray-900 font-bold uppercase tracking-tight ml-1">Front</span>
-            <div className="flex items-center gap-3 p-2 border border-gray-100 rounded-2xl bg-white shadow-sm hover:ring-1 hover:ring-green-500 transition-all">
+            <div className="flex items-center gap-3 p-2 border border-gray-100 rounded-2xl bg-white  hover:ring-1 hover:ring-green-500 transition-all">
               <input
                 type="color"
                 value={config.backgroundColorFront}
@@ -285,14 +285,14 @@ export const CardOptionsPanel = () => {
                   setConfig({ backgroundColorFront: e.target.value });
                   if (canvas) canvas.setBackgroundColor(e.target.value, canvas.renderAll.bind(canvas));
                 }}
-                className="w-10 h-10 rounded-xl border-none cursor-pointer bg-transparent shadow-inner"
+                className="w-10 h-10 rounded-xl border-none cursor-pointer bg-transparent "
               />
               <span className="text-[11px] font-mono font-bold text-gray-900">{config.backgroundColorFront.toUpperCase()}</span>
             </div>
           </div>
           <div className="space-y-2">
             <span className="text-[10px] text-gray-900 font-bold uppercase tracking-tight ml-1">Back</span>
-            <div className="flex items-center gap-3 p-2 border border-gray-100 rounded-2xl bg-white shadow-sm hover:ring-1 hover:ring-green-500 transition-all">
+            <div className="flex items-center gap-3 p-2 border border-gray-100 rounded-2xl bg-white  hover:ring-1 hover:ring-green-500 transition-all">
               <input
                 type="color"
                 value={config.backgroundColorBack}
@@ -301,7 +301,7 @@ export const CardOptionsPanel = () => {
                   const { side, canvas } = useDesignerStore.getState();
                   if (canvas && side === 'back') canvas.setBackgroundColor(e.target.value, canvas.renderAll.bind(canvas));
                 }}
-                className="w-10 h-10 rounded-xl border-none cursor-pointer bg-transparent shadow-inner"
+                className="w-10 h-10 rounded-xl border-none cursor-pointer bg-transparent "
               />
               <span className="text-[11px] font-mono font-bold text-gray-900">{config.backgroundColorBack.toUpperCase()}</span>
             </div>
@@ -539,7 +539,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => addText('Add headline')}
-            className="flex items-center justify-center gap-3 p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all shadow-md active:scale-95 group"
+            className="flex items-center justify-center gap-3 p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all  active:scale-95 group"
           >
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
               <Type size={18} />
@@ -548,7 +548,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
           </button>
           <button
             onClick={() => addText('Add paragraph')}
-            className="flex items-center justify-center gap-3 p-4 border border-gray-100 bg-white rounded-2xl hover:border-green-200 transition-all shadow-sm active:scale-95"
+            className="flex items-center justify-center gap-3 p-4 border border-gray-100 bg-white rounded-2xl hover:border-green-200 transition-all  active:scale-95"
           >
             <div className="flex flex-col gap-0.5 w-6">
               <div className="h-1 bg-gray-300 w-full rounded-full" />
@@ -574,9 +574,9 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => addText('{{firstName}} {{lastName}}', true)}
-                className="flex flex-col items-center justify-center p-5 border border-purple-100 bg-purple-50/30 rounded-3xl hover:border-purple-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95 col-span-2"
+                className="flex flex-col items-center justify-center p-5 border border-purple-100 bg-purple-50/30 rounded-3xl hover:border-purple-400  hover:scale-[1.02] transition-all group  active:scale-95 col-span-2"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mb-2 group-hover:bg-purple-100 transition-colors shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mb-2 group-hover:bg-purple-100 transition-colors ">
                   <Type size={18} className="text-purple-400 group-hover:text-purple-600" />
                 </div>
                 <span className="text-[11px] font-black text-purple-700 text-center leading-tight">
@@ -589,7 +589,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
                 <button
                   key={field}
                   onClick={() => addText(`{{${fieldToKeyMap[field]}}}`, true)}
-                  className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95"
+                  className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400  hover:scale-[1.02] transition-all group  active:scale-95"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
                     <Type size={18} className="text-gray-900 group-hover:text-green-600" />
@@ -616,7 +616,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
                 <button
                   key={field}
                   onClick={() => addText(`{{${field}}}`, true)}
-                  className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95"
+                  className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400  hover:scale-[1.02] transition-all group  active:scale-95"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
                     <Type size={18} className="text-gray-900 group-hover:text-green-600" />
@@ -1133,9 +1133,9 @@ export const CustomizePanel = () => {
           <button
             onClick={handleRemoveBackground}
             disabled={isProcessingBG}
-            className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl font-bold transition-all active:scale-95 shadow-lg ${isProcessingBG
+            className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl font-bold transition-all active:scale-95  ${isProcessingBG
               ? 'bg-gray-100 text-gray-900 cursor-not-allowed'
-              : 'bg-green-500 text-white hover:bg-green-600 shadow-green-200'
+              : 'bg-green-500 text-white hover:bg-green-600 '
               }`}
           >
             {isProcessingBG ? (
@@ -1533,8 +1533,8 @@ export const CustomizePanel = () => {
         <button
           onClick={() => applySecurityChanges(props)}
           disabled={isApplyingSecurity}
-          className={`w-full py-3 text-white rounded-xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
-            isApplyingSecurity ? 'bg-gray-400 cursor-wait' : 'bg-green-500 hover:bg-green-600 shadow-green-100'
+          className={`w-full py-3 text-white rounded-xl font-bold transition-all  active:scale-95 flex items-center justify-center gap-2 ${
+            isApplyingSecurity ? 'bg-gray-400 cursor-wait' : 'bg-green-500 hover:bg-green-600 '
           }`}
         >
           {isApplyingSecurity ? (
@@ -1706,7 +1706,7 @@ export const CustomizePanel = () => {
                   {uniqueVars.map((varKey: string) => {
                     const colorMap: Record<string, string> = props.variableColors || {};
                     return (
-                      <div key={varKey} className="flex items-center justify-between bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                      <div key={varKey} className="flex items-center justify-between bg-white p-2 rounded-xl border border-gray-100 ">
                         <span className="text-[10px] font-bold text-gray-900 truncate max-w-[100px]">{varKey}</span>
                         <div className="flex items-center gap-2">
                           <input
@@ -2187,7 +2187,7 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setIsAddDialogOpen(true)}
-            className="flex flex-col items-center justify-center p-4 border border-gray-100 bg-white rounded-2xl hover:border-green-200 transition-all shadow-sm active:scale-95 group"
+            className="flex flex-col items-center justify-center p-4 border border-gray-100 bg-white rounded-2xl hover:border-green-200 transition-all  active:scale-95 group"
           >
             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors text-gray-900 group-hover:text-green-600">
               <Plus size={20} />
@@ -2196,7 +2196,7 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
           </button>
           <button
             onClick={() => setIsImageLibraryOpen(true)}
-            className="flex flex-col items-center justify-center p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all shadow-md active:scale-95 group"
+            className="flex flex-col items-center justify-center p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all  active:scale-95 group"
           >
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center mb-2">
               <ImageIcon size={20} />
@@ -2220,7 +2220,7 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
             <button
               key={item.ph}
               onClick={() => addImageToCanvas(item.ph, item.label, canvas, setPanel)}
-              className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95"
+              className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400  hover:scale-[1.02] transition-all group  active:scale-95"
             >
               <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
                 <div className="text-gray-900 group-hover:text-green-600 scale-125">
@@ -2260,7 +2260,7 @@ export const SecurityPanel = () => {
   const laminationOpts = [
     { id: 'none', label: 'None', icon: <div className="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center"><div className="w-full h-0.5 bg-gray-300 rotate-45" /></div> },
     { id: 'transparent', label: 'Transparent', icon: <div className="w-8 h-8 rounded-lg bg-gray-100 flex flex-col items-center justify-center gap-0.5"><div className="w-5 h-0.5 bg-gray-300" /><div className="w-5 h-0.5 bg-gray-300" /><div className="w-5 h-0.5 bg-gray-300" /></div> },
-    { id: 'hologram', label: 'Hologram', icon: <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 shadow-sm" /> },
+    { id: 'hologram', label: 'Hologram', icon: <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 " /> },
   ];
 
   return (
@@ -2268,14 +2268,14 @@ export const SecurityPanel = () => {
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => addImageToCanvas('{{barcode}}', 'Barcode', canvas, setActivePanel)}
-          className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 transition-all shadow-sm active:scale-95 group"
+          className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 transition-all  active:scale-95 group"
         >
           <ScanBarcode className="w-8 h-8 mb-2 text-gray-900 group-hover:text-green-600 transition-colors" />
           <span className="text-[11px] font-black text-gray-900">Add Barcode</span>
         </button>
         <button
           onClick={() => addImageToCanvas('{{qr_code}}', 'QR Code', canvas, setActivePanel)}
-          className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 transition-all shadow-sm active:scale-95 group"
+          className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 transition-all  active:scale-95 group"
         >
           <QrCode className="w-8 h-8 mb-2 text-gray-900 group-hover:text-green-600 transition-colors" />
           <span className="text-[11px] font-black text-gray-900">Add QR Code</span>
@@ -2292,7 +2292,7 @@ export const SecurityPanel = () => {
             <button
               key={opt.id}
               onClick={() => setConfig({ frontLamination: opt.id as any })}
-              className={`flex flex-col items-center justify-center py-4 border rounded-2xl transition-all relative ${config.frontLamination === opt.id ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+              className={`flex flex-col items-center justify-center py-4 border rounded-2xl transition-all relative ${config.frontLamination === opt.id ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
               {config.frontLamination === opt.id && <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white"><Plus size={10} className="rotate-45" /></div>}
               <div className="mb-2">{opt.icon}</div>
@@ -2312,7 +2312,7 @@ export const SecurityPanel = () => {
             <button
               key={opt.id}
               onClick={() => setConfig({ backLamination: opt.id as any })}
-              className={`flex flex-col items-center justify-center py-4 border rounded-2xl transition-all relative ${config.backLamination === opt.id ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+              className={`flex flex-col items-center justify-center py-4 border rounded-2xl transition-all relative ${config.backLamination === opt.id ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
               {config.backLamination === opt.id && <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white"><Plus size={10} className="rotate-45" /></div>}
               <div className="mb-2">{opt.icon}</div>
