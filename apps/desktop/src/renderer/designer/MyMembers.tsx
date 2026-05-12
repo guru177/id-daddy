@@ -344,14 +344,14 @@ export const MyMembers = () => {
                   </div>
                   
                   <div className="p-4 flex flex-row gap-4">
-                    <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-200">
-                      <img src={preview.front} alt="Front Preview" className="w-full h-auto object-contain bg-white" />
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-[10px] font-black text-white rounded uppercase tracking-widest">Front</div>
+                    <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-100 bg-stone-50">
+                      <img src={preview.front} alt="Front Preview" className="w-full h-auto max-h-[300px] object-contain mx-auto" />
+                      <div className="absolute top-2 left-2 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Front</div>
                     </div>
                     
-                    <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-200">
-                      <img src={preview.back} alt="Back Preview" className="w-full h-auto object-contain bg-white" />
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-[10px] font-black text-white rounded uppercase tracking-widest">Back</div>
+                    <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-100 bg-stone-50">
+                      <img src={preview.back} alt="Back Preview" className="w-full h-auto max-h-[300px] object-contain mx-auto" />
+                      <div className="absolute top-2 left-2 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Back</div>
                     </div>
                   </div>
                 </div>

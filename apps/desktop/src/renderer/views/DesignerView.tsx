@@ -564,7 +564,7 @@ export function DesignerView() {
             </div>
 
             {/* Front / Back Toggle on Center Right Edge */}
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white  flex flex-col gap-2 z-50 pointer-events-auto">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md p-2 rounded-l-2xl border-l border-y border-stone-200  flex flex-col gap-2 z-50 pointer-events-auto">
               <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front' ? 'bg-green-500 text-white  scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Front</span>
               </button>
