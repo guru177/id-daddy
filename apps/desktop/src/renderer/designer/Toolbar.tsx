@@ -32,7 +32,7 @@ const Toolbar = () => {
       case 'security': return <SecurityPanel />;
       case 'shapes': return <ShapesPanel />;
       case 'customize': return <CustomizePanel />;
-      default: return <div className="text-center text-gray-400 mt-10 italic">Panel coming soon...</div>;
+      default: return <div className="text-center text-gray-900 mt-10 italic">Panel coming soon...</div>;
     }
   };
 
@@ -47,7 +47,7 @@ const Toolbar = () => {
             className={`flex flex-col items-center justify-center py-3 transition-all relative ${
               activePanel === item.id 
                 ? 'text-green-600 bg-green-50/50' 
-                : 'text-gray-400 hover:text-gray-600'
+                : 'text-gray-900 hover:text-gray-900'
             }`}
           >
             {activePanel === item.id && (
@@ -63,12 +63,12 @@ const Toolbar = () => {
       {activePanel && (
         <div className="w-[320px] border-r border-gray-200 flex flex-col shadow-2xl z-10 animate-in slide-in-from-left duration-200">
           <div className="h-14 flex items-center justify-between px-6 border-b border-gray-100">
-            <h2 className="text-sm font-bold text-gray-800">
+            <h2 className="text-sm font-bold text-gray-900">
               {menuItems.find(m => m.id === activePanel)?.label}
             </h2>
             <button 
               onClick={() => setActivePanel(null)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-900 hover:text-gray-900"
             >
               <X size={18} />
             </button>

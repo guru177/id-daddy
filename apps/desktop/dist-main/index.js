@@ -14,6 +14,7 @@ function createWindow() {
         minWidth: 1024,
         minHeight: 720,
         backgroundColor: "#f7f7f4",
+        autoHideMenuBar: true,
         webPreferences: {
             preload: node_path_1.default.join(__dirname, "preload.js"),
             contextIsolation: true,
@@ -21,6 +22,8 @@ function createWindow() {
             sandbox: true
         }
     });
+    mainWindow.removeMenu();
+    mainWindow.setMenuBarVisibility(false);
     const devUrl = process.env.VITE_DEV_SERVER_URL;
     if (devUrl) {
         void mainWindow.loadURL(devUrl);
@@ -30,6 +33,7 @@ function createWindow() {
         void mainWindow.loadFile(node_path_1.default.join(__dirname, "../../dist-renderer/index.html"));
     }
 }
+electron_1.Menu.setApplicationMenu(null);
 electron_1.app.whenReady().then(() => {
     createWindow();
     electron_updater_1.autoUpdater.checkForUpdatesAndNotify().catch(() => undefined);

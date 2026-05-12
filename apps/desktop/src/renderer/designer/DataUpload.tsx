@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search } from 'lucide-react';
+import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search, ChevronLeft, ChevronRight, Sparkles, RotateCcw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useDesignerStore } from './store';
+import { api } from '../api';
 
 const initialFormState = {
   firstName: '', lastName: '', nickname: '', dob: '', title: '', idNumber: '',
@@ -32,7 +33,7 @@ const Section = ({ title, children }: { title: string, children: React.ReactNode
         onClick={() => setIsOpen(!isOpen)}
       >
         <h2 className="text-[11px] font-black text-gray-900 group-hover:text-green-600 transition-colors">{title}</h2>
-        <ChevronUp size={14} className={`text-gray-400 transition-transform duration-300 ${isOpen ? '' : 'rotate-180'}`} />
+        <ChevronUp size={14} className={`text-gray-900 transition-transform duration-300 ${isOpen ? '' : 'rotate-180'}`} />
       </div>
       {isOpen && (
         <div className="animate-in slide-in-from-top-2 fade-in duration-300">
@@ -53,7 +54,7 @@ const FormField = ({ label, placeholder, required = false, value, onChange, orig
   }
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-black text-gray-800 tracking-wide">
+      <label className="text-[10px] font-black text-gray-900 tracking-wide">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
@@ -61,14 +62,14 @@ const FormField = ({ label, placeholder, required = false, value, onChange, orig
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
+        className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
       />
     </div>
   );
 };
 
 export const DataUpload = () => {
-  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig } = useDesignerStore();
+  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig, isProcessingBulkBG, setIsProcessingBulkBG, bgProgress, setBgProgress, selectedMembers, setSelectedMembers } = useDesignerStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -81,8 +82,15 @@ export const DataUpload = () => {
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [imageViewerMemberId, setImageViewerMemberId] = useState<string | null>(null);
+
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const [bulkBgColor, setBulkBgColor] = useState('#ffffff');
 
   const filteredMembers = members.filter(m => {
     if (!searchQuery) return true;
@@ -93,6 +101,15 @@ export const DataUpload = () => {
     const dept = (m.department || '').toLowerCase();
     return fullName.includes(query) || idNum.includes(query) || empId.includes(query) || dept.includes(query);
   });
+
+  // Reset pagination when search or page size changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedMembers = filteredMembers.slice(startIndex, startIndex + itemsPerPage);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -526,95 +543,244 @@ export const DataUpload = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-800">
+    <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-900">
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0 z-10">
-        <div className="flex items-center gap-6">
-          <h1 className="text-lg font-black text-gray-900 shrink-0">Saved Members ({members.length})</h1>
-          <div className="relative flex-1 max-w-[300px]">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 z-10 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-6 min-w-0">
+          <h1 className="text-xl font-black text-gray-900 shrink-0">Members ({members.length})</h1>
+          <div className="relative w-48 xl:w-80">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-900" />
             <input
               type="text"
-              placeholder="Search by name, ID, or department/class..."
+              placeholder="Search members..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded text-xs w-full focus:outline-none focus:border-green-500 focus:bg-white transition-colors"
+              className="pl-11 pr-4 h-11 bg-gray-50 border border-gray-200 rounded-xl text-sm w-full focus:outline-none focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all placeholder:text-gray-900 font-medium"
             />
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => {
-              setTempConfig(formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] });
-              setTempOrganizationType(organizationType);
-              setIsSettingsOpen(true);
-            }}
-            className={`bg-white border text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 ${isSettingsOpen ? 'border-green-500 text-green-700 bg-green-50' : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
-          >
-            <Settings size={14} /> Variable Checklist
-          </button>
-          <div className="h-6 w-px bg-gray-200 mx-2" />
-
-          {/* Excel & Image Tools */}
+        
+        <div className="flex items-center gap-3 shrink-0">
           <input type="file" ref={excelInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportExcel} />
           <input type="file" ref={bulkImageInputRef} accept="image/*" multiple className="hidden" onChange={handleBulkImageUpload} />
 
-          <button
-            onClick={handleDownloadTemplate}
-            className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
-            title="Download Template"
-          >
-            <FileSpreadsheet size={14} /> Template
-          </button>
+          {selectedMembers.size === 0 && (
+            <>
+              <button
+                onClick={() => {
+                  setTempConfig(formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] });
+                  setTempOrganizationType(organizationType);
+                  setIsSettingsOpen(true);
+                }}
+                className={`h-11 border text-[10px] uppercase tracking-widest font-black px-5 rounded-xl transition-all flex items-center gap-2.5 ${isSettingsOpen ? 'border-green-500 text-green-700 bg-green-50 ring-2 ring-green-500/10' : 'border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50 bg-white'}`}
+              >
+                <Settings size={16} /> Variable Checklist
+              </button>
 
-          <button
-            onClick={() => excelInputRef.current?.click()}
-            className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
-            title="Import Excel"
-          >
-            <Upload size={14} /> Import
-          </button>
+              <div className="h-8 w-px bg-gray-200 mx-1" />
 
-          <button
-            onClick={handleExportExcel}
-            className="bg-white border border-gray-200 text-gray-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-gray-50 hover:text-green-600"
-            title="Export Excel"
-          >
-            <Download size={14} /> Export
-          </button>
+              <button
+                onClick={handleDownloadTemplate}
+                className="h-11 bg-white border border-gray-200 text-gray-900 text-[10px] uppercase tracking-widest font-black px-4 rounded-xl transition-all flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200"
+                title="Download Template"
+              >
+                <FileSpreadsheet size={16} /> Template
+              </button>
 
-          <button
-            onClick={() => bulkImageInputRef.current?.click()}
-            className="bg-white border border-blue-200 text-blue-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-blue-50"
-            title="Bulk upload images to match filenames in Excel"
-          >
-            <FolderUp size={14} /> Bulk Images
-          </button>
+              <button
+                onClick={() => excelInputRef.current?.click()}
+                className="h-11 bg-white border border-gray-200 text-gray-900 text-[10px] uppercase tracking-widest font-black px-4 rounded-xl transition-all flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200"
+                title="Import Excel"
+              >
+                <Upload size={16} /> Import
+              </button>
 
-          <div className="h-6 w-px bg-gray-200 mx-2" />
+              <button
+                onClick={handleExportExcel}
+                className="h-11 bg-white border border-gray-200 text-gray-900 text-[10px] uppercase tracking-widest font-black px-4 rounded-xl transition-all flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200"
+                title="Export Excel"
+              >
+                <Download size={16} /> Export
+              </button>
+            </>
+          )}
 
-          {selectedMembers.size > 0 && (
+          {selectedMembers.size > 0 ? (
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-2 h-11 animate-in zoom-in-95 duration-200">
+              <input
+                type="color"
+                value={bulkBgColor}
+                onChange={(e) => setBulkBgColor(e.target.value)}
+                className="w-6 h-6 rounded border-none cursor-pointer p-0"
+                title="Uniform Background Color"
+              />
+              <button
+                onClick={async () => {
+                  if (selectedMembers.size === 0) return;
+                  
+                  const memberIds = Array.from(selectedMembers);
+                  const validMembers = memberIds.filter(id => {
+                    const member = members.find(m => m.id === id);
+                    return member && member.profileImage && member.profileImage.startsWith('data:image');
+                  });
+
+                  if (validMembers.length === 0) {
+                    showModal({ title: 'No Images Found', message: 'None of the selected members have an attached profile image to process.', type: 'error' });
+                    return;
+                  }
+
+                  setIsProcessingBulkBG(true);
+                  setBgProgress({ current: 0, total: validMembers.length });
+                  let successCount = 0;
+                  
+                  const CHUNK_SIZE = 5; // We can run more in parallel now since the backend handles it smoothly
+                  
+                  for (let i = 0; i < validMembers.length; i += CHUNK_SIZE) {
+                    const chunk = validMembers.slice(i, i + CHUNK_SIZE);
+                    await Promise.all(chunk.map(async (memberId) => {
+                      const member = members.find(m => m.id === memberId)!;
+                      
+                      try {
+                        const { jobId } = await api<{ jobId: string }>('/bg-removal', {
+                          method: 'POST',
+                          body: JSON.stringify({ imageBase64: member.profileImage, bgColor: bulkBgColor }),
+                        });
+
+                        // Poll BullMQ job status
+                        while (true) {
+                          await new Promise(r => setTimeout(r, 1000));
+                          const status = await api<{ id: string; status: string; result: string | null; failedReason: string | null }>(`/bg-removal/${jobId}`);
+                          
+                          if (status.status === 'completed' && status.result) {
+                            const img = new Image();
+                            const src = status.result;
+                            
+                            await new Promise((resolve, reject) => {
+                              img.onload = resolve;
+                              img.onerror = reject;
+                              img.src = src;
+                            });
+                            
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                              ctx.fillStyle = bulkBgColor;
+                              ctx.fillRect(0, 0, canvas.width, canvas.height);
+                              ctx.drawImage(img, 0, 0);
+                              const newImage = canvas.toDataURL('image/jpeg', 0.9);
+                              updateMember(memberId, { 
+                                profileImage: newImage,
+                                originalProfileImage: member.originalProfileImage || member.profileImage
+                              });
+                              successCount++;
+                            }
+                            break;
+                          } else if (status.status === 'failed') {
+                            console.error('BG removal failed on server:', status.failedReason);
+                            break;
+                          } else if (status.status === 'not_found') {
+                            console.error('BullMQ Job not found:', jobId);
+                            break;
+                          }
+                        }
+                      } catch (err) {
+                        console.error('Failed to submit bg removal job for', memberId, err);
+                      } finally {
+                        setBgProgress(p => ({ ...p, current: p.current + 1 }));
+                      }
+                    }));
+                  }
+                  
+                  setIsProcessingBulkBG(false);
+                  showModal({
+                    title: 'Bulk Action Complete',
+                    message: `Successfully processed background for ${successCount} profile images.`,
+                    type: 'info'
+                  });
+                }}
+                disabled={isProcessingBulkBG}
+                className={`text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 ${isProcessingBulkBG ? 'bg-gray-100 text-gray-900 cursor-not-allowed' : 'bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-100 shadow-sm'}`}
+                title="Remove BG and apply color to selected"
+              >
+                {isProcessingBulkBG ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                    {bgProgress.current} / {bgProgress.total} Processed
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} className="text-purple-500" />
+                    Process BG
+                  </>
+                )}
+              </button>
+
+              {Array.from(selectedMembers).some(id => members.find(m => m.id === id)?.originalProfileImage) && (
+                <button
+                  onClick={() => {
+                    let restoredCount = 0;
+                    selectedMembers.forEach(id => {
+                      const member = members.find(m => m.id === id);
+                      if (member && member.originalProfileImage) {
+                        updateMember(id, { 
+                          profileImage: member.originalProfileImage,
+                          originalProfileImage: undefined // Reset it
+                        });
+                        restoredCount++;
+                      }
+                    });
+                    
+                    if (restoredCount > 0) {
+                      showModal({
+                        title: 'Restoration Complete',
+                        message: `Successfully restored original profile images for ${restoredCount} members.`,
+                        type: 'info'
+                      });
+                    }
+                  }}
+                  disabled={isProcessingBulkBG}
+                  className="text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-red-50 hover:text-red-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Restore original image"
+                >
+                  <RotateCcw size={14} /> Restore BG
+                </button>
+              )}
+            </div>
+          ) : (
             <button
-              onClick={() => setIsDeleteConfirmOpen(true)}
-              className="bg-red-50 border border-red-200 text-red-600 text-[11px] uppercase tracking-wide font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 hover:bg-red-100"
-              title="Bulk Delete"
+              onClick={() => bulkImageInputRef.current?.click()}
+              className="h-11 bg-blue-50/50 border border-blue-100 text-blue-600 text-[10px] uppercase tracking-widest font-black px-4 rounded-xl transition-all flex items-center gap-2 hover:bg-blue-100/50 hover:border-blue-200 animate-in zoom-in-95 duration-200"
+              title="Bulk upload images to match filenames in Excel"
             >
-              Delete Selected ({selectedMembers.size})
+              <FolderUp size={16} /> Bulk Images
             </button>
           )}
 
-          <button
-            onClick={() => {
-              setEditingMemberId(null);
-              setFormData(initialFormState);
-              setCustomFieldsList([]);
-              setIsModalOpen(true);
-            }}
-            className="bg-[#34a853] hover:bg-green-600 text-white px-6 py-2 rounded font-bold text-[11px] uppercase tracking-wide transition-colors shadow-sm flex items-center gap-2"
-          >
-            <Plus size={14} /> Add New Member
-          </button>
+          <div className="h-8 w-px bg-gray-200 mx-1" />
+          
+          {selectedMembers.size > 0 ? (
+            <button
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              className="h-11 bg-red-50 border border-red-200 text-red-600 text-[10px] uppercase tracking-widest font-black px-8 rounded-xl transition-all flex items-center gap-2.5 hover:bg-red-100 shadow-lg shadow-red-900/10 animate-in zoom-in-95 duration-200"
+            >
+              <X size={18} /> Delete Selected ({selectedMembers.size})
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setEditingMemberId(null);
+                setFormData(initialFormState);
+                setCustomFieldsList([]);
+                setIsModalOpen(true);
+              }}
+              className="h-11 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] hover:scale-[1.02] active:scale-[0.98] text-white px-8 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-green-900/20 flex items-center gap-2.5"
+            >
+              <Plus size={18} /> Add New Member
+            </button>
+          )}
         </div>
       </div>
 
@@ -626,7 +792,7 @@ export const DataUpload = () => {
               <h2 className="text-lg font-black text-gray-900">Variable Checklist & Profile</h2>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="p-2 text-gray-400 hover:bg-gray-200 hover:text-gray-600 rounded-lg transition-colors"
+                className="p-2 text-gray-900 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>
@@ -634,12 +800,12 @@ export const DataUpload = () => {
 
             <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
               <div className="mb-8">
-                <h3 className="text-sm font-black text-gray-800 mb-4">Organization Profile Type</h3>
-                <p className="text-xs text-gray-500 mb-3">Select the type of organization to automatically adapt the field labels.</p>
+                <h3 className="text-sm font-black text-gray-900 mb-4">Organization Profile Type</h3>
+                <p className="text-xs text-gray-900 mb-3">Select the type of organization to automatically adapt the field labels.</p>
                 <select
                   value={tempOrganizationType}
                   onChange={(e) => setTempOrganizationType(e.target.value as any)}
-                  className="bg-white border border-gray-200 text-stone-700 px-3 py-2.5 rounded font-bold text-[12px] uppercase tracking-wide focus:outline-none focus:border-green-500 transition-colors shadow-sm w-64"
+                  className="bg-white border border-gray-200 text-stone-900 px-3 py-2.5 rounded font-bold text-[12px] uppercase tracking-wide focus:outline-none focus:border-green-500 transition-colors shadow-sm w-64"
                 >
                   <option value="corporate">Corporate Profile</option>
                   <option value="education">Education Profile</option>
@@ -648,7 +814,7 @@ export const DataUpload = () => {
               </div>
 
               <div className="pt-8 border-t border-gray-100">
-                <h3 className="text-sm font-black text-gray-800 mb-4">Configure Form Checklist</h3>
+                <h3 className="text-sm font-black text-gray-900 mb-4">Configure Form Checklist</h3>
                 <div className="grid grid-cols-4 gap-4 mb-8">
                   {STANDARD_FIELDS.map(f => {
                     const label = getLabel(f, tempOrganizationType);
@@ -656,7 +822,7 @@ export const DataUpload = () => {
                     // First Name is always required
                     const disabled = f === 'First Name';
                     return (
-                      <label key={f} className={`flex items-center gap-2 text-xs font-bold ${disabled ? 'text-gray-400' : 'text-gray-700 cursor-pointer'}`}>
+                      <label key={f} className={`flex items-center gap-2 text-xs font-bold ${disabled ? 'text-gray-900' : 'text-gray-900 cursor-pointer'}`}>
                         <input
                           type="checkbox"
                           disabled={disabled}
@@ -677,7 +843,7 @@ export const DataUpload = () => {
                   {tempConfig.customFields.map((cf, idx) => {
                     const isChecked = tempConfig.enabledFields.includes(cf);
                     return (
-                      <label key={`custom-${idx}`} className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer group">
+                      <label key={`custom-${idx}`} className="flex items-center gap-2 text-xs font-bold text-gray-900 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -712,12 +878,12 @@ export const DataUpload = () => {
               </div>
 
               <div className="pt-8 border-t border-gray-100">
-                <h3 className="text-sm font-black text-gray-800 mb-4">Configure Image Checklist</h3>
+                <h3 className="text-sm font-black text-gray-900 mb-4">Configure Image Checklist</h3>
                 <div className="grid grid-cols-4 gap-4 mb-8">
                   {STANDARD_IMAGE_FIELDS.map(f => {
                     const isChecked = tempConfig.enabledImageFields?.includes(f);
                     return (
-                      <label key={f} className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer">
+                      <label key={f} className="flex items-center gap-2 text-xs font-bold text-gray-900 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -737,7 +903,7 @@ export const DataUpload = () => {
                   {tempConfig.customImageFields?.map((cf, idx) => {
                     const isChecked = tempConfig.enabledImageFields?.includes(cf);
                     return (
-                      <label key={`custom-img-${idx}`} className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer group">
+                      <label key={`custom-img-${idx}`} className="flex items-center gap-2 text-xs font-bold text-gray-900 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -773,7 +939,7 @@ export const DataUpload = () => {
 
               <div className="pt-8 border-t border-gray-100 flex gap-12">
                 <div>
-                  <h3 className="text-sm font-black text-gray-800 mb-4">Add Custom Text Field</h3>
+                  <h3 className="text-sm font-black text-gray-900 mb-4">Add Custom Text Field</h3>
                   <div className="flex gap-2 w-64">
                     <input
                       type="text"
@@ -807,7 +973,7 @@ export const DataUpload = () => {
                           input.value = '';
                         }
                       }}
-                      className="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1.5 rounded text-xs font-bold transition-colors"
+                      className="bg-stone-200 hover:bg-stone-300 text-stone-900 px-3 py-1.5 rounded text-xs font-bold transition-colors"
                     >
                       Add
                     </button>
@@ -815,7 +981,7 @@ export const DataUpload = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-black text-gray-800 mb-4">Add Custom Image Field</h3>
+                  <h3 className="text-sm font-black text-gray-900 mb-4">Add Custom Image Field</h3>
                   <div className="flex gap-2 w-64">
                     <input
                       type="text"
@@ -849,7 +1015,7 @@ export const DataUpload = () => {
                           input.value = '';
                         }
                       }}
-                      className="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1.5 rounded text-xs font-bold transition-colors"
+                      className="bg-stone-200 hover:bg-stone-300 text-stone-900 px-3 py-1.5 rounded text-xs font-bold transition-colors"
                     >
                       Add
                     </button>
@@ -861,7 +1027,7 @@ export const DataUpload = () => {
             <div className="bg-gray-50 border-t border-gray-200 px-8 py-4 flex items-center justify-end gap-4 shrink-0">
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-6 py-2 rounded font-bold text-xs transition-colors text-gray-500 hover:bg-gray-200"
+                className="px-6 py-2 rounded font-bold text-xs transition-colors text-gray-900 hover:bg-gray-200"
               >
                 Cancel
               </button>
@@ -882,30 +1048,29 @@ export const DataUpload = () => {
       )}
 
       {/* Main Content: Table */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
-        <div className="w-full h-full">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="text-xs uppercase bg-gray-50 text-gray-400 font-black border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 w-12 text-center">
+      <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
+        <div className="flex-1 overflow-auto custom-scrollbar">
+            <table className="w-full border-collapse min-w-[1000px]">
+              <thead className="sticky top-0 bg-stone-50 z-10">
+                <tr className="border-b border-gray-200">
+                  <th className="p-5 text-left w-12">
                     <input
                       type="checkbox"
-                      className="rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
-                      checked={filteredMembers.length > 0 && selectedMembers.size === filteredMembers.length}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      checked={selectedMembers.size === filteredMembers.length && filteredMembers.length > 0}
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th className="px-6 py-3 w-48">Assets</th>
-                  <th className="px-6 py-3">Name</th>
-                  <th className="px-6 py-3">{getLabel('ID number')}</th>
-                  <th className="px-6 py-3">{getLabel('Department')}</th>
-                  <th className="px-6 py-3">Actions</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-900 uppercase tracking-widest">Assets</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-900 uppercase tracking-widest">Name</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-900 uppercase tracking-widest">ID Number</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-900 uppercase tracking-widest">Grade/Class</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-900 uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredMembers.map(member => (
-                  <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {paginatedMembers.map((member) => (
+                  <tr key={member.id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 py-3 text-center">
                       <input
                         type="checkbox"
@@ -917,9 +1082,13 @@ export const DataUpload = () => {
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
                         {/* Profile Image Main Thumbnail */}
-                        <div className="w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200" title="Profile Image">
+                        <div 
+                          className="w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200 cursor-pointer hover:border-indigo-400 hover:shadow-md transition-all group/img" 
+                          title="Click to view/change image"
+                          onClick={() => setImageViewerMemberId(member.id)}
+                        >
                           {member.profileImage && (member.profileImage.startsWith('data:image') || member.profileImage.startsWith('http')) ? (
-                            <img src={member.profileImage} alt="" className="w-full h-full object-cover" />
+                            <img src={member.profileImage} alt="" className="w-full h-full object-cover group-hover/img:scale-110 transition-transform" />
                           ) : (
                             <ImageIcon size={20} className="text-gray-300" />
                           )}
@@ -978,14 +1147,14 @@ export const DataUpload = () => {
                 ))}
                 {members.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-bold">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-900 font-bold">
                       No members added yet. Click "Add New Member" to get started.
                     </td>
                   </tr>
                 )}
                 {members.length > 0 && filteredMembers.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-bold">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-900 font-bold">
                       No members match your search query "{searchQuery}".
                     </td>
                   </tr>
@@ -993,8 +1162,54 @@ export const DataUpload = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Footer / Pagination */}
+          <div className="mt-auto bg-white border-t border-gray-200 px-8 py-2.5 flex items-center justify-between shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+            <div className="flex items-center gap-4">
+              <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Rows per page:</span>
+              <div className="flex items-center gap-1.5">
+                {[10, 20, 30, 50].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setItemsPerPage(size)}
+                    className={`min-w-[40px] h-8 rounded-lg text-[11px] font-black transition-all border ${itemsPerPage === size ? 'bg-[#1a5d1a] border-[#1a5d1a] text-white shadow-md' : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+              <div className="h-4 w-px bg-gray-200 mx-2" />
+              <span className="text-[11px] font-medium text-gray-900">
+                Showing <span className="font-black text-gray-900">{filteredMembers.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-gray-900">{Math.min(startIndex + itemsPerPage, filteredMembers.length)}</span> of <span className="font-black text-gray-900">{filteredMembers.length}</span> members
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl border border-gray-200 text-gray-900 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Page</span>
+                <div className="bg-gray-50 border border-gray-200 px-3 py-1 rounded-lg text-[11px] font-black text-gray-900">
+                  {currentPage} / {totalPages || 1}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="p-2 rounded-xl border border-gray-200 text-gray-900 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
@@ -1007,17 +1222,17 @@ export const DataUpload = () => {
               <h2 className="text-lg font-black text-red-900">Confirm Deletion</h2>
             </div>
             <div className="p-6">
-              <p className="text-sm text-gray-700 font-bold mb-2">
+              <p className="text-sm text-gray-900 font-bold mb-2">
                 Are you sure you want to delete {selectedMembers.size} member{selectedMembers.size > 1 ? 's' : ''}?
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-900">
                 <strong className="text-red-500">WHAT CAN HAPPEN:</strong> The selected members and all their associated data will be permanently deleted from the database. This action cannot be undone.
               </p>
             </div>
             <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
               <button
                 onClick={() => setIsDeleteConfirmOpen(false)}
-                className="px-4 py-2 rounded font-bold text-xs transition-colors text-gray-600 hover:bg-gray-200"
+                className="px-4 py-2 rounded font-bold text-xs transition-colors text-gray-900 hover:bg-gray-200"
               >
                 Cancel
               </button>
@@ -1048,7 +1263,7 @@ export const DataUpload = () => {
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-lg transition-colors"
+                  className="p-2 text-gray-900 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -1148,11 +1363,11 @@ export const DataUpload = () => {
                             if (formConfig?.customImageFields?.includes(field.label)) return null;
                             return (
                               <div key={idx} className="flex flex-col gap-1.5">
-                                <label className="text-[10px] font-black text-gray-800 tracking-wide">{field.label}</label>
+                                <label className="text-[10px] font-black text-gray-900 tracking-wide">{field.label}</label>
                                 <input
                                   type="text"
                                   placeholder={`Enter ${field.label}...`}
-                                  className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
+                                  className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                   value={field.value}
                                   onChange={e => {
                                     const newList = [...customFieldsList];
@@ -1182,7 +1397,7 @@ export const DataUpload = () => {
 
                       return (
                         <div key={field} className="flex flex-col gap-2">
-                          <label className="text-[10px] font-black text-gray-800 tracking-wide uppercase">{field}</label>
+                          <label className="text-[10px] font-black text-gray-900 tracking-wide uppercase">{field}</label>
                           {(() => {
                             const imageVal = formData[key as keyof typeof initialFormState] as string;
                             return (
@@ -1201,10 +1416,10 @@ export const DataUpload = () => {
                                   </>
                                 ) : (
                                   <>
-                                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 text-gray-400 group-hover:text-green-600 group-hover:scale-110 transition-all">
+                                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 text-gray-900 group-hover:text-green-600 group-hover:scale-110 transition-all">
                                       <Plus size={16} />
                                     </div>
-                                    <span className="text-[11px] font-bold text-gray-500 group-hover:text-green-700">Add {field}</span>
+                                    <span className="text-[11px] font-bold text-gray-900 group-hover:text-green-700">Add {field}</span>
                                   </>
                                 )}
                                 <input
@@ -1237,7 +1452,7 @@ export const DataUpload = () => {
 
                       return (
                         <div key={field} className="flex flex-col gap-2">
-                          <label className="text-[10px] font-black text-gray-800 tracking-wide uppercase">{field}</label>
+                          <label className="text-[10px] font-black text-gray-900 tracking-wide uppercase">{field}</label>
                           <div
                             onClick={() => document.getElementById(`upload-custom-${field.replace(/\s+/g, '-')}`)?.click()}
                             className={`rounded-lg h-32 relative overflow-hidden cursor-pointer group transition-all duration-200 ${imageValue ? 'bg-white border border-gray-200 shadow-sm' : 'bg-gray-50 flex flex-col items-center justify-center border border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50'}`}
@@ -1253,10 +1468,10 @@ export const DataUpload = () => {
                               </>
                             ) : (
                               <>
-                                <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 text-gray-400 group-hover:text-green-600 group-hover:scale-110 transition-all">
+                                <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 text-gray-900 group-hover:text-green-600 group-hover:scale-110 transition-all">
                                   <Plus size={16} />
                                 </div>
-                                <span className="text-[11px] font-bold text-gray-500 group-hover:text-green-700">Add {field}</span>
+                                <span className="text-[11px] font-bold text-gray-900 group-hover:text-green-700">Add {field}</span>
                               </>
                             )}
                             <input
@@ -1289,6 +1504,69 @@ export const DataUpload = () => {
                   </div>
 
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Image Viewer / Changer Modal */}
+      {imageViewerMemberId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-8" onClick={() => setImageViewerMemberId(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <h3 className="font-black text-gray-900 text-sm uppercase tracking-wider">Profile Photo</h3>
+              <button onClick={() => setImageViewerMemberId(null)} className="p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="p-6 flex flex-col items-center">
+              <div className="w-48 h-48 rounded-2xl overflow-hidden bg-stone-50 border border-stone-200 flex items-center justify-center mb-6 shadow-inner relative group">
+                {members.find(m => m.id === imageViewerMemberId)?.profileImage ? (
+                  <img src={members.find(m => m.id === imageViewerMemberId)?.profileImage} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <ImageIcon size={48} className="text-stone-300" />
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <button 
+                    onClick={() => document.getElementById(`quick-upload-${imageViewerMemberId}`)?.click()}
+                    className="bg-white text-gray-900 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-lg"
+                  >
+                    <Upload size={14} /> Change Photo
+                  </button>
+                </div>
+              </div>
+              
+              <input 
+                type="file" 
+                id={`quick-upload-${imageViewerMemberId}`}
+                accept="image/*" 
+                className="hidden" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (f) => {
+                      updateMember(imageViewerMemberId, { profileImage: f.target?.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+              
+              <div className="w-full flex gap-3">
+                <button
+                  onClick={() => document.getElementById(`quick-upload-${imageViewerMemberId}`)?.click()}
+                  className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[11px] uppercase tracking-wider py-2.5 rounded-xl transition-colors border border-indigo-200"
+                >
+                  Upload New
+                </button>
+                <button
+                  onClick={() => setImageViewerMemberId(null)}
+                  className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-black text-[11px] uppercase tracking-wider py-2.5 rounded-xl transition-colors border border-stone-200"
+                >
+                  Done
+                </button>
               </div>
             </div>
           </div>

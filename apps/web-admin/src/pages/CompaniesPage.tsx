@@ -634,14 +634,22 @@ export function CompaniesPage() {
                     <td className="px-4 py-3">{company.status}</td>
                     <td className="px-4 py-3 font-medium text-stone-600">
                       {company.subscription?.endDate 
-                        ? (
-                          <div className="flex items-center gap-2">
-                            {new Date(company.subscription.endDate).toLocaleDateString()}
-                            {company.plan === "PRO_1Y" && (new Date(company.subscription.endDate).getTime() - new Date().getTime()) < 30 * 24 * 60 * 60 * 1000 && (
-                              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" title="Expiring within 30 days" />
-                            )}
-                          </div>
-                        ) 
+                        ? (() => {
+                            const diffTime = new Date(company.subscription.endDate).getTime() - new Date().getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            const isExpired = diffDays < 0;
+                            return (
+                              <div className="flex items-center gap-2">
+                                <span>{new Date(company.subscription.endDate).toLocaleDateString()}</span>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isExpired ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                  {isExpired ? 'Expired' : `${diffDays} days left`}
+                                </span>
+                                {company.plan === "PRO_1Y" && diffDays > 0 && diffDays < 30 && (
+                                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" title="Expiring within 30 days" />
+                                )}
+                              </div>
+                            );
+                          })()
                         : "Lifetime"}
                     </td>
                     <td className="px-4 py-3">{company._count?.users ?? 0}</td>

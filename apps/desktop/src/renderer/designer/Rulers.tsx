@@ -48,7 +48,7 @@ export const Ruler: React.FC<RulerProps> = ({ type, size, scale, offset = 0, onS
       >
         {isMajor && (
           <span
-            className="absolute text-[8px] font-bold text-gray-400"
+            className="absolute text-[8px] font-bold text-gray-900"
             style={{
               [isHorizontal ? 'left' : 'top']: '2px',
               [isHorizontal ? 'top' : 'left']: '8px',

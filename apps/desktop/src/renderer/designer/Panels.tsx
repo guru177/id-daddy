@@ -32,6 +32,7 @@ import {
   Italic,
   Underline,
   Info,
+  CheckCircle2,
 } from 'lucide-react';
 import { AddImageDialog } from './ImageLibrary';
 import QRCode from 'qrcode';
@@ -160,14 +161,14 @@ const FontSelect = ({ value, onChange }: { value: string, onChange: (val: string
                     if ((selectedObject as any).canvas) (selectedObject as any).canvas.renderAll();
                   }
                 }}
-                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-green-50 transition-colors ${value === font ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-700'}`}
+                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-green-50 transition-colors ${value === font ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-900'}`}
                 style={{ fontFamily: font }}
               >
                 {font}
               </button>
             ))}
             {filteredFonts.length === 0 && (
-              <div className="p-3 text-xs text-gray-400 text-center">No fonts found</div>
+              <div className="p-3 text-xs text-gray-900 text-center">No fonts found</div>
             )}
           </div>
         </div>
@@ -189,28 +190,28 @@ export const CardOptionsPanel = () => {
   return (
     <div className="space-y-6">
       <section>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-3">Orientation</label>
+        <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-3">Orientation</label>
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => updateOrientation('horizontal')}
             className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'horizontal' ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
           >
             <div className={`w-12 h-8 border-2 rounded-md mb-2 transition-colors ${config.orientation === 'horizontal' ? 'border-green-600' : 'border-gray-300'}`} />
-            <span className={`text-[11px] font-bold ${config.orientation === 'horizontal' ? 'text-green-700' : 'text-gray-500'}`}>Horizontal</span>
+            <span className={`text-[11px] font-bold ${config.orientation === 'horizontal' ? 'text-green-700' : 'text-gray-900'}`}>Horizontal</span>
           </button>
           <button
             onClick={() => updateOrientation('vertical')}
             className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'vertical' ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
           >
             <div className={`w-8 h-12 border-2 rounded-md mb-2 transition-colors ${config.orientation === 'vertical' ? 'border-green-600' : 'border-gray-300'}`} />
-            <span className={`text-[11px] font-bold ${config.orientation === 'vertical' ? 'text-green-700' : 'text-gray-500'}`}>Vertical</span>
+            <span className={`text-[11px] font-bold ${config.orientation === 'vertical' ? 'text-green-700' : 'text-gray-900'}`}>Vertical</span>
           </button>
         </div>
       </section>
 
       <section>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-3 flex items-center justify-between">
-          Card Type <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-400 cursor-help">?</span>
+        <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-3 flex items-center justify-between">
+          Card Type <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-900 cursor-help">?</span>
         </label>
         <div className="grid grid-cols-2 gap-3">
           {['30 Mil PVC', 'Adhesive PVC'].map(type => (
@@ -219,16 +220,16 @@ export const CardOptionsPanel = () => {
               onClick={() => setConfig({ type })}
               className={`p-4 border rounded-2xl text-center transition-all ${config.type === type ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
-              <CreditCard className={`w-6 h-6 mx-auto mb-2 transition-opacity ${config.type === type ? 'text-green-600 opacity-100' : 'text-gray-400 opacity-50'}`} />
-              <span className={`text-[10px] font-extrabold block leading-tight ${config.type === type ? 'text-green-700' : 'text-gray-500'}`}>{type}</span>
+              <CreditCard className={`w-6 h-6 mx-auto mb-2 transition-opacity ${config.type === type ? 'text-green-600 opacity-100' : 'text-gray-900 opacity-50'}`} />
+              <span className={`text-[10px] font-extrabold block leading-tight ${config.type === type ? 'text-green-700' : 'text-gray-900'}`}>{type}</span>
             </button>
           ))}
         </div>
       </section>
 
       <section>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-3 flex items-center justify-between">
-          Backside Printing <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-400 cursor-help">?</span>
+        <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-3 flex items-center justify-between">
+          Backside Printing <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-900 cursor-help">?</span>
         </label>
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -242,15 +243,15 @@ export const CardOptionsPanel = () => {
               className={`flex flex-col items-center justify-center py-3 border rounded-2xl transition-all relative ${config.backsidePrinting === opt.id ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
               <div className="mb-2">{opt.icon}</div>
-              <span className={`text-[9px] font-extrabold text-center leading-none ${config.backsidePrinting === opt.id ? 'text-green-700' : 'text-gray-400'}`}>{opt.label}</span>
+              <span className={`text-[9px] font-extrabold text-center leading-none ${config.backsidePrinting === opt.id ? 'text-green-700' : 'text-gray-900'}`}>{opt.label}</span>
             </button>
           ))}
         </div>
       </section>
 
       <section>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-3 flex items-center justify-between">
-          Slot Punch <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-400 cursor-help">?</span>
+        <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-3 flex items-center justify-between">
+          Slot Punch <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-900 cursor-help">?</span>
         </label>
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -264,7 +265,7 @@ export const CardOptionsPanel = () => {
               className={`flex flex-col items-center justify-center py-3 border rounded-2xl transition-all relative ${config.slotPunch === opt.id ? 'border-green-500 bg-green-50 shadow-sm ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
             >
               <div className="mb-2">{opt.icon}</div>
-              <span className={`text-[9px] font-extrabold text-center leading-none ${config.slotPunch === opt.id ? 'text-green-700' : 'text-gray-400'}`}>{opt.label}</span>
+              <span className={`text-[9px] font-extrabold text-center leading-none ${config.slotPunch === opt.id ? 'text-green-700' : 'text-gray-900'}`}>{opt.label}</span>
             </button>
           ))}
         </div>
@@ -272,10 +273,10 @@ export const CardOptionsPanel = () => {
 
 
       <section>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-4">Background Color</label>
+        <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-4">Background Color</label>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight ml-1">Front</span>
+            <span className="text-[10px] text-gray-900 font-bold uppercase tracking-tight ml-1">Front</span>
             <div className="flex items-center gap-3 p-2 border border-gray-100 rounded-2xl bg-white shadow-sm hover:ring-1 hover:ring-green-500 transition-all">
               <input
                 type="color"
@@ -286,11 +287,11 @@ export const CardOptionsPanel = () => {
                 }}
                 className="w-10 h-10 rounded-xl border-none cursor-pointer bg-transparent shadow-inner"
               />
-              <span className="text-[11px] font-mono font-bold text-gray-400">{config.backgroundColorFront.toUpperCase()}</span>
+              <span className="text-[11px] font-mono font-bold text-gray-900">{config.backgroundColorFront.toUpperCase()}</span>
             </div>
           </div>
           <div className="space-y-2">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight ml-1">Back</span>
+            <span className="text-[10px] text-gray-900 font-bold uppercase tracking-tight ml-1">Back</span>
             <div className="flex items-center gap-3 p-2 border border-gray-100 rounded-2xl bg-white shadow-sm hover:ring-1 hover:ring-green-500 transition-all">
               <input
                 type="color"
@@ -302,7 +303,7 @@ export const CardOptionsPanel = () => {
                 }}
                 className="w-10 h-10 rounded-xl border-none cursor-pointer bg-transparent shadow-inner"
               />
-              <span className="text-[11px] font-mono font-bold text-gray-400">{config.backgroundColorBack.toUpperCase()}</span>
+              <span className="text-[11px] font-mono font-bold text-gray-900">{config.backgroundColorBack.toUpperCase()}</span>
             </div>
           </div>
         </div>
@@ -453,12 +454,20 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
     }
 
     const textObj = new fabric.IText(displayValue, {
-      left: 50,
-      top: 50,
       fontSize: 16,
       fontFamily: 'Inter',
       fill: '#000000',
     });
+
+    if (canvas.width && canvas.height) {
+      textObj.initDimensions();
+      textObj.set({
+        left: (canvas.width - (textObj.width || 0)) / 2,
+        top: (canvas.height - (textObj.height || 0)) / 2
+      });
+    } else {
+      textObj.set({ left: 50, top: 50 });
+    }
     // @ts-ignore
     textObj.isVariable = isVariable;
     if (isVariable) {
@@ -526,7 +535,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
   return (
     <div className="space-y-6">
       <section>
-        <label className="text-xs font-bold text-gray-400 block mb-3 uppercase tracking-wider">Static Text</label>
+        <label className="text-xs font-bold text-gray-900 block mb-3 uppercase tracking-wider">Static Text</label>
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => addText('Add headline')}
@@ -546,7 +555,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
               <div className="h-1 bg-gray-300 w-2/3 rounded-full" />
               <div className="h-1 bg-gray-300 w-5/6 rounded-full" />
             </div>
-            <span className="text-xs font-black text-gray-700">Multi Line</span>
+            <span className="text-xs font-black text-gray-900">Multi Line</span>
           </button>
         </div>
       </section>
@@ -557,10 +566,10 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
         {activeStandardFields.filter(f => fieldToKeyMap[f]).length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900">
                 <Type size={14} />
               </div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Standard Variables</label>
+              <label className="text-xs font-bold text-gray-900 uppercase tracking-wider">Standard Variables</label>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -583,9 +592,9 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
                   className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
-                    <Type size={18} className="text-gray-400 group-hover:text-green-600" />
+                    <Type size={18} className="text-gray-900 group-hover:text-green-600" />
                   </div>
-                  <span className="text-[11px] font-black text-gray-700 text-center leading-tight">
+                  <span className="text-[11px] font-black text-gray-900 text-center leading-tight">
                     {getDynamicLabel(field)}
                   </span>
                 </button>
@@ -597,10 +606,10 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
         {activeCustomFields.filter(f => !formConfig?.customImageFields?.includes(f)).length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-900">
                 <Plus size={14} />
               </div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Custom Variables</label>
+              <label className="text-xs font-bold text-gray-900 uppercase tracking-wider">Custom Variables</label>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {activeCustomFields.filter(f => !formConfig?.customImageFields?.includes(f)).map(field => (
@@ -610,9 +619,9 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
                   className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
-                    <Type size={18} className="text-gray-400 group-hover:text-green-600" />
+                    <Type size={18} className="text-gray-900 group-hover:text-green-600" />
                   </div>
-                  <span className="text-[11px] font-black text-gray-700 text-center leading-tight">
+                  <span className="text-[11px] font-black text-gray-900 text-center leading-tight">
                     {field}
                   </span>
                 </button>
@@ -734,6 +743,7 @@ export const CustomizePanel = () => {
   } = useDesignerStore();
   const [props, setProps] = React.useState<any>({});
   const [isProcessingBG, setIsProcessingBG] = React.useState(false);
+  const [isApplyingSecurity, setIsApplyingSecurity] = React.useState(false);
 
   React.useEffect(() => {
     if (selectedObject) {
@@ -779,7 +789,7 @@ export const CustomizePanel = () => {
     }
   }, [selectedObject]);
 
-  if (!selectedObject) return <div className="text-center text-gray-400 mt-10">Select an element to customize</div>;
+  if (!selectedObject) return <div className="text-center text-gray-900 mt-10">Select an element to customize</div>;
 
   const updateSelected = (key: string, val: any) => {
     if (!selectedObject || !canvas) return;
@@ -851,11 +861,11 @@ export const CustomizePanel = () => {
   const isPDF417 = (selectedObject as any).placeholder === '{{pdf417}}';
   const isDataMatrix = (selectedObject as any).placeholder === '{{datamatrix}}';
 
-  const handleSecurityPropChange = (key: string, value: any) => {
+  const handleSecurityPropChange = (key: string, value: any, autoApply = true) => {
     const newProps = { ...props, [key]: value };
     setProps(newProps);
 
-    if (key === 'securityFormat' || key === 'securityData' || key === 'securityType' || key === 'qrFields' || key === 'securityHideText') {
+    if (autoApply && (key === 'securityFormat' || key === 'securityType' || key === 'securityHideText')) {
       setTimeout(() => applySecurityChanges(newProps), 0);
     }
   };
@@ -863,6 +873,7 @@ export const CustomizePanel = () => {
   const applySecurityChanges = async (currentProps = props) => {
     if (!selectedObject || !canvas) return;
 
+    setIsApplyingSecurity(true);
     try {
       const { members, previewMemberId } = useDesignerStore.getState();
       const targetMember = previewMemberId ? members.find((m: any) => m.id === previewMemberId) || members[0] : members[0];
@@ -937,6 +948,8 @@ export const CustomizePanel = () => {
       }
     } catch (err) {
       console.error('Error generating security element:', err);
+    } finally {
+      setIsApplyingSecurity(false);
     }
   };
 
@@ -980,7 +993,7 @@ export const CustomizePanel = () => {
 
   const NumberInput = ({ label, value, onChange, min = 0, max = 1000 }: any) => (
     <div className="flex items-center justify-between">
-      {label && <label className="text-[11px] font-bold text-gray-700">{label}</label>}
+      {label && <label className="text-[11px] font-bold text-gray-900">{label}</label>}
       <div className="relative w-28 h-10 border border-gray-100 rounded-xl flex items-center bg-gray-50/30 overflow-hidden group hover:border-green-200 transition-all">
         <input
           type="number"
@@ -999,7 +1012,7 @@ export const CustomizePanel = () => {
   if (isShape) {
     return (
       <div className="space-y-6">
-        <h2 className="text-sm font-bold text-gray-800">Customize Shape</h2>
+        <h2 className="text-sm font-bold text-gray-900">Customize Shape</h2>
 
         <section className="space-y-4">
           <NumberInput
@@ -1009,7 +1022,7 @@ export const CustomizePanel = () => {
           />
 
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold text-gray-700">Border Color</label>
+            <label className="text-[11px] font-bold text-gray-900">Border Color</label>
             <div className="w-32 h-10 border border-gray-100 rounded-xl flex items-center px-2 bg-gray-50/30">
               <input
                 type="color"
@@ -1017,12 +1030,12 @@ export const CustomizePanel = () => {
                 onChange={(e) => updateSelected('stroke', e.target.value)}
                 className="w-6 h-6 rounded-md border-none bg-transparent cursor-pointer"
               />
-              <span className="ml-2 text-[10px] font-mono text-gray-400 uppercase">{props.stroke || '#000000'}</span>
+              <span className="ml-2 text-[10px] font-mono text-gray-900 uppercase">{props.stroke || '#000000'}</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold text-gray-700">Fill Color</label>
+            <label className="text-[11px] font-bold text-gray-900">Fill Color</label>
             <div className="w-32 h-10 border border-gray-100 rounded-xl flex items-center px-2 bg-gray-50/30">
               <input
                 type="color"
@@ -1030,7 +1043,7 @@ export const CustomizePanel = () => {
                 onChange={(e) => updateSelected('fill', e.target.value)}
                 className="w-6 h-6 rounded-md border-none bg-transparent cursor-pointer"
               />
-              <span className="ml-2 text-[10px] font-mono text-gray-400 uppercase">{props.fill || '#000000'}</span>
+              <span className="ml-2 text-[10px] font-mono text-gray-900 uppercase">{props.fill || '#000000'}</span>
             </div>
           </div>
 
@@ -1083,19 +1096,19 @@ export const CustomizePanel = () => {
 
         <section className="grid grid-cols-2 gap-x-6 gap-y-4">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-gray-400">W</span>
+            <span className="text-[11px] font-bold text-gray-900">W</span>
             <NumberInput value={Math.round(props.width || 0)} onChange={(v: number) => updateSelected('width', v)} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-gray-400">H</span>
+            <span className="text-[11px] font-bold text-gray-900">H</span>
             <NumberInput value={Math.round(props.height || 0)} onChange={(v: number) => updateSelected('height', v)} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-gray-400">X</span>
+            <span className="text-[11px] font-bold text-gray-900">X</span>
             <NumberInput value={Math.round(props.left || 0)} onChange={(v: number) => updateSelected('left', v)} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-gray-400">Y</span>
+            <span className="text-[11px] font-bold text-gray-900">Y</span>
             <NumberInput value={Math.round(props.top || 0)} onChange={(v: number) => updateSelected('top', v)} />
           </div>
         </section>
@@ -1121,7 +1134,7 @@ export const CustomizePanel = () => {
             onClick={handleRemoveBackground}
             disabled={isProcessingBG}
             className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl font-bold transition-all active:scale-95 shadow-lg ${isProcessingBG
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              ? 'bg-gray-100 text-gray-900 cursor-not-allowed'
               : 'bg-green-500 text-white hover:bg-green-600 shadow-green-200'
               }`}
           >
@@ -1178,7 +1191,7 @@ export const CustomizePanel = () => {
             onChange={(v: number) => updateSelected('strokeWidth', v)}
           />
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold text-gray-700">Border Color</label>
+            <label className="text-[11px] font-bold text-gray-900">Border Color</label>
             <div className="w-32 h-10 border border-gray-100 rounded-xl flex items-center px-2 bg-gray-50/30">
               <input
                 type="color"
@@ -1194,19 +1207,19 @@ export const CustomizePanel = () => {
         <section className="pt-4 border-t border-gray-50">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">W</span>
+              <span className="text-[11px] font-bold text-gray-900">W</span>
               <NumberInput value={Math.round(props.width || 0)} onChange={(v: number) => updateSelected('width', v)} />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">H</span>
+              <span className="text-[11px] font-bold text-gray-900">H</span>
               <NumberInput value={Math.round(props.height || 0)} onChange={(v: number) => updateSelected('height', v)} />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">X</span>
+              <span className="text-[11px] font-bold text-gray-900">X</span>
               <NumberInput value={Math.round(props.left || 0)} onChange={(v: number) => updateSelected('left', v)} />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">Y</span>
+              <span className="text-[11px] font-bold text-gray-900">Y</span>
               <NumberInput value={Math.round(props.top || 0)} onChange={(v: number) => updateSelected('top', v)} />
             </div>
           </div>
@@ -1218,12 +1231,12 @@ export const CustomizePanel = () => {
   if (isSecurity) {
     return (
       <div className="space-y-6">
-        <h2 className="text-sm font-bold text-gray-800">Customize Security</h2>
+        <h2 className="text-sm font-bold text-gray-900">Customize Security</h2>
 
         {isBarcode ? (
           <section className="space-y-4">
             <div>
-              <label className="text-[11px] font-bold text-gray-700 block mb-2">Barcode Format</label>
+              <label className="text-[11px] font-bold text-gray-900 block mb-2">Barcode Format</label>
               <select
                 value={props.securityFormat}
                 onChange={(e) => handleSecurityPropChange('securityFormat', e.target.value)}
@@ -1238,10 +1251,10 @@ export const CustomizePanel = () => {
               </select>
             </div>
             <div>
-              <label className="text-[11px] font-bold text-gray-700 block mb-2">Input Data</label>
+              <label className="text-[11px] font-bold text-gray-900 block mb-2">Input Data</label>
               <textarea
                 value={props.securityData}
-                onChange={(e) => handleSecurityPropChange('securityData', e.target.value)}
+                onChange={(e) => handleSecurityPropChange('securityData', e.target.value, false)}
                 className="w-full p-3 border border-gray-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-green-500 bg-white h-24 resize-none"
               />
             </div>
@@ -1249,7 +1262,7 @@ export const CustomizePanel = () => {
         ) : (
           <section className="space-y-4">
             <div>
-              <label className="text-[11px] font-bold text-gray-700 block mb-2">QR Code Type</label>
+              <label className="text-[11px] font-bold text-gray-900 block mb-2">QR Code Type</label>
               <select
                 value={props.securityType}
                 onChange={(e) => handleSecurityPropChange('securityType', e.target.value)}
@@ -1265,11 +1278,11 @@ export const CustomizePanel = () => {
 
             {props.securityType === 'URL' && (
               <div>
-                <label className="text-[11px] font-bold text-gray-700 block mb-2">Website URL</label>
+                <label className="text-[11px] font-bold text-gray-900 block mb-2">Website URL</label>
                 <input
                   type="text"
                   value={props.securityData}
-                  onChange={(e) => handleSecurityPropChange('securityData', e.target.value)}
+                  onChange={(e) => handleSecurityPropChange('securityData', e.target.value, false)}
                   placeholder="https://example.com"
                   className="w-full p-3 border border-gray-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-green-500 bg-white"
                 />
@@ -1278,10 +1291,10 @@ export const CustomizePanel = () => {
 
             {props.securityType === 'Text' && (
               <div>
-                <label className="text-[11px] font-bold text-gray-700 block mb-2">Text Content</label>
+                <label className="text-[11px] font-bold text-gray-900 block mb-2">Text Content</label>
                 <textarea
                   value={props.securityData}
-                  onChange={(e) => handleSecurityPropChange('securityData', e.target.value)}
+                  onChange={(e) => handleSecurityPropChange('securityData', e.target.value, false)}
                   placeholder="Enter text..."
                   className="w-full p-3 border border-gray-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-green-500 bg-white h-24 resize-none"
                 />
@@ -1410,7 +1423,7 @@ export const CustomizePanel = () => {
 
         <section>
           <div className="flex items-center gap-2 mb-2">
-            <label className="text-[11px] font-bold text-gray-700">Insert Smart Field</label>
+            <label className="text-[11px] font-bold text-gray-900">Insert Smart Field</label>
             <Info size={12} className="text-gray-300" />
           </div>
           <select 
@@ -1511,7 +1524,7 @@ export const CustomizePanel = () => {
               onChange={(e) => handleSecurityPropChange('securityHideText', e.target.checked)}
               className="w-4 h-4 text-green-500 rounded border-gray-300 focus:ring-green-500 cursor-pointer"
             />
-            <label htmlFor="securityHideText" className="text-xs font-bold text-gray-700 cursor-pointer">
+            <label htmlFor="securityHideText" className="text-xs font-bold text-gray-900 cursor-pointer">
               Hide Text Under Barcode
             </label>
           </section>
@@ -1519,9 +1532,22 @@ export const CustomizePanel = () => {
 
         <button
           onClick={() => applySecurityChanges(props)}
-          className="w-full py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-100"
+          disabled={isApplyingSecurity}
+          className={`w-full py-3 text-white rounded-xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+            isApplyingSecurity ? 'bg-gray-400 cursor-wait' : 'bg-green-500 hover:bg-green-600 shadow-green-100'
+          }`}
         >
-          Apply
+          {isApplyingSecurity ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Applying...
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={18} />
+              Apply Changes
+            </>
+          )}
         </button>
 
         <section className="space-y-4 pt-4 border-t border-gray-50">
@@ -1540,19 +1566,19 @@ export const CustomizePanel = () => {
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">W</span>
+              <span className="text-[11px] font-bold text-gray-900">W</span>
               <NumberInput value={Math.round(props.width || 0)} onChange={(v: number) => updateSelected('width', v)} />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">H</span>
+              <span className="text-[11px] font-bold text-gray-900">H</span>
               <NumberInput value={Math.round(props.height || 0)} onChange={(v: number) => updateSelected('height', v)} />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">X</span>
+              <span className="text-[11px] font-bold text-gray-900">X</span>
               <NumberInput value={Math.round(props.left || 0)} onChange={(v: number) => updateSelected('left', v)} />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold text-gray-400">Y</span>
+              <span className="text-[11px] font-bold text-gray-900">Y</span>
               <NumberInput value={Math.round(props.top || 0)} onChange={(v: number) => updateSelected('top', v)} />
             </div>
           </div>
@@ -1565,14 +1591,14 @@ export const CustomizePanel = () => {
     <div className="space-y-6">
       {(selectedObject.type === 'i-text' || selectedObject.type === 'text') && (
         <section>
-          <label className="text-xs font-bold text-gray-700 block mb-2">Add Text</label>
+          <label className="text-xs font-bold text-gray-900 block mb-2">Add Text</label>
           <textarea
             value={props.text}
             onChange={(e) => updateSelected('text', e.target.value)}
             className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-1 focus:ring-green-500 outline-none h-24 resize-none font-mono"
           />
           <div className="mt-3">
-            <label className="text-xs font-bold text-gray-700 block mb-2">Insert Smart Field</label>
+            <label className="text-xs font-bold text-gray-900 block mb-2">Insert Smart Field</label>
             <select
               onChange={(e) => {
                 if (e.target.value === 'Select a Smart field...') return;
@@ -1674,14 +1700,14 @@ export const CustomizePanel = () => {
               <div className="mt-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles size={14} className="text-purple-500" />
-                  <label className="text-[11px] font-black text-gray-700 uppercase tracking-wider">Variable Colors</label>
+                  <label className="text-[11px] font-black text-gray-900 uppercase tracking-wider">Variable Colors</label>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
                   {uniqueVars.map((varKey: string) => {
                     const colorMap: Record<string, string> = props.variableColors || {};
                     return (
                       <div key={varKey} className="flex items-center justify-between bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                        <span className="text-[10px] font-bold text-gray-500 truncate max-w-[100px]">{varKey}</span>
+                        <span className="text-[10px] font-bold text-gray-900 truncate max-w-[100px]">{varKey}</span>
                         <div className="flex items-center gap-2">
                           <input
                             type="color"
@@ -1698,7 +1724,7 @@ export const CustomizePanel = () => {
                               delete newColors[varKey];
                               updateSelected('variableColors', newColors);
                             }}
-                            className="text-[10px] text-gray-400 hover:text-red-500 font-bold"
+                            className="text-[10px] text-gray-900 hover:text-red-500 font-bold"
                           >Reset</button>
                         </div>
                       </div>
@@ -1712,7 +1738,7 @@ export const CustomizePanel = () => {
       )}
 
       <section>
-        <label className="text-xs font-bold text-gray-700 block mb-3">Text Style</label>
+        <label className="text-xs font-bold text-gray-900 block mb-3">Text Style</label>
         <div className="space-y-3">
           <div className="flex gap-2">
             <FontSelect
@@ -1758,7 +1784,7 @@ export const CustomizePanel = () => {
                 <button
                   key={align}
                   onClick={() => updateSelected('textAlign', align)}
-                  className={`p-2 hover:bg-gray-50 transition-colors ${props.textAlign === align ? 'bg-green-50 text-green-600' : 'text-gray-400'}`}
+                  className={`p-2 hover:bg-gray-50 transition-colors ${props.textAlign === align ? 'bg-green-50 text-green-600' : 'text-gray-900'}`}
                 >
                   {align === 'left' && <AlignLeft size={16} />}
                   {align === 'center' && <AlignCenter size={16} />}
@@ -1773,7 +1799,7 @@ export const CustomizePanel = () => {
       <section>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-bold text-gray-700 block mb-1">Width</label>
+            <label className="text-xs font-bold text-gray-900 block mb-1">Width</label>
             <input
               type="number"
               value={props.width}
@@ -1782,7 +1808,7 @@ export const CustomizePanel = () => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-700 block mb-1">Height</label>
+            <label className="text-xs font-bold text-gray-900 block mb-1">Height</label>
             <input
               type="number"
               value={props.height}
@@ -1791,7 +1817,7 @@ export const CustomizePanel = () => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-700 block mb-1">X Position</label>
+            <label className="text-xs font-bold text-gray-900 block mb-1">X Position</label>
             <input
               type="number"
               value={props.left}
@@ -1800,7 +1826,7 @@ export const CustomizePanel = () => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-700 block mb-1">Y Position</label>
+            <label className="text-xs font-bold text-gray-900 block mb-1">Y Position</label>
             <input
               type="number"
               value={props.top}
@@ -1813,8 +1839,8 @@ export const CustomizePanel = () => {
 
       <section>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-bold text-gray-700">Rotation</label>
-          <div className="w-16 h-8 border border-gray-200 rounded-lg flex items-center justify-center text-xs font-bold text-gray-600">
+          <label className="text-xs font-bold text-gray-900">Rotation</label>
+          <div className="w-16 h-8 border border-gray-200 rounded-lg flex items-center justify-center text-xs font-bold text-gray-900">
             {props.angle}°
           </div>
         </div>
@@ -1829,7 +1855,7 @@ export const CustomizePanel = () => {
 
       <section>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-bold text-gray-700">Transparency</label>
+          <label className="text-xs font-bold text-gray-900">Transparency</label>
           <div className="w-16 h-8 border border-gray-200 rounded-lg flex items-center justify-between px-2 text-[10px] font-bold">
             {Math.round((1 - props.opacity) * 100)}
             <div className="flex flex-col">
@@ -1947,8 +1973,8 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
     elements.push(labelText);
 
     const group = new fabric.Group(elements, {
-      left: 100,
-      top: 100,
+      left: canvas.width ? (canvas.width - size) / 2 : 100,
+      top: canvas.height ? (canvas.height - size) / 2 : 100,
     });
 
     // @ts-ignore
@@ -1977,9 +2003,11 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
         img.scale(scale);
       }
 
+      const imgW = (img.width || 0) * (img.scaleX || 1);
+      const imgH = (img.height || 0) * (img.scaleY || 1);
       img.set({
-        left: 50 + offset,
-        top: 50 + offset,
+        left: canvas.width ? (canvas.width - imgW) / 2 : 50 + offset,
+        top: canvas.height ? (canvas.height - imgH) / 2 : 50 + offset,
       });
       // @ts-ignore
       img.placeholder = ph;
@@ -2013,8 +2041,8 @@ export const ShapesPanel = () => {
 
     let shape: fabric.Object;
     const common = {
-      left: 100,
-      top: 100,
+      left: canvas.width ? (canvas.width - 100) / 2 : 100,
+      top: canvas.height ? (canvas.height - 100) / 2 : 100,
       fill: '#000000',
       stroke: '#000000',
       strokeWidth: 0,
@@ -2118,7 +2146,7 @@ export const ShapesPanel = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-sm font-bold text-gray-800">Shapes</h2>
+      <h2 className="text-sm font-bold text-gray-900">Shapes</h2>
       <div className="grid grid-cols-4 gap-3">
         {shapes.map(item => (
           <button
@@ -2126,10 +2154,10 @@ export const ShapesPanel = () => {
             onClick={() => addShape(item.id)}
             className="flex flex-col items-center justify-center p-3 border border-gray-100 bg-white rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
           >
-            <div className="text-gray-400 group-hover:text-green-600 mb-1">
+            <div className="text-gray-900 group-hover:text-green-600 mb-1">
               {item.icon}
             </div>
-            <span className="text-[10px] font-bold text-gray-600">{item.label}</span>
+            <span className="text-[10px] font-bold text-gray-900">{item.label}</span>
           </button>
         ))}
       </div>
@@ -2155,16 +2183,16 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
   return (
     <div className="space-y-6">
       <section>
-        <label className="text-xs font-bold text-gray-400 block mb-3 uppercase tracking-wider">Static Images</label>
+        <label className="text-xs font-bold text-gray-900 block mb-3 uppercase tracking-wider">Static Images</label>
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setIsAddDialogOpen(true)}
             className="flex flex-col items-center justify-center p-4 border border-gray-100 bg-white rounded-2xl hover:border-green-200 transition-all shadow-sm active:scale-95 group"
           >
-            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors text-gray-400 group-hover:text-green-600">
+            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors text-gray-900 group-hover:text-green-600">
               <Plus size={20} />
             </div>
-            <span className="text-[11px] font-black text-gray-700">Upload Image</span>
+            <span className="text-[11px] font-black text-gray-900">Upload Image</span>
           </button>
           <button
             onClick={() => setIsImageLibraryOpen(true)}
@@ -2184,8 +2212,8 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
 
       <section>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Variable Images</label>
-          <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-400 cursor-help">?</span>
+          <label className="text-xs font-bold text-gray-900 uppercase tracking-wider">Variable Images</label>
+          <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-900 cursor-help">?</span>
         </div>
         <div className="grid grid-cols-2 gap-3 pb-10">
           {imageVariables.map(item => (
@@ -2195,11 +2223,11 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
               className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 hover:shadow-xl hover:scale-[1.02] transition-all group shadow-sm active:scale-95"
             >
               <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
-                <div className="text-gray-400 group-hover:text-green-600 scale-125">
+                <div className="text-gray-900 group-hover:text-green-600 scale-125">
                   {item.icon}
                 </div>
               </div>
-              <span className="text-[11px] font-black text-gray-700 text-center leading-tight">{item.label}</span>
+              <span className="text-[11px] font-black text-gray-900 text-center leading-tight">{item.label}</span>
             </button>
           ))}
         </div>
@@ -2242,21 +2270,21 @@ export const SecurityPanel = () => {
           onClick={() => addImageToCanvas('{{barcode}}', 'Barcode', canvas, setActivePanel)}
           className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 transition-all shadow-sm active:scale-95 group"
         >
-          <ScanBarcode className="w-8 h-8 mb-2 text-gray-400 group-hover:text-green-600 transition-colors" />
-          <span className="text-[11px] font-black text-gray-700">Add Barcode</span>
+          <ScanBarcode className="w-8 h-8 mb-2 text-gray-900 group-hover:text-green-600 transition-colors" />
+          <span className="text-[11px] font-black text-gray-900">Add Barcode</span>
         </button>
         <button
           onClick={() => addImageToCanvas('{{qr_code}}', 'QR Code', canvas, setActivePanel)}
           className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400 transition-all shadow-sm active:scale-95 group"
         >
-          <QrCode className="w-8 h-8 mb-2 text-gray-400 group-hover:text-green-600 transition-colors" />
-          <span className="text-[11px] font-black text-gray-700">Add QR Code</span>
+          <QrCode className="w-8 h-8 mb-2 text-gray-900 group-hover:text-green-600 transition-colors" />
+          <span className="text-[11px] font-black text-gray-900">Add QR Code</span>
         </button>
       </div>
 
       <section>
         <div className="flex items-center gap-2 mb-3">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Frontside Lamination</label>
+          <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider">Frontside Lamination</label>
           <Info size={12} className="text-gray-300 cursor-help" />
         </div>
         <div className="grid grid-cols-3 gap-2">
@@ -2268,7 +2296,7 @@ export const SecurityPanel = () => {
             >
               {config.frontLamination === opt.id && <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white"><Plus size={10} className="rotate-45" /></div>}
               <div className="mb-2">{opt.icon}</div>
-              <span className={`text-[10px] font-bold ${config.frontLamination === opt.id ? 'text-green-700' : 'text-gray-400'}`}>{opt.label}</span>
+              <span className={`text-[10px] font-bold ${config.frontLamination === opt.id ? 'text-green-700' : 'text-gray-900'}`}>{opt.label}</span>
             </button>
           ))}
         </div>
@@ -2276,7 +2304,7 @@ export const SecurityPanel = () => {
 
       <section>
         <div className="flex items-center gap-2 mb-3">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Backside Lamination</label>
+          <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider">Backside Lamination</label>
           <Info size={12} className="text-gray-300 cursor-help" />
         </div>
         <div className="grid grid-cols-3 gap-2">
@@ -2288,7 +2316,7 @@ export const SecurityPanel = () => {
             >
               {config.backLamination === opt.id && <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white"><Plus size={10} className="rotate-45" /></div>}
               <div className="mb-2">{opt.icon}</div>
-              <span className={`text-[10px] font-bold ${config.backLamination === opt.id ? 'text-green-700' : 'text-gray-400'}`}>{opt.label}</span>
+              <span className={`text-[10px] font-bold ${config.backLamination === opt.id ? 'text-green-700' : 'text-gray-900'}`}>{opt.label}</span>
             </button>
           ))}
         </div>
@@ -2297,7 +2325,7 @@ export const SecurityPanel = () => {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Magnetic Stripe Encoding</label>
+            <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider">Magnetic Stripe Encoding</label>
             <Info size={12} className="text-gray-300 cursor-help" />
           </div>
           <button
@@ -2312,7 +2340,7 @@ export const SecurityPanel = () => {
           <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
             {['Track 1', 'Track 2', 'Track 3'].map((track, i) => (
               <div key={track} className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">{track}:</label>
+                <label className="text-[10px] font-bold text-gray-900 uppercase">{track}:</label>
                 <input
                   type="text"
                   value={(config.magStripeTracks as any)[`track${i + 1}`]}
@@ -2329,7 +2357,7 @@ export const SecurityPanel = () => {
       </section>
 
       <section>
-        <label className="text-[11px] font-bold text-gray-700 block mb-2 uppercase tracking-wider">Smart Fields:</label>
+        <label className="text-[11px] font-bold text-gray-900 block mb-2 uppercase tracking-wider">Smart Fields:</label>
         <select 
           onChange={(e) => {
             if (e.target.value === 'Select a Smart field...') return;

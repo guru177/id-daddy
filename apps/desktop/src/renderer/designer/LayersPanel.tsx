@@ -78,7 +78,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       case 'circle': return <Circle size={14} className="text-orange-500" />;
       case 'triangle': return <Triangle size={14} className="text-orange-500" />;
       case 'line': return <Minus size={14} className="text-orange-500" />;
-      default: return <Layers size={14} className="text-gray-500" />;
+      default: return <Layers size={14} className="text-gray-900" />;
     }
   };
 
@@ -119,7 +119,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleVisibility(e); }}
         className={`p-1 rounded hover:bg-black/10 transition-colors z-20 relative ${
-          isSelected ? 'text-white' : 'text-gray-400'
+          isSelected ? 'text-white' : 'text-gray-900'
         }`}
       >
         {obj.visible ? <Eye size={14} /> : <EyeOff size={14} className="opacity-50" />}
@@ -129,7 +129,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleLock(e); }}
         className={`p-1 rounded hover:bg-black/10 transition-colors z-20 relative ${
-          isSelected ? 'text-white' : 'text-gray-400'
+          isSelected ? 'text-white' : 'text-gray-900'
         }`}
       >
         {obj.selectable ? <Unlock size={14} className="opacity-20" /> : <Lock size={14} className="text-orange-400" />}
@@ -144,7 +144,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       
       <div className="flex-1 min-w-0">
         <p className={`text-[11px] font-bold truncate ${
-          isSelected ? 'text-white' : 'text-gray-700'
+          isSelected ? 'text-white' : 'text-gray-900'
         }`}>
           {getLayerName(obj)}
         </p>
@@ -314,8 +314,8 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
     <div className="w-64 bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl z-10">
       {/* Header */}
       <div className="h-12 px-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-        <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[2px] flex items-center gap-2">
-          <Layers size={14} className="text-gray-400" />
+        <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[2px] flex items-center gap-2">
+          <Layers size={14} className="text-gray-900" />
           Layers
         </h3>
         <span className="text-[10px] font-bold text-gray-300">{layers.length} Total</span>
@@ -358,12 +358,12 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
 
       {/* Footer Actions */}
       <div className="p-2 border-t border-gray-100 bg-gray-50/50 grid grid-cols-6 gap-1">
-        <button onClick={sendToBack} disabled={!selectedObject} title="Send to Back" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-500 disabled:opacity-20 transition-all"><ChevronsDown size={16} /></button>
-        <button onClick={sendBackward} disabled={!selectedObject} title="Send Backward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-500 disabled:opacity-20 transition-all"><ChevronDown size={16} /></button>
-        <button onClick={bringForward} disabled={!selectedObject} title="Bring Forward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-500 disabled:opacity-20 transition-all"><ChevronUp size={16} /></button>
-        <button onClick={bringToFront} disabled={!selectedObject} title="Bring to Front" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-500 disabled:opacity-20 transition-all"><ChevronsUp size={16} /></button>
-        <button onClick={duplicateSelected} disabled={!selectedObject} title="Duplicate Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-500 disabled:opacity-20 transition-all"><Copy size={14} /></button>
-        <button onClick={mergeSelected} disabled={!canvas || canvas.getActiveObjects().length <= 1} title="Merge Layers (Flatten)" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-500 disabled:opacity-20 transition-all"><Layers size={14} /></button>
+        <button onClick={sendToBack} disabled={!selectedObject} title="Send to Back" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronsDown size={16} /></button>
+        <button onClick={sendBackward} disabled={!selectedObject} title="Send Backward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronDown size={16} /></button>
+        <button onClick={bringForward} disabled={!selectedObject} title="Bring Forward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronUp size={16} /></button>
+        <button onClick={bringToFront} disabled={!selectedObject} title="Bring to Front" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><ChevronsUp size={16} /></button>
+        <button onClick={duplicateSelected} disabled={!selectedObject} title="Duplicate Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><Copy size={14} /></button>
+        <button onClick={mergeSelected} disabled={!canvas || canvas.getActiveObjects().length <= 1} title="Merge Layers (Flatten)" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-900 disabled:opacity-20 transition-all"><Layers size={14} /></button>
         <button onClick={deleteSelected} disabled={!selectedObject} title="Delete Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-red-500 disabled:opacity-20 transition-all"><Trash2 size={14} /></button>
       </div>
     </div>

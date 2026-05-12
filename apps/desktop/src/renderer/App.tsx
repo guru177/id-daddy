@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, User as UserIcon } from "lucide-react";
+import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, Sparkles, User as UserIcon } from "lucide-react";
 import clsx from "clsx";
 import { api } from "./api";
 import { DesktopPage, useAuthStore } from "./store";
@@ -52,20 +52,20 @@ export default function App() {
   }
 
   return (
-    <div className="relative flex h-screen bg-stone-100 text-ink">
+    <div className="relative flex h-screen bg-[#fdfaf5] text-[#2c3e50] font-medium">
       {/* ... (Blocked Notification Overlay remains the same) */}
       {isBlocked && (
         <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-6">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-2xl text-center border-2 border-red-500/20 animate-in fade-in zoom-in duration-300">
-            <div className="h-16 w-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <LogOut className="h-8 w-8 text-red-600" />
+          <div className="w-full max-w-sm bg-white rounded-[40px] p-10 shadow-2xl text-center border-2 border-red-500/20 animate-in fade-in zoom-in duration-300">
+            <div className="h-20 w-20 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
+              <LogOut className="h-10 w-10 text-red-600" />
             </div>
-            <h2 className="text-xl font-black text-stone-900 mb-3">Account Blocked</h2>
-            <p className="text-stone-500 font-medium leading-relaxed mb-8">
+            <h2 className="text-2xl font-black text-stone-900 mb-3">Account Blocked</h2>
+            <p className="text-stone-900 font-medium text-lg leading-relaxed mb-8">
               Your account has been blocked by the admin. Please contact support for more information.
             </p>
             <button 
-              className="w-full h-12 bg-gray-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-lg active:scale-95"
+              className="w-full h-14 bg-gray-900 text-white font-black text-lg rounded-[24px] hover:bg-black transition-all shadow-lg active:scale-95"
               onClick={logout}
             >
               OK, Log out
@@ -74,33 +74,54 @@ export default function App() {
         </div>
       )}
 
-      <aside className={clsx("flex w-64 shrink-0 flex-col border-r border-stone-200 bg-white transition-all", isBlocked && "grayscale")}>
+      <aside className={clsx(
+        "flex w-80 shrink-0 flex-col border-r border-[#e8d5c4]/50 transition-all relative overflow-hidden",
+        isBlocked && "grayscale"
+      )}>
+        <div className="absolute inset-0 bg-[#f5ece2]/50 -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f5ece2] via-[#f5ece2] to-[#d4e7d4]/30 -z-10" />
+        
         <button 
-          className="border-b border-stone-200 px-5 py-4 text-left hover:bg-stone-50 transition-colors group"
+          className="px-8 py-8 text-left hover:bg-white/40 transition-all group relative"
           onClick={() => !isBlocked && setPage("profile")}
           disabled={isBlocked}
         >
-          <p className="font-semibold group-hover:text-indigo-600 transition-colors">ID Daddy</p>
-          <p className="text-xs text-stone-500">{user.email}</p>
-          
-          <div className="mt-3 flex items-center gap-2">
-            <div className={clsx(
-              "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
-              user.plan === "LIFETIME" ? "bg-amber-50 text-amber-600 border-amber-200" :
-              user.plan === "PRO_1Y" ? "bg-indigo-50 text-indigo-600 border-indigo-200" :
-              "bg-stone-50 text-stone-500 border-stone-200"
-            )}>
-              {user.plan === "FREE_TRIAL" ? "3-Day Trial" : 
-               user.plan === "PRO_1Y" ? "Pro (1 Year)" : "Lifetime"}
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center shadow-lg shadow-green-900/20">
+              <span className="text-white font-black text-xl">ID</span>
             </div>
-            {user.subscriptionEnd && user.plan !== "LIFETIME" && (
-              <span className="text-[10px] font-bold text-stone-400">
-                {Math.ceil((new Date(user.subscriptionEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d left
-              </span>
-            )}
+            <div>
+              <p className="font-black text-2xl tracking-tight group-hover:text-[#1a5d1a] transition-colors leading-none">ID Daddy</p>
+              <p className="text-sm font-bold text-stone-900 mt-1 opacity-70">Desktop Professional</p>
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <div className={clsx(
+              "inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-2xl shadow-sm border",
+              user.plan === "LIFETIME" ? "bg-amber-100 text-amber-700 border-amber-200" :
+              user.plan === "PRO_1Y" ? "bg-green-100 text-green-700 border-green-200" :
+              "bg-stone-100 text-stone-900 border-stone-200"
+            )}>
+              <Sparkles size={11} className="opacity-50" />
+              {(() => {
+                if (user.plan === "FREE_TRIAL") {
+                  if (!user.subscriptionEnd) return "Trial Version";
+                  const diffDays = Math.ceil((new Date(user.subscriptionEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                  return diffDays < 0 ? "Trial Expired" : `${diffDays} Days Left`;
+                }
+                if (user.plan === "PRO_1Y") {
+                  if (!user.subscriptionEnd) return "Pro (1 Year)";
+                  const diffDays = Math.ceil((new Date(user.subscriptionEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                  return diffDays < 0 ? "Pro Expired" : `Pro (${diffDays} Days Left)`;
+                }
+                return "Lifetime Membership";
+              })()}
+            </div>
           </div>
         </button>
-        <nav className="flex-1 space-y-1 p-3">
+
+        <nav className="flex-1 space-y-2 px-6 py-2 overflow-y-auto custom-scrollbar">
           {pages
             .filter((item) => {
               if (user.role === "SUPER_ADMIN") {
@@ -112,22 +133,46 @@ export default function App() {
               <button
                 key={item.id}
                 className={clsx(
-                  "flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium",
-                  page === item.id ? "bg-teal-50 text-mint" : "text-stone-600 hover:bg-stone-50 hover:text-ink"
+                  "flex h-16 w-full items-center gap-4 px-6 text-left transition-all duration-300 group rounded-lg",
+                  page === item.id 
+                    ? "bg-gradient-to-r from-[#1a5d1a] to-[#2d7a2d] text-white scale-[1.02]" 
+                    : "text-stone-900 hover:bg-white/60 hover:text-[#1a5d1a] hover:translate-x-1"
                 )}
                 onClick={() => !isBlocked && setPage(item.id)}
                 disabled={isBlocked}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <div className={clsx(
+                  "p-2.5 rounded-md transition-colors",
+                  page === item.id ? "bg-white/20" : "bg-stone-100 group-hover:bg-white"
+                )}>
+                  <item.icon className={clsx("h-6 w-6", page === item.id ? "text-white" : "text-stone-900 group-hover:text-[#1a5d1a]")} />
+                </div>
+                <span className={clsx("font-black text-lg", page === item.id ? "text-white" : "text-stone-900")}>
+                  {item.label}
+                </span>
               </button>
             ))}
         </nav>
-        <div className="border-t border-stone-200 p-3">
-          <button className="btn-secondary w-full" onClick={logout}>
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
+
+        <div className="p-6">
+          <div className="bg-white/40 backdrop-blur-sm rounded-[32px] p-5 border border-white/60">
+             <div className="flex items-center gap-3 mb-4 px-2">
+                <div className="w-10 h-10 rounded-full bg-[#e8d5c4] flex items-center justify-center text-[#1a5d1a] font-black">
+                  {user.workspaceName ? user.workspaceName[0].toUpperCase() : user.email[0].toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black truncate">{user.workspaceName || user.email.split('@')[0]}</p>
+                  <p className="text-[10px] font-bold text-stone-900 truncate">{user.email}</p>
+                </div>
+             </div>
+            <button 
+              className="w-full h-12 bg-white text-stone-900 font-black rounded-2xl border border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2 shadow-sm" 
+              onClick={logout}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
       <main className={clsx("min-w-0 flex-1 overflow-hidden transition-all", isBlocked && "grayscale")}>

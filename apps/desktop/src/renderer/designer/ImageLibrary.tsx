@@ -127,7 +127,7 @@ export const ImageLibraryModal = () => {
           
           {/* Sidebar */}
           <div className="w-72 border-r border-gray-100 p-6 space-y-6 bg-gray-50/30">
-            <div className="flex items-center justify-between text-gray-400">
+            <div className="flex items-center justify-between text-gray-900">
               <span className="text-[11px] font-black uppercase tracking-wider">My Folders</span>
             </div>
 
@@ -136,13 +136,13 @@ export const ImageLibraryModal = () => {
                 <button
                   key={folder.name}
                   onClick={() => setActiveFolder(folder.name)}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${activeFolder === folder.name ? 'bg-green-100/50 text-green-700 ring-1 ring-green-200' : 'text-gray-500 hover:bg-white hover:shadow-sm'}`}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${activeFolder === folder.name ? 'bg-green-100/50 text-green-700 ring-1 ring-green-200' : 'text-gray-900 hover:bg-white hover:shadow-sm'}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={activeFolder === folder.name ? 'text-green-600' : 'text-gray-400'}>{folder.icon}</span>
+                    <span className={activeFolder === folder.name ? 'text-green-600' : 'text-gray-900'}>{folder.icon}</span>
                     <span>{folder.name}</span>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${activeFolder === folder.name ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${activeFolder === folder.name ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
                     {folder.count}
                   </span>
                 </button>
@@ -169,7 +169,7 @@ export const ImageLibraryModal = () => {
             {/* Grid Area */}
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
               {currentImages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-4">
+                <div className="h-full flex flex-col items-center justify-center text-gray-900 gap-4">
                   <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
                     <Upload size={32} />
                   </div>
@@ -198,7 +198,7 @@ export const ImageLibraryModal = () => {
                         </div>
                       </div>
                       <div className="mt-3 px-1">
-                        <p className="text-[11px] font-bold text-gray-700 truncate">
+                        <p className="text-[11px] font-bold text-gray-900 truncate">
                           {activeFolder === 'My Images' ? `My Upload ${i + 1}` : `Stock Asset ${i + 1}`}
                         </p>
                       </div>

@@ -32,7 +32,7 @@ export function PrintView() {
     <div className="h-full overflow-auto p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Print Manager</h1>
-        <p className="text-sm text-stone-500">Print generated grid PDFs through the system printer.</p>
+        <p className="text-sm text-stone-900">Print generated grid PDFs through the system printer.</p>
       </div>
       <div className="panel mb-6 flex items-center gap-4 p-4">
         <label className="flex items-center gap-2 text-sm">
@@ -49,11 +49,11 @@ export function PrintView() {
           <RefreshCcw className="h-4 w-4" />
           Refresh
         </button>
-        {message ? <span className="text-sm text-stone-500">{message}</span> : null}
+        {message ? <span className="text-sm text-stone-900">{message}</span> : null}
       </div>
       <div className="panel overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-stone-500">
+          <thead className="bg-stone-50 text-stone-900">
             <tr>
               <th className="px-4 py-3">Created</th>
               <th className="px-4 py-3">Status</th>

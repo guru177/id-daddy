@@ -3,11 +3,19 @@
 @tailwind utilities;
 
 :root {
-  color: #17202a;
-  background: #f7f7f4;
+  --sandal-light: #fdfaf5;
+  --sandal-medium: #f5ece2;
+  --sandal-deep: #e8d5c4;
+  --green-primary: #1a5d1a;
+  --green-light: #d4e7d4;
+  --gradient-sandal-green: linear-gradient(135deg, #f5ece2 0%, #d4e7d4 100%);
+  
+  color: #2c3e50;
+  background: var(--sandal-light);
   font-synthesis: none;
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
+  font-family: 'Montserrat', sans-serif;
 }
 
 body {
@@ -15,6 +23,7 @@ body {
   min-width: 1024px;
   min-height: 100vh;
   overflow: hidden;
+  font-size: 16px;
 }
 
 button,

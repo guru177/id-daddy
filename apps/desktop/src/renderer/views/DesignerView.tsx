@@ -97,10 +97,10 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
 
   return (
     <div className="relative member-dropdown flex items-center gap-2">
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:block">Preview:</span>
+      <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider hidden md:block">Preview:</span>
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all shadow-sm w-48 justify-between"
+        className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all shadow-sm w-48 justify-between"
       >
         <div className="flex items-center gap-2 truncate">
           {selectedMember?.profileImage ? (
@@ -110,14 +110,14 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
           )}
           <span className="truncate">{selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : 'Default (First)'}</span>
         </div>
-        <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+        <ChevronDown size={14} className="text-gray-900 flex-shrink-0" />
       </div>
       
       {isOpen && (
         <div className="absolute top-full left-[55px] mt-1 w-64 bg-white border border-gray-100 shadow-xl rounded-xl z-50 overflow-hidden flex flex-col">
           <div className="p-2 border-b border-gray-100 bg-gray-50/50">
             <div className="relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-900" />
               <input 
                 type="text" 
                 placeholder="Search members..." 
@@ -133,7 +133,7 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
               <button
                 key={m.id}
                 onClick={() => handleSelect(m.id)}
-                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${(previewMemberId === m.id || (!previewMemberId && m.id === members[0]?.id)) ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-700'}`}
+                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${(previewMemberId === m.id || (!previewMemberId && m.id === members[0]?.id)) ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-900'}`}
               >
                 <div className="flex items-center gap-2 truncate">
                   {m.profileImage ? (
@@ -146,7 +146,7 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
                 {(previewMemberId === m.id || (!previewMemberId && m.id === members[0]?.id)) && <Check size={14} className="text-green-600 flex-shrink-0" />}
               </button>
             )) : (
-              <div className="p-4 text-center text-xs text-gray-400 italic">No members found</div>
+              <div className="p-4 text-center text-xs text-gray-900 italic">No members found</div>
             )}
           </div>
         </div>
@@ -293,7 +293,7 @@ export function DesignerView() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Design Library</h1>
-            <p className="text-gray-500 text-base font-medium">You have {userDesigns.length} saved templates in your library</p>
+            <p className="text-gray-900 text-base font-medium">You have {userDesigns.length} saved templates in your library</p>
           </div>
           <button
             onClick={() => { interceptAction(() => { resetDesign(); setActiveTab('Card Designer'); }); }}
@@ -310,7 +310,7 @@ export function DesignerView() {
               <Plus size={40} className="text-gray-300" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Your library is empty</h2>
-            <p className="text-gray-400 font-medium text-lg mb-8 text-center max-w-sm">
+            <p className="text-gray-900 font-medium text-lg mb-8 text-center max-w-sm">
               Start creating your professional ID cards and they will appear here for easy management.
             </p>
             <button
@@ -370,7 +370,7 @@ export function DesignerView() {
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => setActiveTemplateId(design.id)}
-                        className={`p-1.5 rounded-lg transition-all ${activeTemplateId === design.id ? 'bg-amber-100 text-amber-600 ring-1 ring-amber-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                        className={`p-1.5 rounded-lg transition-all ${activeTemplateId === design.id ? 'bg-amber-100 text-amber-600 ring-1 ring-amber-200' : 'bg-gray-50 text-gray-900 hover:bg-gray-100'}`}
                         title={activeTemplateId === design.id ? 'Current Default Template' : 'Set as Default Template'}
                       >
                         <Star size={14} fill={activeTemplateId === design.id ? 'currentColor' : 'none'} />
@@ -392,7 +392,7 @@ export function DesignerView() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-gray-400 font-bold uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-xs text-gray-900 font-bold uppercase tracking-widest">
                       <Calendar size={14} className="text-gray-300" />
                       {new Date(design.timestamp).toLocaleDateString()}
                     </div>
@@ -416,7 +416,7 @@ export function DesignerView() {
 
   // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Single unified return ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tab bar always visible ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   return (
-    <div className="flex flex-col h-full bg-stone-100 overflow-hidden font-sans text-gray-800">
+    <div className="flex flex-col h-full bg-stone-100 overflow-hidden font-sans text-gray-900">
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared Tab Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       <header className="h-[73px] bg-green-50/50 border-b border-stone-200 flex items-center justify-center gap-10 px-4 shrink-0 z-20">
@@ -424,7 +424,7 @@ export function DesignerView() {
           <button
             key={item}
             onClick={() => setActiveTab(item)}
-            className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === item ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+            className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === item ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-900 hover:text-gray-900'}`}
           >
             {item}
           </button>
@@ -464,10 +464,10 @@ export function DesignerView() {
         <div className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-6 z-50 shrink-0 relative">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <button onClick={undo} disabled={history.length <= 1} className="p-1.5 hover:bg-gray-50 text-gray-400 disabled:opacity-20 transition-all">
+              <button onClick={undo} disabled={history.length <= 1} className="p-1.5 hover:bg-gray-50 text-gray-900 disabled:opacity-20 transition-all">
                 <Undo2 size={16} />
               </button>
-              <button onClick={redo} disabled={redoStack.length === 0} className="p-1.5 hover:bg-gray-50 text-gray-400 disabled:opacity-20 transition-all">
+              <button onClick={redo} disabled={redoStack.length === 0} className="p-1.5 hover:bg-gray-50 text-gray-900 disabled:opacity-20 transition-all">
                 <Redo2 size={16} />
               </button>
             </div>
@@ -479,7 +479,7 @@ export function DesignerView() {
               canvas={canvas}
             />
             <div className="h-6 w-px bg-gray-100" />
-            <div className="flex items-center gap-4 text-gray-400">
+            <div className="flex items-center gap-4 text-gray-900">
               <button onClick={() => setShowGrid(!showGrid)} className={`transition-all ${showGrid ? 'text-green-600' : 'hover:text-green-600'}`}>
                 <Grid3X3 size={18} />
               </button>
@@ -565,10 +565,10 @@ export function DesignerView() {
 
             {/* Front / Back Toggle on Center Right Edge */}
             <div className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white shadow-2xl flex flex-col gap-2 z-50 pointer-events-auto">
-              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-500 hover:bg-gray-100'}`}>
+              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Front</span>
               </button>
-              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'back' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-500 hover:bg-gray-100'}`}>
+              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'back' ? 'bg-green-500 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Back</span>
               </button>
             </div>
@@ -593,7 +593,7 @@ export function DesignerView() {
               </div>
             </div>
             <h3 className="text-xl font-black text-gray-900 text-center mb-2">Unsaved Changes</h3>
-            <p className="text-gray-500 font-medium text-sm text-center mb-8 leading-relaxed">
+            <p className="text-gray-900 font-medium text-sm text-center mb-8 leading-relaxed">
               You have unsaved changes on the current design.<br />
               Would you like to save before continuing?
             </p>
@@ -606,11 +606,11 @@ export function DesignerView() {
               </button>
               <button
                 onClick={() => { const a = pendingAction; setPendingAction(null); a?.(); }}
-                className="w-full h-12 bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 font-black rounded-2xl transition-all active:scale-95"
+                className="w-full h-12 bg-gray-100 hover:bg-red-50 text-gray-900 hover:text-red-600 font-black rounded-2xl transition-all active:scale-95"
               >
                 Discard & Continue
               </button>
-              <button onClick={() => setPendingAction(null)} className="w-full h-10 text-gray-400 hover:text-gray-600 font-bold text-sm transition-colors">
+              <button onClick={() => setPendingAction(null)} className="w-full h-10 text-gray-900 hover:text-gray-900 font-bold text-sm transition-colors">
                 Cancel
               </button>
             </div>

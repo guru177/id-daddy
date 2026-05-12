@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, Menu } from "electron";
 import { autoUpdater } from "electron-updater";
 import path from "node:path";
 
@@ -11,6 +11,7 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 720,
     backgroundColor: "#f7f7f4",
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -18,6 +19,9 @@ function createWindow() {
       sandbox: true
     }
   });
+
+  mainWindow.removeMenu();
+  mainWindow.setMenuBarVisibility(false);
 
   const devUrl = process.env.VITE_DEV_SERVER_URL;
   if (devUrl) {
@@ -27,6 +31,8 @@ function createWindow() {
     void mainWindow.loadFile(path.join(__dirname, "../../dist-renderer/index.html"));
   }
 }
+
+Menu.setApplicationMenu(null);
 
 app.whenReady().then(() => {
   createWindow();

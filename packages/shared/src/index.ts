@@ -70,6 +70,7 @@ export interface RegisterWorkspaceRequest {
 export interface AuthUser {
   id: string;
   workspaceId: string | null;
+  workspaceName?: string;
   email: string;
   role: Role;
   plan?: Plan;

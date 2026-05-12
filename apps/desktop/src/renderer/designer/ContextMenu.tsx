@@ -102,7 +102,7 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
       disabled={disabled}
       className={`w-full flex items-center gap-3 px-4 py-2 text-[11px] font-bold transition-colors ${
         disabled ? 'opacity-20 cursor-not-allowed' : 
-        danger ? 'text-red-500 hover:bg-red-50' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+        danger ? 'text-red-500 hover:bg-red-50' : 'text-gray-900 hover:bg-blue-50 hover:text-blue-600'
       }`}
     >
       <div className="shrink-0">{icon}</div>
@@ -196,7 +196,7 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
         
         {/* Security Submenu Placeholder */}
         <div className="relative group/sub">
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-[11px] font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+          <button className="w-full flex items-center gap-3 px-4 py-2 text-[11px] font-bold text-gray-900 hover:bg-blue-50 hover:text-blue-600 transition-colors">
             <ShieldAlert size={14} />
             <span className="flex-1 text-left">Set as Security Layer</span>
             <ChevronUp size={12} className="rotate-90 opacity-40" />

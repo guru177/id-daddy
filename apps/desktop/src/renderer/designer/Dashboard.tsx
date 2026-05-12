@@ -77,7 +77,7 @@ const DesignCard = ({
         <h3 className={`text-sm font-black text-gray-900 truncate transition-colors ${accentColor === 'green' ? 'group-hover:text-green-600' : 'group-hover:text-amber-600'}`}>
           {design.name}
         </h3>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+        <p className="text-[10px] font-bold text-gray-900 uppercase tracking-widest mt-0.5">
           {design.isGlobal ? 'Official Design' : `Modified ${new Date(design.timestamp || design.updatedAt || '').toLocaleDateString()}`}
         </p>
       </div>
@@ -101,7 +101,7 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
       <div className="max-w-[1600px] mx-auto">
         <header className="mb-12">
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">Get Started</h1>
-          <p className="text-gray-500 font-medium mt-2 text-lg">Pick a professional template or start from scratch.</p>
+          <p className="text-gray-900 font-medium mt-2 text-lg">Pick a professional template or start from scratch.</p>
         </header>
 
         {/* Section: Official Templates */}
@@ -110,7 +110,7 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
             <div className="p-2 bg-green-100 text-green-600 rounded-xl">
               <Globe size={20} strokeWidth={2.5} />
             </div>
-            <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest text-sm">Official ID Templates</h2>
+            <h2 className="text-xl font-black text-gray-900 uppercase tracking-widest text-sm">Official ID Templates</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -127,7 +127,7 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
               </div>
               <div className="px-4 py-3 border-t border-gray-100">
                 <h3 className="text-sm font-black text-gray-900 group-hover:text-green-600 transition-colors">Blank Canvas</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Start from scratch</p>
+                <p className="text-[10px] font-bold text-gray-900 uppercase tracking-widest mt-0.5">Start from scratch</p>
               </div>
             </button>
 
@@ -151,7 +151,7 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
               <div className="p-2 bg-amber-100 text-amber-600 rounded-xl">
                 <Clock size={20} strokeWidth={2.5} />
               </div>
-              <h2 className="text-xl font-black text-gray-800 uppercase tracking-widest text-sm">Your Recent Designs</h2>
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-widest text-sm">Your Recent Designs</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

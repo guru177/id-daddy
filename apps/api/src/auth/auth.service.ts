@@ -76,6 +76,7 @@ export class AuthService {
     return this.issueTokens({
       id: user.id,
       workspaceId: user.workspaceId,
+      workspaceName: user.workspace?.name || (user.role === "SUPER_ADMIN" ? "Platform Admin" : undefined),
       email: user.email,
       role: user.role
     });
@@ -123,6 +124,7 @@ export class AuthService {
     return this.issueTokens({
       id: admin.id,
       workspaceId: admin.workspaceId,
+      workspaceName: dto.workspaceName.trim(),
       email: admin.email,
       role: admin.role
     });
@@ -187,6 +189,7 @@ export class AuthService {
     const payload = {
       sub: user.id,
       workspaceId: user.workspaceId,
+      workspaceName: user.workspaceName,
       email: user.email,
       role: user.role
     };

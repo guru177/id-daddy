@@ -71,6 +71,7 @@ export interface Member {
   divisionLogo: string;
   customImage: string;
   customFields?: Record<string, string>;
+  originalProfileImage?: string;
 }
 
 export const DEFAULT_MEMBERS: Member[] = [
@@ -358,6 +359,12 @@ interface DesignerState {
   zoom: number;
   setZoom: (zoom: number) => void;
   resetZoom: () => void;
+  isProcessingBulkBG: boolean;
+  setIsProcessingBulkBG: (processing: boolean) => void;
+  bgProgress: { current: number; total: number };
+  setBgProgress: (updater: { current: number; total: number } | ((prev: { current: number; total: number }) => { current: number; total: number })) => void;
+  selectedMembers: Set<string>;
+  setSelectedMembers: (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
 }
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
@@ -439,6 +446,16 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   zoom: 1,
   setZoom: (zoom) => set({ zoom: Math.max(0.1, Math.min(5, zoom)) }),
   resetZoom: () => set({ zoom: 1 }),
+  isProcessingBulkBG: false,
+  setIsProcessingBulkBG: (processing: boolean) => set({ isProcessingBulkBG: processing }),
+  bgProgress: { current: 0, total: 0 },
+  setBgProgress: (updater) => set((state) => ({
+    bgProgress: typeof updater === 'function' ? updater(state.bgProgress) : updater
+  })),
+  selectedMembers: new Set<string>(),
+  setSelectedMembers: (updater) => set((state) => ({
+    selectedMembers: typeof updater === 'function' ? updater(state.selectedMembers) : updater
+  })),
   frontThumbnail: '',
   backThumbnail: '',
   modal: {
@@ -1105,7 +1122,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       ]);
 
       if (templatesRes && templatesRes.data) {
-        const dbTemplates = templatesRes.data.map((r: any) => ({ ...r.design, id: r.id, name: r.name }));
+        const dbTemplates = templatesRes.data.map((r: any) => ({ 
+          ...r.design, 
+          id: r.id, 
+          name: r.name,
+          isGlobal: r.isGlobal ?? false,
+          timestamp: r.updatedAt ?? r.createdAt ?? new Date().toISOString()
+        }));
         set({ savedDesigns: dbTemplates });
         localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
       }

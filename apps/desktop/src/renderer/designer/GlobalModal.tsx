@@ -26,7 +26,7 @@ export function GlobalModal() {
           </div>
 
           <h2 className="text-xl font-black text-gray-900 mb-2">{modal.title}</h2>
-          <p className="text-gray-500 text-sm leading-relaxed mb-8">
+          <p className="text-gray-900 text-sm leading-relaxed mb-8">
             {modal.message}
           </p>
 
@@ -47,7 +47,7 @@ export function GlobalModal() {
                 </button>
                 <button
                   onClick={closeModal}
-                  className="w-full py-3.5 bg-gray-100 text-gray-600 text-sm font-black rounded-2xl hover:bg-gray-200 transition-all"
+                  className="w-full py-3.5 bg-gray-100 text-gray-900 text-sm font-black rounded-2xl hover:bg-gray-200 transition-all"
                 >
                   Cancel
                 </button>

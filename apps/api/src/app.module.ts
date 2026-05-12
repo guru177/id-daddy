@@ -5,6 +5,7 @@ import { AuthModule } from "./auth/auth.module";
 import { BillingModule } from "./billing/billing.module";
 import { ExportsModule } from "./exports/exports.module";
 import { FilesModule } from "./files/files.module";
+import { BgRemovalModule } from "./bg-removal/bg-removal.module";
 import { GenerationModule } from "./generation/generation.module";
 import { HealthController } from "./health.controller";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -40,6 +41,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     RecordsModule,
     FilesModule,
     GenerationModule,
+    BgRemovalModule,
     ExportsModule,
     BillingModule
   ],

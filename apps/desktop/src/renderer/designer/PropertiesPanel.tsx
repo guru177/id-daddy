@@ -64,7 +64,7 @@ const PropertiesPanel = () => {
 
   if (!selectedObject) {
     return (
-      <div className="w-72 bg-white border-l border-stone-200 p-6 flex flex-col items-center justify-center text-stone-400">
+      <div className="w-72 bg-white border-l border-stone-200 p-6 flex flex-col items-center justify-center text-stone-900">
         <Layers className="w-12 h-12 mb-4 opacity-20" />
         <p className="text-sm font-medium">Select element to edit</p>
       </div>
@@ -90,25 +90,25 @@ const PropertiesPanel = () => {
   return (
     <div className="w-72 bg-white border-l border-stone-200 flex flex-col overflow-y-auto">
       <div className="p-4 border-b border-stone-100 flex items-center justify-between">
-        <h2 className="font-semibold text-stone-700 capitalize">{selectedObject.type}</h2>
+        <h2 className="font-semibold text-stone-900 capitalize">{selectedObject.type}</h2>
         <div className="flex gap-1">
-          <button onClick={duplicateSelected} className="p-2 hover:bg-stone-50 rounded text-stone-500"><Copy size={16} /></button>
+          <button onClick={duplicateSelected} className="p-2 hover:bg-stone-50 rounded text-stone-900"><Copy size={16} /></button>
           <button onClick={deleteSelected} className="p-2 hover:bg-red-50 rounded text-red-500"><Trash2 size={16} /></button>
         </div>
       </div>
 
       <div className="p-4 space-y-6">
         <section>
-          <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-stone-900 uppercase tracking-widest mb-3 flex items-center gap-2">
             <Move size={12} /> Transform
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] text-stone-500 mb-1 block">X</label>
+              <label className="text-[10px] text-stone-900 mb-1 block">X</label>
               <input type="number" value={props.left || 0} onChange={(e) => updateSelected('left', parseInt(e.target.value))} className="w-full px-2 py-1.5 border border-stone-200 rounded text-xs focus:ring-1 focus:ring-mint outline-none" />
             </div>
             <div>
-              <label className="text-[10px] text-stone-500 mb-1 block">Y</label>
+              <label className="text-[10px] text-stone-900 mb-1 block">Y</label>
               <input type="number" value={props.top || 0} onChange={(e) => updateSelected('top', parseInt(e.target.value))} className="w-full px-2 py-1.5 border border-stone-200 rounded text-xs focus:ring-1 focus:ring-mint outline-none" />
             </div>
           </div>
@@ -116,7 +116,7 @@ const PropertiesPanel = () => {
 
         {isText && (
           <section className="border-t border-stone-100 pt-6">
-            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <h3 className="text-[10px] font-bold text-stone-900 uppercase tracking-widest mb-3 flex items-center gap-2">
               <Type size={12} /> Typography
             </h3>
             <div className="space-y-3">
@@ -138,7 +138,7 @@ const PropertiesPanel = () => {
         )}
 
         <section className="border-t border-stone-100 pt-6">
-          <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">Arrange</h3>
+          <h3 className="text-[10px] font-bold text-stone-900 uppercase tracking-widest mb-3">Arrange</h3>
           <div className="grid grid-cols-1 gap-2">
             <button onClick={bringForward} className="px-3 py-2 border border-stone-200 rounded text-xs font-medium hover:bg-stone-50">Bring Forward</button>
             <button onClick={sendBackward} className="px-3 py-2 border border-stone-200 rounded text-xs font-medium hover:bg-stone-50">Send Backward</button>
