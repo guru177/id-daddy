@@ -112,3 +112,19 @@ export function deleteTemplate(id: string) {
     method: "DELETE"
   });
 }
+
+export function generateDesignFromText(prompt: string) {
+  return api<any>("/ai/generate-text", {
+    method: "POST",
+    body: JSON.stringify({ prompt })
+  });
+}
+
+export async function analyzeImageForDesign(file: File) {
+  const body = new FormData();
+  body.append("file", file);
+  return api<any>("/ai/analyze-image", {
+    method: "POST",
+    body
+  });
+}

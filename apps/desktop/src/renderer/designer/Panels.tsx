@@ -33,11 +33,13 @@ import {
   Underline,
   Info,
   CheckCircle2,
+  Upload,
 } from 'lucide-react';
 import { AddImageDialog } from './ImageLibrary';
 import QRCode from 'qrcode';
 import bwipjs from 'bwip-js';
 import { removeBackground } from '@imgly/background-removal';
+import { generateDesignFromText, analyzeImageForDesign } from '../api';
 
 const GOOGLE_FONTS = Array.from(new Set([
   // Popular Global
@@ -178,7 +180,7 @@ const FontSelect = ({ value, onChange }: { value: string, onChange: (val: string
 };
 
 export const CardOptionsPanel = () => {
-  const { config, setConfig, canvas } = useDesignerStore();
+  const { config, setConfig, canvas, showSafeZones, setShowSafeZones } = useDesignerStore();
 
   const updateOrientation = (o: 'horizontal' | 'vertical') => {
     if (!canvas) return;
@@ -306,6 +308,27 @@ export const CardOptionsPanel = () => {
               <span className="text-[11px] font-mono font-bold text-gray-900">{config.backgroundColorBack.toUpperCase()}</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="pt-2">
+        <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-4">Visual Guides</label>
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowSafeZones(!showSafeZones)}
+            className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${showSafeZones ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+          >
+            <div className="flex items-center gap-3">
+              <Shield className={`w-5 h-5 ${showSafeZones ? 'text-green-600' : 'text-gray-900'}`} />
+              <div className="text-left">
+                <span className={`text-[11px] font-bold block ${showSafeZones ? 'text-green-700' : 'text-gray-900'}`}>Show Safe Zones</span>
+                <span className="text-[9px] text-gray-900 font-medium">3mm Print Bleed Protection</span>
+              </div>
+            </div>
+            <div className={`w-10 h-5 rounded-full relative transition-colors ${showSafeZones ? 'bg-green-500' : 'bg-gray-200'}`}>
+              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${showSafeZones ? 'left-6' : 'left-1'}`} />
+            </div>
+          </button>
         </div>
       </section>
     </div>
@@ -527,6 +550,16 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
     'Hair Color': 'hairColor',
     'Height': 'height',
     'Weight': 'weight',
+    'Blood Group': 'bloodGroup',
+    'RFID No': 'rfidNo',
+    'Parent Name': 'parentName',
+    'Parent Phone': 'parentPhone',
+    'Emergency Contact': 'emergencyContact',
+    'Emergency Phone': 'emergencyPhone',
+    'Bus Route': 'busRoute',
+    'Hostel Name': 'hostelName',
+    'Room No': 'roomNo',
+    'Role': 'role',
   };
 
   const activeStandardFields = formConfig?.enabledFields || Object.keys(fieldToKeyMap);
@@ -2380,6 +2413,15 @@ export const SecurityPanel = () => {
                   {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
                   {showField('Department') && <option value="{{department}}">Department</option>}
                 </optgroup>
+                <optgroup label="Specialized Identity">
+                  <option value="{{bloodGroup}}">Blood Group</option>
+                  <option value="{{rfidNo}}">RFID No</option>
+                  <option value="{{parentName}}">Parent Name</option>
+                  <option value="{{emergencyContact}}">Emergency Contact</option>
+                  <option value="{{busRoute}}">Bus Route</option>
+                  <option value="{{hostelName}}">Hostel Name</option>
+                  <option value="{{role}}">Role</option>
+                </optgroup>
                 {formConfig?.customFields && formConfig.customFields.length > 0 && (
                   <optgroup label="Custom Fields">
                     {formConfig.customFields.map(f => (
@@ -2392,6 +2434,148 @@ export const SecurityPanel = () => {
           })()}
         </select>
       </section>
+    </div>
+  );
+};
+
+export const AIDesignPanel = () => {
+  const { canvas, saveState, showModal, closeModal } = useDesignerStore();
+  const [prompt, setPrompt] = React.useState('');
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const generateDesign = async (type: 'text' | 'image') => {
+    setIsGenerating(true);
+    showModal({
+      title: 'AI Designer',
+      message: type === 'text' ? 'Generating design from prompt...' : 'Analyzing image and creating template...',
+      type: 'info'
+    });
+
+    // Real AI Logic
+    try {
+      let designData;
+      if (type === 'text') {
+        designData = await generateDesignFromText(prompt);
+      } else {
+        const file = fileInputRef.current?.files?.[0];
+        if (!file) throw new Error('No image selected');
+        designData = await analyzeImageForDesign(file);
+      }
+
+      if (!canvas || !designData) throw new Error('Canvas or design data is missing');
+
+      // Normalize data: handle string response or nested wrapper
+      const template = typeof designData === 'string' ? JSON.parse(designData) : designData;
+
+      // Ensure template has the right Fabric.js structure
+      if (!template.objects || !Array.isArray(template.objects)) {
+        throw new Error('AI returned invalid template structure (missing objects array)');
+      }
+
+      // Load into canvas safely
+      canvas.clear();
+      canvas.loadFromJSON(
+        { version: template.version || '5.3.0', objects: template.objects, background: template.background },
+        () => {
+          canvas.renderAll();
+          saveState();
+          setIsGenerating(false);
+          closeModal();
+          setPrompt('');
+        }
+      );
+    } catch (error: any) {
+      console.error('AI Generation failed:', error);
+      showModal({
+        title: 'AI Error',
+        message: error.message || 'Failed to connect to AI service.',
+        type: 'error'
+      });
+      setIsGenerating(false);
+    }
+
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-green-200">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-tight">Text to Design</h3>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">AI-Powered Template Generation</p>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe your design (e.g. 'Blue corporate ID with modern fonts and profile picture on left')..."
+            className="w-full h-32 p-5 border border-gray-100 rounded-[32px] text-xs outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50 resize-none placeholder:text-gray-300 font-bold transition-all"
+          />
+          <button
+            disabled={!prompt || isGenerating}
+            onClick={() => generateDesign('text')}
+            className="w-full py-4 bg-gray-900 text-white rounded-[32px] text-xs font-black hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none active:scale-95"
+          >
+            {isGenerating ? 'AI is thinking...' : 'Generate Design'}
+            <Sparkles size={14} className={isGenerating ? 'animate-spin' : ''} />
+          </button>
+        </div>
+      </section>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
+        <div className="relative flex justify-center text-[9px] uppercase font-black text-gray-400 px-3 bg-white w-fit mx-auto tracking-[0.2em]">Or analyze reference</div>
+      </div>
+
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+            <ImageIcon size={20} />
+          </div>
+          <div>
+            <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-tight">Image to Design</h3>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Clone from existing sample</p>
+          </div>
+        </div>
+
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept="image/*"
+          onChange={(e) => {
+            if (e.target.files?.[0]) generateDesign('image');
+          }}
+        />
+        
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full py-12 border-2 border-dashed border-gray-100 rounded-[40px] flex flex-col items-center justify-center gap-4 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group"
+        >
+          <div className="w-14 h-14 rounded-3xl bg-indigo-50 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+            <Upload size={28} />
+          </div>
+          <div className="text-center">
+            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest block mb-1">Click to Upload</span>
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Reference ID Card Photo</span>
+          </div>
+        </button>
+      </section>
+      
+      <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 rounded-[32px] border border-amber-100">
+        <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
+          <span className="uppercase text-[11px] block mb-2 flex items-center gap-2">
+            <Info size={14} /> AI Intelligence Tip:
+          </span>
+          The more detail you provide in text, the better the result. Try specifying colors, fonts, and layout alignment.
+        </p>
+      </div>
     </div>
   );
 };

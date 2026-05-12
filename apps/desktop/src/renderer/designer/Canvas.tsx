@@ -5,7 +5,7 @@ import { useDesignerStore } from './store';
 const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setCanvas, setSelectedObject, saveState, config, side, setActivePanel, showGrid, loadTrigger, zoom, setZoom, resetZoom } = useDesignerStore();
+  const { setCanvas, setSelectedObject, saveState, config, side, setActivePanel, showGrid, showSafeZones, loadTrigger, zoom, setZoom, resetZoom } = useDesignerStore();
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -98,11 +98,40 @@ const Canvas = () => {
       const bgColor = side === 'front' ? config.backgroundColorFront : config.backgroundColorBack;
       fabricCanvas.setBackgroundColor(bgColor, fabricCanvas.renderAll.bind(fabricCanvas));
 
-      const existingPunch = fabricCanvas.getObjects().find(obj => (obj as any).name === 'slot-punch-overlay');
-      if (existingPunch) fabricCanvas.remove(existingPunch);
+      // Remove previous overlays
+      fabricCanvas.getObjects().forEach(obj => {
+        if ((obj as any).name === 'slot-punch-overlay' || (obj as any).name === 'safe-zone-overlay') {
+          fabricCanvas.remove(obj);
+        }
+      });
+
+      const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
+
+      // Safe Zone Indicator (3mm margin roughly 35px at this resolution)
+      const { showSafeZones } = useDesignerStore.getState();
+      if (showSafeZones) {
+        const margin = 35; 
+        const safeZone = new fabric.Rect({
+          left: margin,
+          top: margin,
+          width: width - margin * 2,
+          height: height - margin * 2,
+          fill: 'transparent',
+          stroke: '#f43f5e',
+          strokeWidth: 1,
+          strokeDashArray: [10, 5],
+          selectable: false,
+          evented: false,
+          // @ts-ignore
+          name: 'safe-zone-overlay',
+          // @ts-ignore
+          excludeFromExport: true
+        });
+        fabricCanvas.add(safeZone);
+        safeZone.bringToFront();
+      }
 
       if (config.slotPunch !== 'none') {
-        const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
         const punch = new fabric.Rect({
           width: 160,
           height: 35,
@@ -449,14 +478,40 @@ const Canvas = () => {
     const bgColor = side === 'front' ? config.backgroundColorFront : config.backgroundColorBack;
     canvas.setBackgroundColor(bgColor, canvas.renderAll.bind(canvas));
 
-    // Update Slot Punch
+    // Update Slot Punch and Safe Zones
     const existingPunch = canvas.getObjects().find(obj => (obj as any).name === 'slot-punch-overlay');
+    const existingSafeZone = canvas.getObjects().find(obj => (obj as any).name === 'safe-zone-overlay');
+    
     if (existingPunch) canvas.remove(existingPunch);
+    if (existingSafeZone) canvas.remove(existingSafeZone);
+
+    const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
+
+    if (showSafeZones) {
+      const margin = 35;
+      const safeZone = new fabric.Rect({
+        left: margin,
+        top: margin,
+        width: width - margin * 2,
+        height: height - margin * 2,
+        fill: 'transparent',
+        stroke: '#f43f5e',
+        strokeWidth: 1,
+        strokeDashArray: [10, 5],
+        selectable: false,
+        evented: false,
+        // @ts-ignore
+        name: 'safe-zone-overlay',
+        // @ts-ignore
+        excludeFromExport: true
+      });
+      canvas.add(safeZone);
+      safeZone.bringToFront();
+    }
 
     if (config.slotPunch !== 'none') {
-      const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
       const punch = new fabric.Rect({
-        width: 160,  // Proportional to 1013px width
+        width: 160,
         height: 35,
         rx: 12,
         ry: 12,
@@ -475,7 +530,7 @@ const Canvas = () => {
       punch.bringToFront();
     }
     canvas.renderAll();
-  }, [config.backgroundColorFront, config.backgroundColorBack, config.slotPunch]);
+  }, [config.backgroundColorFront, config.backgroundColorBack, config.slotPunch, showSafeZones]);
 
   return (
     <div

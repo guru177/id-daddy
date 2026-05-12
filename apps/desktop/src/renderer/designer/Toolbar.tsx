@@ -7,9 +7,10 @@ import {
   Shapes, 
   Watch, 
   SlidersHorizontal,
+  Sparkles,
   X
 } from 'lucide-react';
-import { CardOptionsPanel, TextPanel, CustomizePanel, ImagesPanel, SecurityPanel, ShapesPanel } from './Panels';
+import { CardOptionsPanel, TextPanel, CustomizePanel, ImagesPanel, SecurityPanel, ShapesPanel, AIDesignPanel } from './Panels';
 import { useDesignerStore } from './store';
 
 const Toolbar = () => {
@@ -22,6 +23,7 @@ const Toolbar = () => {
     { id: 'security', label: 'Security', icon: ShieldCheck },
     { id: 'shapes', label: 'Shapes', icon: Shapes },
     { id: 'customize', label: 'Customize', icon: SlidersHorizontal },
+    // { id: 'ai-design', label: 'AI Design', icon: Sparkles }, // Hidden temporarily
   ];
 
   const renderPanel = () => {
@@ -32,6 +34,7 @@ const Toolbar = () => {
       case 'security': return <SecurityPanel />;
       case 'shapes': return <ShapesPanel />;
       case 'customize': return <CustomizePanel />;
+      case 'ai-design': return <AIDesignPanel />;
       default: return <div className="text-center text-gray-900 mt-10 italic">Panel coming soon...</div>;
     }
   };

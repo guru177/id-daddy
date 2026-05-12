@@ -70,6 +70,16 @@ export interface Member {
   fingerprint: string;
   divisionLogo: string;
   customImage: string;
+  bloodGroup: string;
+  parentName: string;
+  parentPhone: string;
+  emergencyContact: string;
+  emergencyPhone: string;
+  rfidNo: string;
+  busRoute: string;
+  hostelName: string;
+  roomNo: string;
+  role: 'Student' | 'Staff' | 'Guest' | 'Contractor';
   customFields?: Record<string, string>;
   originalProfileImage?: string;
 }
@@ -82,7 +92,9 @@ export const DEFAULT_MEMBERS: Member[] = [
     state: 'NY', city: 'New York', street1: '123 Business Ave', street2: 'Suite 200', gradeLevel: '', securityLevel: 'Level 5',
     height: '6\'1"', weight: '185 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Brown',
     profileImage: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+    signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+    bloodGroup: 'O+', parentName: 'John Anderson', parentPhone: '555-0011', emergencyContact: 'John Anderson', emergencyPhone: '555-0011',
+    rfidNo: 'RF-88221', busRoute: 'Route 12', hostelName: '', roomNo: '', role: 'Staff'
   },
   {
     id: 'm2', firstName: 'Emma', lastName: 'Thompson', nickname: 'Em', dob: '1992-07-24', title: 'Marketing Lead',
@@ -91,7 +103,9 @@ export const DEFAULT_MEMBERS: Member[] = [
     state: 'CA', city: 'Los Angeles', street1: '456 Creative Blvd', street2: '', gradeLevel: '', securityLevel: 'Level 4',
     height: '5\'6"', weight: '130 lbs', gender: 'Female', eyeColor: 'Blue', hairColor: 'Blonde',
     profileImage: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+    signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+    bloodGroup: 'A+', parentName: '', parentPhone: '', emergencyContact: '', emergencyPhone: '',
+    rfidNo: 'RF-88222', busRoute: 'Route 05', hostelName: '', roomNo: '', role: 'Staff'
   },
   {
     id: 'm3', firstName: 'James', lastName: 'Rodriguez', nickname: 'Jim', dob: '1990-11-05', title: 'Senior Engineer',
@@ -100,7 +114,9 @@ export const DEFAULT_MEMBERS: Member[] = [
     state: 'TX', city: 'Austin', street1: '789 Tech Parkway', street2: 'Floor 3', gradeLevel: '', securityLevel: 'Level 5',
     height: '5\'10"', weight: '170 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
     profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+    signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+    bloodGroup: 'B+', parentName: '', parentPhone: '', emergencyContact: '', emergencyPhone: '',
+    rfidNo: 'RF-88223', busRoute: 'Route 08', hostelName: '', roomNo: '', role: 'Staff'
   },
   {
     id: 'm4', firstName: 'Sofia', lastName: 'Patel', nickname: 'Sofi', dob: '1995-04-18', title: 'Product Designer',
@@ -109,7 +125,9 @@ export const DEFAULT_MEMBERS: Member[] = [
     state: 'CA', city: 'San Francisco', street1: '321 Design St', street2: '', gradeLevel: '', securityLevel: 'Level 3',
     height: '5\'4"', weight: '120 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Black',
     profileImage: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+    signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+    bloodGroup: 'AB+', parentName: '', parentPhone: '', emergencyContact: '', emergencyPhone: '',
+    rfidNo: 'RF-88224', busRoute: 'Route 10', hostelName: '', roomNo: '', role: 'Staff'
   },
   {
     id: 'm5', firstName: 'Alexander', lastName: 'Wright', nickname: 'Alex', dob: '1985-09-30', title: 'Operations Manager',
@@ -118,7 +136,9 @@ export const DEFAULT_MEMBERS: Member[] = [
     state: 'IL', city: 'Chicago', street1: '654 Logistics Way', street2: 'Building A', gradeLevel: '', securityLevel: 'Level 5',
     height: '6\'0"', weight: '195 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Brown',
     profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+    signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+    bloodGroup: 'O-', parentName: '', parentPhone: '', emergencyContact: '', emergencyPhone: '',
+    rfidNo: 'RF-88225', busRoute: 'Route 03', hostelName: '', roomNo: '', role: 'Staff'
   },
   {
     id: 'm6', firstName: 'Mia', lastName: 'Chen', nickname: 'Mia', dob: '1993-12-12', title: 'Financial Analyst',
@@ -127,7 +147,9 @@ export const DEFAULT_MEMBERS: Member[] = [
     state: 'MA', city: 'Boston', street1: '987 Financial Dist', street2: '', gradeLevel: '', securityLevel: 'Level 4',
     height: '5\'5"', weight: '125 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Black',
     profileImage: 'https://images.unsplash.com/photo-1598550874175-4d0ef436c909?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+    signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+    bloodGroup: 'A-', parentName: '', parentPhone: '', emergencyContact: '', emergencyPhone: '',
+    rfidNo: 'RF-88226', busRoute: 'Route 07', hostelName: '', roomNo: '', role: 'Staff'
   },
   {
     id: 'm7', firstName: 'Benjamin', lastName: 'Foster', nickname: 'Ben', dob: '1987-02-28', title: 'System Administrator',
@@ -136,125 +158,10 @@ export const DEFAULT_MEMBERS: Member[] = [
     state: 'WA', city: 'Seattle', street1: '147 Cloud Ave', street2: 'Server Room 2', gradeLevel: '', securityLevel: 'Level 6',
     height: '5\'11"', weight: '180 lbs', gender: 'Male', eyeColor: 'Hazel', hairColor: 'Brown',
     profileImage: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+    signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+    bloodGroup: 'B-', parentName: '', parentPhone: '', emergencyContact: '', emergencyPhone: '',
+    rfidNo: 'RF-88227', busRoute: 'Route 09', hostelName: '', roomNo: '', role: 'Staff'
   },
-  {
-    id: 'm8', firstName: 'Charlotte', lastName: 'Kim', nickname: 'Charli', dob: '1991-08-08', title: 'HR Specialist',
-    idNumber: 'EMP-2008', employeeId: 'EMP-2008', department: 'Human Resources', hireDate: '2020-03-20', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0208', phone2: '', fax: '', email: 'charlotte.k@example.com', website: '', country: 'USA', postalCode: '30303',
-    state: 'GA', city: 'Atlanta', street1: '258 People St', street2: '', gradeLevel: '', securityLevel: 'Level 3',
-    height: '5\'7"', weight: '135 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Brown',
-    profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm9', firstName: 'Daniel', lastName: 'Murphy', nickname: 'Dan', dob: '1984-05-14', title: 'Legal Counsel',
-    idNumber: 'EMP-2009', employeeId: 'EMP-2009', department: 'Legal', hireDate: '2015-09-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0209', phone2: '', fax: '', email: 'daniel.m@example.com', website: '', country: 'USA', postalCode: '20001',
-    state: 'DC', city: 'Washington', street1: '369 Justice Blvd', street2: 'Suite 500', gradeLevel: '', securityLevel: 'Level 6',
-    height: '6\'2"', weight: '205 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Grey',
-    profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm10', firstName: 'Ava', lastName: 'Martinez', nickname: 'Ava', dob: '1996-01-22', title: 'Sales Associate',
-    idNumber: 'EMP-2010', employeeId: 'EMP-2010', department: 'Sales', hireDate: '2023-05-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0210', phone2: '', fax: '', email: 'ava.m@example.com', website: '', country: 'USA', postalCode: '33101',
-    state: 'FL', city: 'Miami', street1: '741 Ocean Drive', street2: '', gradeLevel: '', securityLevel: 'Level 2',
-    height: '5\'3"', weight: '115 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Brown',
-    profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm11', firstName: 'Lucas', lastName: 'Taylor', nickname: 'Luke', dob: '1990-10-18', title: 'Content Strategist',
-    idNumber: 'EMP-2011', employeeId: 'EMP-2011', department: 'Marketing', hireDate: '2021-02-10', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0211', phone2: '', fax: '', email: 'lucas.t@example.com', website: '', country: 'USA', postalCode: '80202',
-    state: 'CO', city: 'Denver', street1: '852 Media Lane', street2: '', gradeLevel: '', securityLevel: 'Level 3',
-    height: '5\'11"', weight: '175 lbs', gender: 'Male', eyeColor: 'Green', hairColor: 'Blonde',
-    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm12', firstName: 'Isabella', lastName: 'White', nickname: 'Izzy', dob: '1994-06-05', title: 'Data Scientist',
-    idNumber: 'EMP-2012', employeeId: 'EMP-2012', department: 'Engineering', hireDate: '2022-07-20', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0212', phone2: '', fax: '', email: 'isabella.w@example.com', website: '', country: 'USA', postalCode: '98109',
-    state: 'WA', city: 'Seattle', street1: '963 Algorithm Way', street2: 'Lab 4', gradeLevel: '', securityLevel: 'Level 5',
-    height: '5\'8"', weight: '140 lbs', gender: 'Female', eyeColor: 'Hazel', hairColor: 'Brown',
-    profileImage: 'https://images.unsplash.com/photo-1531123897727-8f129e1bf98c?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm13', firstName: 'Henry', lastName: 'Brooks', nickname: 'Hank', dob: '1989-11-30', title: 'Art Director',
-    idNumber: 'EMP-2013', employeeId: 'EMP-2013', department: 'Design', hireDate: '2018-10-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0213', phone2: '', fax: '', email: 'henry.b@example.com', website: 'hankbrooks.art', country: 'USA', postalCode: '11201',
-    state: 'NY', city: 'Brooklyn', street1: '159 Studio St', street2: 'Loft 8', gradeLevel: '', securityLevel: 'Level 4',
-    height: '6\'0"', weight: '180 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Brown',
-    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm14', firstName: 'Harper', lastName: 'Scott', nickname: 'Harper', dob: '1992-02-14', title: 'Supply Chain Analyst',
-    idNumber: 'EMP-2014', employeeId: 'EMP-2014', department: 'Operations', hireDate: '2020-11-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0214', phone2: '', fax: '', email: 'harper.s@example.com', website: '', country: 'USA', postalCode: '43215',
-    state: 'OH', city: 'Columbus', street1: '753 Warehouse Rd', street2: '', gradeLevel: '', securityLevel: 'Level 4',
-    height: '5\'5"', weight: '135 lbs', gender: 'Female', eyeColor: 'Brown', hairColor: 'Black',
-    profileImage: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm15', firstName: 'Samuel', lastName: 'Green', nickname: 'Sam', dob: '1986-07-09', title: 'Controller',
-    idNumber: 'EMP-2015', employeeId: 'EMP-2015', department: 'Finance', hireDate: '2016-03-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0215', phone2: '', fax: '', email: 'samuel.g@example.com', website: '', country: 'USA', postalCode: '60611',
-    state: 'IL', city: 'Chicago', street1: '852 Audit Ave', street2: 'Floor 10', gradeLevel: '', securityLevel: 'Level 6',
-    height: '5\'11"', weight: '190 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
-    profileImage: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm16', firstName: 'Evelyn', lastName: 'Lee', nickname: 'Evie', dob: '1995-09-25', title: 'Network Security',
-    idNumber: 'EMP-2016', employeeId: 'EMP-2016', department: 'IT', hireDate: '2023-01-10', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0216', phone2: '', fax: '', email: 'evelyn.l@example.com', website: '', country: 'USA', postalCode: '27701',
-    state: 'NC', city: 'Durham', street1: '951 Firewall St', street2: '', gradeLevel: '', securityLevel: 'Level 5',
-    height: '5\'6"', weight: '125 lbs', gender: 'Female', eyeColor: 'Hazel', hairColor: 'Brown',
-    profileImage: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm17', firstName: 'Jackson', lastName: 'Hall', nickname: 'Jack', dob: '1991-04-03', title: 'Recruiter',
-    idNumber: 'EMP-2017', employeeId: 'EMP-2017', department: 'Human Resources', hireDate: '2021-08-20', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0217', phone2: '', fax: '', email: 'jackson.h@example.com', website: '', country: 'USA', postalCode: '37203',
-    state: 'TN', city: 'Nashville', street1: '159 Talent Row', street2: '', gradeLevel: '', securityLevel: 'Level 3',
-    height: '6\'0"', weight: '175 lbs', gender: 'Male', eyeColor: 'Blue', hairColor: 'Blonde',
-    profileImage: 'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm18', firstName: 'Amelia', lastName: 'Adams', nickname: 'Amy', dob: '1988-12-29', title: 'Paralegal',
-    idNumber: 'EMP-2018', employeeId: 'EMP-2018', department: 'Legal', hireDate: '2019-12-05', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0218', phone2: '', fax: '', email: 'amelia.a@example.com', website: '', country: 'USA', postalCode: '19103',
-    state: 'PA', city: 'Philadelphia', street1: '753 Court Plaza', street2: 'Suite 2A', gradeLevel: '', securityLevel: 'Level 4',
-    height: '5\'7"', weight: '130 lbs', gender: 'Female', eyeColor: 'Green', hairColor: 'Red',
-    profileImage: 'https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm19', firstName: 'Sebastian', lastName: 'King', nickname: 'Seb', dob: '1994-01-17', title: 'Account Manager',
-    idNumber: 'EMP-2019', employeeId: 'EMP-2019', department: 'Sales', hireDate: '2022-03-01', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0219', phone2: '', fax: '', email: 'sebastian.k@example.com', website: '', country: 'USA', postalCode: '85001',
-    state: 'AZ', city: 'Phoenix', street1: '357 Client Way', street2: '', gradeLevel: '', securityLevel: 'Level 3',
-    height: '5\'11"', weight: '185 lbs', gender: 'Male', eyeColor: 'Brown', hairColor: 'Black',
-    profileImage: 'https://images.unsplash.com/photo-1517070208541-6ddc4d3efbcb?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  },
-  {
-    id: 'm20', firstName: 'Grace', lastName: 'Nelson', nickname: 'Gracie', dob: '1983-05-22', title: 'Chief Operating Officer',
-    idNumber: 'EMP-2020', employeeId: 'EMP-2020', department: 'Management', hireDate: '2014-06-15', issueDate: '2024-01-15', expirationDate: '2026-01-15',
-    phone1: '+1 555-0220', phone2: '', fax: '', email: 'grace.n@example.com', website: '', country: 'USA', postalCode: '94104',
-    state: 'CA', city: 'San Francisco', street1: '100 Executive Dr', street2: 'Penthouse', gradeLevel: '', securityLevel: 'Level 7',
-    height: '5\'8"', weight: '145 lbs', gender: 'Female', eyeColor: 'Blue', hairColor: 'Grey',
-    profileImage: 'https://images.unsplash.com/photo-1508214751196-bfdd4ca4a72d?w=400&q=80',
-    signature: '', fingerprint: '', divisionLogo: '', customImage: ''
-  }
 ];
 
 interface DesignerState {
@@ -269,7 +176,7 @@ interface DesignerState {
   customVariables: string[];
   activePanel: string | null;
   setActivePanel: (panel: string | null) => void;
-  
+
   setCanvas: (canvas: fabric.Canvas) => void;
   setSide: (side: 'front' | 'back') => void;
   setConfig: (config: Partial<CardConfig>) => void;
@@ -281,12 +188,12 @@ interface DesignerState {
   setLibraryMode: (mode: 'add' | 'replace') => void;
   uploadedImages: string[];
   addUploadedImage: (url: string) => void;
-  
+
   isHistoryPaused: boolean;
   saveState: () => void;
   undo: () => void;
   redo: () => void;
-  
+
   deleteSelected: () => void;
   duplicateSelected: () => void;
   bringForward: () => void;
@@ -357,8 +264,10 @@ interface DesignerState {
   removeGuideline: (type: 'horizontal' | 'vertical', index: number) => void;
   clearGuidelines: () => void;
   zoom: number;
-  setZoom: (zoom: number) => void;
+  setZoom: (z: number) => void;
   resetZoom: () => void;
+  showSafeZones: boolean;
+  setShowSafeZones: (show: boolean) => void;
   isProcessingBulkBG: boolean;
   setIsProcessingBulkBG: (processing: boolean) => void;
   bgProgress: { current: number; total: number };
@@ -396,17 +305,17 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setActivePanel: (panel: string | null) => set({ activePanel: panel }),
   showGrid: false,
   setShowGrid: (show: boolean) => set({ showGrid: show }),
-  
-  addCustomVariable: (v: string) => set((state) => ({ 
-    customVariables: [...state.customVariables, v] 
+
+  addCustomVariable: (v: string) => set((state) => ({
+    customVariables: [...state.customVariables, v]
   })),
   isImageLibraryOpen: false,
   setIsImageLibraryOpen: (open: boolean) => set({ isImageLibraryOpen: open }),
   libraryMode: 'add',
   setLibraryMode: (mode: 'add' | 'replace') => set({ libraryMode: mode }),
   uploadedImages: [],
-  addUploadedImage: (url: string) => set((state) => ({ 
-    uploadedImages: [url, ...state.uploadedImages] 
+  addUploadedImage: (url: string) => set((state) => ({
+    uploadedImages: [url, ...state.uploadedImages]
   })),
   currentDesignId: null,
   loadTrigger: 0,
@@ -416,7 +325,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     set({ organizationType: type });
     updateProfile({ settings: { organizationType: type, formConfig: get().formConfig } }).catch(console.error);
   },
-  formConfig: localStorage.getItem('id_daddy_form_config') ? (() => { try { return JSON.parse(localStorage.getItem('id_daddy_form_config')!); } catch(e) { return null; } })() : null,
+  formConfig: localStorage.getItem('id_daddy_form_config') ? (() => { try { return JSON.parse(localStorage.getItem('id_daddy_form_config')!); } catch (e) { return null; } })() : null,
   setFormConfig: (config) => {
     if (config) localStorage.setItem('id_daddy_form_config', JSON.stringify(config));
     else localStorage.removeItem('id_daddy_form_config');
@@ -443,9 +352,11 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     }
   })),
   clearGuidelines: () => set({ guidelines: { horizontal: [], vertical: [] } }),
-  zoom: 1,
-  setZoom: (zoom) => set({ zoom: Math.max(0.1, Math.min(5, zoom)) }),
-  resetZoom: () => set({ zoom: 1 }),
+  zoom: 1.0,
+  setZoom: (z) => set({ zoom: Math.max(0.1, Math.min(5, z)) }),
+  resetZoom: () => set({ zoom: 1.0 }),
+  showSafeZones: false,
+  setShowSafeZones: (show) => set({ showSafeZones: show }),
   isProcessingBulkBG: false,
   setIsProcessingBulkBG: (processing: boolean) => set({ isProcessingBulkBG: processing }),
   bgProgress: { current: 0, total: 0 },
@@ -464,18 +375,18 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     message: '',
     type: 'info'
   },
-  showModal: (options) => set({ 
-    modal: { 
-      isOpen: true, 
-      type: 'info', 
-      ...options 
-    } 
+  showModal: (options) => set({
+    modal: {
+      isOpen: true,
+      type: 'info',
+      ...options
+    }
   }),
-  closeModal: () => set((state) => ({ 
-    modal: { ...state.modal, isOpen: false } 
+  closeModal: () => set((state) => ({
+    modal: { ...state.modal, isOpen: false }
   })),
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
-  
+
   members: (() => {
     const stored = localStorage.getItem('saved_id_members');
     if (stored) {
@@ -548,7 +459,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const currentMember = get().members.find(m => m.id === id);
     if (!currentMember) return;
     const mergedMember = { ...currentMember, ...updatedMember };
-    
+
     try {
       await updateRecord(id, mergedMember);
       set((state) => {
@@ -590,13 +501,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setIsGeneratingPreviews: (is) => set({ isGeneratingPreviews: is }),
   previewMemberId: null,
   setPreviewMemberId: (id) => set({ previewMemberId: id }),
-  
+
   setSide: (side: 'front' | 'back') => {
     set({ side });
   },
 
-  setConfig: (newConfig: Partial<CardConfig>) => set((state) => ({ 
-    config: { ...state.config, ...newConfig } 
+  setConfig: (newConfig: Partial<CardConfig>) => set((state) => ({
+    config: { ...state.config, ...newConfig }
   })),
 
   setSelectedObject: (obj: fabric.Object | null) => set({ selectedObject: obj }),
@@ -608,7 +519,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
     const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors', 'securityData', 'securityFormat', 'securityType', 'qrFields', 'securityHideText']);
     const jsonStr = JSON.stringify(json);
-    
+
     // Deduplicate history
     if (history.length > 0 && JSON.stringify(history[history.length - 1]) === jsonStr) return;
 
@@ -626,7 +537,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     else updates.backThumbnail = thumb;
 
     set(updates);
-    
+
     // Notify layers panel to refresh
     canvas.fire('object:modified');
   },
@@ -637,7 +548,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
     const currentState = history[history.length - 1];
     const prevState = history[history.length - 2];
-    
+
     canvas.loadFromJSON(prevState, () => {
       canvas.renderAll();
       const updates: any = {
@@ -655,7 +566,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     if (!canvas || redoStack.length === 0) return;
 
     const nextState = redoStack[redoStack.length - 1];
-    
+
     canvas.loadFromJSON(nextState, () => {
       canvas.renderAll();
       const updates: any = {
@@ -671,7 +582,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   deleteSelected: () => {
     const { canvas, selectedObject, saveState } = get();
     if (!canvas || !selectedObject) return;
-    
+
     const activeObjects = canvas.getActiveObjects();
     if (activeObjects.length > 0) {
       activeObjects.forEach(obj => canvas.remove(obj));
@@ -754,11 +665,11 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     if (!canvas) return;
     const activeObject = canvas.getActiveObject();
     if (!activeObject || activeObject.type !== 'activeSelection') return;
-    
+
     // Explicitly set origin to avoid shifts
     activeObject.set({ originX: 'left', originY: 'top' });
     (activeObject as fabric.ActiveSelection).toGroup();
-    
+
     canvas.requestRenderAll();
     saveState();
   },
@@ -766,11 +677,11 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   ungroupSelected: () => {
     const { canvas, selectedObject, saveState } = get();
     if (!canvas || !selectedObject || selectedObject.type !== 'group') return;
-    
+
     // Explicitly set origin to avoid shifts during ungroup
     selectedObject.set({ originX: 'left', originY: 'top' });
     (selectedObject as fabric.Group).toActiveSelection();
-    
+
     canvas.requestRenderAll();
     saveState();
   },
@@ -778,13 +689,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   centerObject: () => {
     const { canvas, selectedObject, saveState } = get();
     if (!canvas || !selectedObject) return;
-    
+
     // Set origins to center so it stays centered when text changes
     selectedObject.set({
       originX: 'center',
       originY: 'center'
     });
-    
+
     canvas.centerObject(selectedObject);
     selectedObject.setCoords();
     canvas.renderAll();
@@ -831,7 +742,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         originalMask.set({ visible: true, selectable: true });
       }
     }
-    selectedObject.set({ 
+    selectedObject.set({
       clipPath: undefined,
       // @ts-ignore
       isClipped: false,
@@ -952,10 +863,10 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     // 1. Temporarily hide all other objects and background to get a CLEAN capture
     const originalBG = canvas.backgroundColor;
     canvas.backgroundColor = 'rgba(0,0,0,0)';
-    
+
     const allObjects = canvas.getObjects();
     const otherObjects = allObjects.filter(obj => !objectsToMerge.includes(obj));
-    
+
     // Remember visibility to restore later
     const visibilityMap = new Map();
     otherObjects.forEach(obj => {
@@ -988,7 +899,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     // 5. Replace originals with the new image
     canvas.discardActiveObject();
     objectsToMerge.forEach(obj => canvas.remove(obj));
-    
+
     fabric.Image.fromURL(dataURL, (img) => {
       if (img) {
         img.set({
@@ -999,10 +910,10 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         });
         (img as any).id = Math.random().toString(36).substr(2, 9);
         (img as any).customName = 'Merged Layer';
-        
+
         canvas.add(img);
         canvas.setActiveObject(img);
-        
+
         set({ isHistoryPaused: false });
         canvas.renderAll();
         saveState();
@@ -1013,7 +924,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   downloadCanvas: () => {
     const { canvas, side, frontData, backData, config } = get();
     if (!canvas) return;
-    
+
     // Discard active object to clean up export
     canvas.discardActiveObject();
     canvas.renderAll();
@@ -1044,11 +955,11 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const tempCanvasElem = document.createElement('canvas');
       tempCanvasElem.width = width;
       tempCanvasElem.height = height;
-      
+
       const tempFabric = new fabric.StaticCanvas(tempCanvasElem, {
         width, height, backgroundColor: bgColor
       });
-      
+
       tempFabric.loadFromJSON(otherSideData, () => {
         if (config.slotPunch !== 'none') {
           const punch = new fabric.Rect({
@@ -1080,13 +991,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     };
 
     const [width, height] = design.config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
-    
+
     const runExport = (data: any, bgColor: string, isFront: boolean) => {
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = width;
       tempCanvas.height = height;
       const fabricCanvas = new fabric.StaticCanvas(tempCanvas, { width, height, backgroundColor: bgColor });
-      
+
       fabricCanvas.loadFromJSON(data, () => {
         if (design.config.slotPunch !== 'none') {
           const punch = new fabric.Rect({
@@ -1110,7 +1021,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
 
   savedDesigns: JSON.parse(localStorage.getItem('saved_id_designs') || '[]'),
-  
+
 
 
   syncLocalData: async () => {
@@ -1122,9 +1033,9 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       ]);
 
       if (templatesRes && templatesRes.data) {
-        const dbTemplates = templatesRes.data.map((r: any) => ({ 
-          ...r.design, 
-          id: r.id, 
+        const dbTemplates = templatesRes.data.map((r: any) => ({
+          ...r.design,
+          id: r.id,
           name: r.name,
           isGlobal: r.isGlobal ?? false,
           timestamp: r.updatedAt ?? r.createdAt ?? new Date().toISOString()
@@ -1149,23 +1060,23 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
     // 1. Capture current side thumbnail
     const currentThumb = canvas.toDataURL({ format: 'png', multiplier: 2.0 });
-    
+
     // 2. Generate other side thumbnail to ensure slot punch and background are correct
     const generateOtherThumb = () => {
       const otherData = side === 'front' ? backData : frontData;
       const otherBG = side === 'front' ? config.backgroundColorBack : config.backgroundColorFront;
-      
+
       if (!otherData) return currentThumb; // Fallback if no data yet
 
       const [w, h] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
       const tempCanvasElem = document.createElement('canvas');
       tempCanvasElem.width = w;
       tempCanvasElem.height = h;
-      
-      const tempFabric = new fabric.StaticCanvas(tempCanvasElem, { 
-        width: w, 
-        height: h, 
-        backgroundColor: otherBG 
+
+      const tempFabric = new fabric.StaticCanvas(tempCanvasElem, {
+        width: w,
+        height: h,
+        backgroundColor: otherBG
       });
 
       return new Promise<string>((resolve) => {
@@ -1193,7 +1104,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const runSave = async () => {
       const otherThumb = await generateOtherThumb();
       const isFront = side === 'front';
-      
+
       const currentData = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors', 'securityData', 'securityFormat', 'securityType', 'qrFields', 'securityHideText']);
       const fData = isFront ? currentData : frontData;
       const bData = !isFront ? currentData : backData;
@@ -1204,8 +1115,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       let designId: string = currentDesignId || '';
 
       if (currentDesignId) {
-        updatedDesigns = savedDesigns.map(d => 
-          d.id === currentDesignId 
+        updatedDesigns = savedDesigns.map(d =>
+          d.id === currentDesignId
             ? { ...d, front: fData, back: bData, config, thumbnailFront: fThumb, thumbnailBack: bThumb, timestamp: new Date().toISOString() }
             : d
         );
@@ -1224,16 +1135,16 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         updatedDesigns = [newDesign, ...savedDesigns];
       }
 
-      set({ 
-        savedDesigns: updatedDesigns, 
-        currentDesignId: designId, 
+      set({
+        savedDesigns: updatedDesigns,
+        currentDesignId: designId,
         activeTemplateId: designId,
         previewResults: [],
         frontThumbnail: fThumb,
         backThumbnail: bThumb
       });
       localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
-      
+
       get().showModal({
         title: 'Success',
         message: currentDesignId ? 'Design updated successfully!' : 'New design saved successfully!',
@@ -1317,7 +1228,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   newDesign: () => {
     const { canvas, saveState, showModal, config } = get();
     if (!canvas) return;
-    
+
     showModal({
       title: 'New Design',
       message: 'Are you sure you want to start a new design? All unsaved changes will be lost.',
@@ -1326,8 +1237,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         canvas.clear();
         const bgColor = config.backgroundColorFront;
         canvas.setBackgroundColor(bgColor, canvas.renderAll.bind(canvas));
-        set({ 
-          frontData: null, 
+        set({
+          frontData: null,
           backData: null,
           frontThumbnail: '',
           backThumbnail: '',

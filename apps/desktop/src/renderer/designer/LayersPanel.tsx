@@ -181,8 +181,12 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
   useEffect(() => {
     if (!canvas) return;
     const updateLayers = () => {
-      // Filter out system objects like the slot punch overlay
-      const objects = canvas.getObjects().filter((obj: any) => obj.name !== 'slot-punch-overlay');
+      // Filter out system objects like the slot punch overlay and safe zones
+      const objects = canvas.getObjects().filter((obj: any) => 
+        obj.name !== 'slot-punch-overlay' && 
+        obj.name !== 'safe-zone-overlay' &&
+        obj.name !== 'smart-guide'
+      );
       
       // Ensure objects have stable unique IDs for dnd-kit
       objects.forEach((obj: any) => {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { fabric } from 'fabric';
 import { useDesignerStore } from './store';
 import { 
   Type, 
@@ -13,7 +14,9 @@ import {
   AlignCenter,
   AlignRight,
   Bold,
-  Italic
+  Italic,
+  Sparkles,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const PropertiesPanel = () => {
@@ -24,7 +27,9 @@ const PropertiesPanel = () => {
     deleteSelected, 
     duplicateSelected,
     bringForward,
-    sendBackward 
+    sendBackward,
+    showModal,
+    closeModal 
   } = useDesignerStore();
   
   const [props, setProps] = useState<any>({});
@@ -46,6 +51,10 @@ const PropertiesPanel = () => {
           fontStyle: (selectedObject as any).fontStyle || 'normal',
           textAlign: (selectedObject as any).textAlign || 'left',
           lockMovementX: selectedObject.lockMovementX,
+          stroke: selectedObject.stroke || '#000000',
+          strokeWidth: selectedObject.strokeWidth || 0,
+          rx: (selectedObject as any).rx || 0,
+          ry: (selectedObject as any).ry || 0,
         });
       };
 
@@ -77,6 +86,26 @@ const PropertiesPanel = () => {
       selectedObject.set('scaleX', value / (selectedObject.width || 1));
     } else if (key === 'height') {
       selectedObject.set('scaleY', value / (selectedObject.height || 1));
+    } else if (key === 'rx' || key === 'ry' || key === 'cornerRadius') {
+      // Handle corner radius for both Rects and Images (via clipping)
+      const radius = parseInt(value);
+      if (selectedObject.type === 'rect') {
+        (selectedObject as any).set('rx', radius);
+        (selectedObject as any).set('ry', radius);
+      } else if (selectedObject.type === 'image' || (selectedObject as any).placeholder) {
+        // Clipping for images
+        const w = selectedObject.width || 0;
+        const h = selectedObject.height || 0;
+        selectedObject.set('clipPath', new fabric.Rect({
+          width: w,
+          height: h,
+          rx: radius,
+          ry: radius,
+          originX: 'center',
+          originY: 'center'
+        }));
+      }
+      setProps((prev: any) => ({ ...prev, rx: radius, ry: radius }));
     } else {
       selectedObject.set(key as any, value);
     }
@@ -138,10 +167,64 @@ const PropertiesPanel = () => {
         )}
 
         <section className="border-t border-stone-100 pt-6">
+          <h3 className="text-[10px] font-bold text-stone-900 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Sparkles size={12} /> Effects
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-1">
+                <label className="text-[10px] text-stone-900">Opacity</label>
+                <span className="text-[10px] font-bold">{Math.round(props.opacity * 100)}%</span>
+              </div>
+              <input 
+                type="range" min="0" max="1" step="0.01" 
+                value={props.opacity} 
+                onChange={(e) => updateSelected('opacity', parseFloat(e.target.value))} 
+                className="w-full h-1 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-green-500" 
+              />
+            </div>
+
+            {(selectedObject.type === 'rect' || selectedObject.type === 'image' || (selectedObject as any).placeholder) && (
+              <div>
+                <label className="text-[10px] text-stone-900 mb-1 block">Corner Radius</label>
+                <input 
+                  type="number" min="0" 
+                  value={props.rx || 0} 
+                  onChange={(e) => updateSelected('cornerRadius', e.target.value)} 
+                  className="w-full px-2 py-1.5 border border-stone-200 rounded text-xs" 
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-stone-900 mb-1 block">Border Width</label>
+                <input 
+                  type="number" min="0" 
+                  value={props.strokeWidth || 0} 
+                  onChange={(e) => updateSelected('strokeWidth', parseInt(e.target.value))} 
+                  className="w-full px-2 py-1.5 border border-stone-200 rounded text-xs" 
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-stone-900 mb-1 block">Border Color</label>
+                <input 
+                  type="color" 
+                  value={props.stroke || '#000000'} 
+                  onChange={(e) => updateSelected('stroke', e.target.value)} 
+                  className="w-full h-8 px-1 py-1 border border-stone-200 rounded cursor-pointer" 
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <section className="border-t border-stone-100 pt-6">
           <h3 className="text-[10px] font-bold text-stone-900 uppercase tracking-widest mb-3">Arrange</h3>
-          <div className="grid grid-cols-1 gap-2">
-            <button onClick={bringForward} className="px-3 py-2 border border-stone-200 rounded text-xs font-medium hover:bg-stone-50">Bring Forward</button>
-            <button onClick={sendBackward} className="px-3 py-2 border border-stone-200 rounded text-xs font-medium hover:bg-stone-50">Send Backward</button>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={bringForward} className="px-3 py-2 border border-stone-200 rounded text-[10px] font-bold hover:bg-stone-50 transition-colors">Bring Forward</button>
+            <button onClick={sendBackward} className="px-3 py-2 border border-stone-200 rounded text-[10px] font-bold hover:bg-stone-50 transition-colors">Send Backward</button>
           </div>
         </section>
       </div>

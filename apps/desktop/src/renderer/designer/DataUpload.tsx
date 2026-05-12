@@ -10,14 +10,17 @@ const initialFormState = {
   phone1: '', phone2: '', fax: '', email: '', website: '', country: '', postalCode: '',
   state: '', city: '', street1: '', street2: '', gradeLevel: '', securityLevel: '',
   height: '', weight: '', gender: '', eyeColor: '', hairColor: '', profileImage: '',
-  signature: '', fingerprint: '', divisionLogo: '', customImage: ''
+  signature: '', fingerprint: '', divisionLogo: '', customImage: '',
+  bloodGroup: '', parentName: '', parentPhone: '', emergencyContact: '', emergencyPhone: '',
+  rfidNo: '', busRoute: '', hostelName: '', roomNo: '', role: 'Student'
 };
 const STANDARD_FIELDS = [
   'First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Title', 'ID number',
   'Employee ID', 'Department', 'Hire Date', 'Issue Date', 'Expiration Date',
   'Phone 1', 'Fax', 'Email', 'Website', 'Country', 'Postal Code', 'State', 'City',
   'Street 1', 'Street 2', 'Grade Level', 'Security Level', 'Height', 'Weight',
-  'Gender', 'Eye color', 'Hair color'
+  'Gender', 'Eye color', 'Hair color', 'Blood Group', 'Parent Name', 'Parent Phone',
+  'Emergency Contact', 'Emergency Phone', 'RFID No', 'Bus Route', 'Hostel Name', 'Room No', 'Role'
 ];
 const STANDARD_IMAGE_FIELDS = ['Signature', 'Fingerprint', 'Division Logo'];
 
@@ -412,6 +415,7 @@ export const DataUpload = () => {
           if (
             (m.idNumber && m.idNumber.toLowerCase() === fileLower) ||
             (m.employeeId && m.employeeId.toLowerCase() === fileLower) ||
+            (m.rfidNo && m.rfidNo.toLowerCase() === fileLower) ||
             (fullName && fullName === fileLower) ||
             (fullName && fullName === fileLowerSpaces)
           ) {
@@ -449,7 +453,7 @@ export const DataUpload = () => {
 
     // Apply accumulated updates
     membersUpdates.forEach((update, id) => {
-      updateMember(id, update);
+      updateMember(id, update as any);
     });
 
     showModal({
@@ -512,9 +516,9 @@ export const DataUpload = () => {
     });
 
     if (editingMemberId) {
-      updateMember(editingMemberId, { ...formData, customFields: customFieldsRecord });
+      updateMember(editingMemberId, { ...formData, customFields: customFieldsRecord } as any);
     } else {
-      addMember({ ...formData, customFields: customFieldsRecord });
+      addMember({ ...formData, customFields: customFieldsRecord } as any);
     }
 
     setFormData(initialFormState);
@@ -1333,6 +1337,34 @@ export const DataUpload = () => {
                     <div className="grid grid-cols-2 gap-x-8 gap-y-6 mt-6">
                       <FormField label="Street 1" placeholder="Enter Street 1..." value={formData.street1} onChange={(v) => handleChange('street1', v)} />
                       <FormField label="Street 2" placeholder="Enter Street 2..." value={formData.street2} onChange={(v) => handleChange('street2', v)} />
+                    </div>
+                  </Section>
+
+                  {/* Specialized Identity Fields */}
+                  <Section title="Specialized Identity Fields">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                      <FormField label="Blood Group" placeholder="e.g. O+, AB-" value={formData.bloodGroup} onChange={(v) => handleChange('bloodGroup', v)} />
+                      <FormField label="RFID No" placeholder="Enter RFID Tag ID..." value={formData.rfidNo} onChange={(v) => handleChange('rfidNo', v)} />
+                      <FormField label="Parent Name" placeholder="Enter Parent Name..." value={formData.parentName} onChange={(v) => handleChange('parentName', v)} />
+                      <FormField label="Parent Phone" placeholder="Enter Parent Phone..." value={formData.parentPhone} onChange={(v) => handleChange('parentPhone', v)} />
+                      <FormField label="Emergency Contact" placeholder="Emergency Contact Name..." value={formData.emergencyContact} onChange={(v) => handleChange('emergencyContact', v)} />
+                      <FormField label="Emergency Phone" placeholder="Emergency Phone Number..." value={formData.emergencyPhone} onChange={(v) => handleChange('emergencyPhone', v)} />
+                      <FormField label="Bus Route" placeholder="Enter Bus Route/No..." value={formData.busRoute} onChange={(v) => handleChange('busRoute', v)} />
+                      <FormField label="Hostel Name" placeholder="Enter Hostel Name..." value={formData.hostelName} onChange={(v) => handleChange('hostelName', v)} />
+                      <FormField label="Room No" placeholder="Enter Room Number..." value={formData.roomNo} onChange={(v) => handleChange('roomNo', v)} />
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-gray-900 tracking-wide">Identity Role</label>
+                        <select
+                          value={formData.role}
+                          onChange={(e) => handleChange('role', e.target.value)}
+                          className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
+                        >
+                          <option value="Student">Student</option>
+                          <option value="Staff">Staff</option>
+                          <option value="Guest">Guest</option>
+                          <option value="Contractor">Contractor</option>
+                        </select>
+                      </div>
                     </div>
                   </Section>
 

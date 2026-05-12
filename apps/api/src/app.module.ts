@@ -14,6 +14,7 @@ import { StorageModule } from "./storage/storage.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { UsersModule } from "./users/users.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
+import { AIModule } from "./ai/ai.module";
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     GenerationModule,
     BgRemovalModule,
     ExportsModule,
-    BillingModule
+    BillingModule,
+    AIModule
   ],
   controllers: [HealthController]
 })
