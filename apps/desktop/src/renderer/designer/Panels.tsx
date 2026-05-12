@@ -822,7 +822,31 @@ export const CustomizePanel = () => {
     }
   }, [selectedObject]);
 
-  if (!selectedObject) return <div className="text-center text-gray-900 mt-10">Select an element to customize</div>;
+  if (!selectedObject) return (
+    <div className="flex flex-col items-center justify-center h-full pb-10 text-center px-6">
+      <div className="w-20 h-20 rounded-3xl bg-gray-50 flex items-center justify-center mb-5 border-2 border-dashed border-gray-200">
+        <SlidersHorizontal size={32} className="text-gray-300" />
+      </div>
+      <h3 className="text-sm font-black text-gray-700 mb-2">No Element Selected</h3>
+      <p className="text-xs text-gray-400 font-medium leading-relaxed">
+        Click any element on the canvas to select it, then edit its properties here.
+      </p>
+      <div className="mt-6 flex flex-col gap-2 w-full">
+        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 text-left">
+          <div className="w-5 h-5 rounded bg-blue-100 flex items-center justify-center shrink-0">
+            <Type size={10} className="text-blue-500" />
+          </div>
+          <span className="text-[10px] text-gray-500 font-medium">Add text from the Text panel</span>
+        </div>
+        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 text-left">
+          <div className="w-5 h-5 rounded bg-green-100 flex items-center justify-center shrink-0">
+            <ImageIcon size={10} className="text-green-500" />
+          </div>
+          <span className="text-[10px] text-gray-500 font-medium">Add images from the Images panel</span>
+        </div>
+      </div>
+    </div>
+  );
 
   const updateSelected = (key: string, val: any) => {
     if (!selectedObject || !canvas) return;

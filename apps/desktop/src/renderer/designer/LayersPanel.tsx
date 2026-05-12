@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDesignerStore } from './store';
 import { fabric } from 'fabric';
 import { 
@@ -19,7 +19,9 @@ import {
   ChevronsDown,
   Triangle,
   Minus,
-  GripVertical
+  GripVertical,
+  Undo2,
+  Redo2
 } from 'lucide-react';
 
 import {
@@ -47,9 +49,10 @@ interface SortableItemProps {
   onToggleVisibility: (e: React.MouseEvent) => void;
   onToggleLock: (e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent) => void;
+  onRename: (id: string, name: string) => void;
 }
 
-const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onToggleLock, onContextMenu }: SortableItemProps) => {
+const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onToggleLock, onContextMenu, onRename }: SortableItemProps) => {
   const {
     attributes,
     listeners,
@@ -58,6 +61,10 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
     transition,
     isDragging
   } = useSortable({ id: obj.id || obj.cacheKey || Math.random().toString() });
+
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const renameRef = useRef<HTMLInputElement>(null);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -87,6 +94,19 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
     if (obj.placeholder) return obj.placeholder.replace('{{', '').replace('}}', '').toUpperCase();
     if (obj.type === 'i-text') return obj.text?.substring(0, 20) || 'Text Layer';
     return obj.type.charAt(0).toUpperCase() + obj.type.slice(1);
+  };
+
+  const startRename = () => {
+    setRenameValue(obj.customName || getLayerName(obj));
+    setIsRenaming(true);
+    setTimeout(() => renameRef.current?.select(), 50);
+  };
+
+  const commitRename = () => {
+    if (renameValue.trim()) {
+      onRename(obj.id, renameValue.trim());
+    }
+    setIsRenaming(false);
   };
 
   // @ts-ignore
@@ -143,11 +163,33 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       </div>
       
       <div className="flex-1 min-w-0">
-        <p className={`text-[11px] font-bold truncate ${
-          isSelected ? 'text-white' : 'text-gray-900'
-        }`}>
-          {getLayerName(obj)}
-        </p>
+        {isRenaming ? (
+          <input
+            ref={renameRef}
+            autoFocus
+            type="text"
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitRename();
+              if (e.key === 'Escape') setIsRenaming(false);
+              e.stopPropagation();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full text-[11px] font-bold bg-white text-gray-900 border border-blue-400 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        ) : (
+          <p
+            className={`text-[11px] font-bold truncate ${
+              isSelected ? 'text-white' : 'text-gray-900'
+            }`}
+            onDoubleClick={(e) => { e.stopPropagation(); startRename(); }}
+            title="Double-click to rename"
+          >
+            {getLayerName(obj)}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -169,7 +211,12 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
     sendBackward,
     bringToFront,
     sendToBack,
-    mergeSelected
+    mergeSelected,
+    renameLayer,
+    history,
+    redoStack,
+    undo,
+    redo
   } = useDesignerStore();
   const [layers, setLayers] = useState<any[]>([]);
 
@@ -200,7 +247,8 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
     updateLayers();
     canvas.on('object:added', updateLayers);
     canvas.on('object:removed', updateLayers);
-    canvas.on('object:modified', updateLayers);
+    // Listen to our custom refresh event (not object:modified) to avoid feedback loop
+    canvas.on('layers:refresh' as any, updateLayers);
     canvas.on('selection:created', updateLayers);
     canvas.on('selection:cleared', updateLayers);
     canvas.on('selection:updated', updateLayers);
@@ -208,7 +256,7 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
     return () => {
       canvas.off('object:added', updateLayers);
       canvas.off('object:removed', updateLayers);
-      canvas.off('object:modified', updateLayers);
+      canvas.off('layers:refresh' as any, updateLayers);
       canvas.off('selection:created', updateLayers);
       canvas.off('selection:cleared', updateLayers);
       canvas.off('selection:updated', updateLayers);
@@ -352,6 +400,7 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
                     onToggleVisibility={(e) => toggleVisibility(e, obj)}
                     onToggleLock={(e) => toggleLock(e, obj)}
                     onContextMenu={(e) => handleContextMenu(e, obj)}
+                    onRename={(id, name) => renameLayer(id, name)}
                   />
                 ))}
               </div>
@@ -361,14 +410,38 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
       </div>
 
       {/* Footer Actions */}
-      <div className="p-2 border-t border-gray-100 bg-gray-50/50 grid grid-cols-6 gap-1">
-        <button onClick={sendToBack} disabled={!selectedObject} title="Send to Back" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronsDown size={16} /></button>
-        <button onClick={sendBackward} disabled={!selectedObject} title="Send Backward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronDown size={16} /></button>
-        <button onClick={bringForward} disabled={!selectedObject} title="Bring Forward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronUp size={16} /></button>
-        <button onClick={bringToFront} disabled={!selectedObject} title="Bring to Front" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><ChevronsUp size={16} /></button>
-        <button onClick={duplicateSelected} disabled={!selectedObject} title="Duplicate Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><Copy size={14} /></button>
-        <button onClick={mergeSelected} disabled={!canvas || canvas.getActiveObjects().length <= 1} title="Merge Layers (Flatten)" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-gray-900 disabled:opacity-20 transition-all"><Layers size={14} /></button>
-        <button onClick={deleteSelected} disabled={!selectedObject} title="Delete Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white  text-red-500 disabled:opacity-20 transition-all"><Trash2 size={14} /></button>
+      <div className="p-2 border-t border-gray-100 bg-gray-50/50">
+        {/* Undo/Redo row */}
+        <div className="flex items-center gap-1 mb-1.5 pb-1.5 border-b border-gray-100">
+          <button
+            onClick={undo}
+            disabled={history.length <= 1}
+            title={`Undo (${Math.max(0, history.length - 1)} steps)`}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all text-[10px] font-bold"
+          >
+            <Undo2 size={13} />
+            {history.length > 1 && <span className="text-[9px] bg-gray-200 rounded px-1">{history.length - 1}</span>}
+          </button>
+          <button
+            onClick={redo}
+            disabled={redoStack.length === 0}
+            title={`Redo (${redoStack.length} steps)`}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all text-[10px] font-bold"
+          >
+            <Redo2 size={13} />
+            {redoStack.length > 0 && <span className="text-[9px] bg-gray-200 rounded px-1">{redoStack.length}</span>}
+          </button>
+        </div>
+        {/* Layer ordering & management row */}
+        <div className="grid grid-cols-6 gap-1">
+          <button onClick={sendToBack} disabled={!selectedObject} title="Send to Back" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all"><ChevronsDown size={16} /></button>
+          <button onClick={sendBackward} disabled={!selectedObject} title="Send Backward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all"><ChevronDown size={16} /></button>
+          <button onClick={bringForward} disabled={!selectedObject} title="Bring Forward" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all"><ChevronUp size={16} /></button>
+          <button onClick={bringToFront} disabled={!selectedObject} title="Bring to Front" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all"><ChevronsUp size={16} /></button>
+          <button onClick={duplicateSelected} disabled={!selectedObject} title="Duplicate Layer" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all"><Copy size={14} /></button>
+          <button onClick={mergeSelected} disabled={!canvas || canvas.getActiveObjects().length <= 1} title="Merge Layers (Flatten)" className="p-1.5 flex items-center justify-center rounded-lg hover:bg-white text-gray-900 disabled:opacity-20 transition-all"><Layers size={14} /></button>
+          <button onClick={deleteSelected} disabled={!selectedObject} title="Delete Layer" className="p-1.5 col-span-6 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400 disabled:opacity-20 transition-all gap-1.5 text-[10px] font-bold"><Trash2 size={13} /> Delete Selected</button>
+        </div>
       </div>
     </div>
   );

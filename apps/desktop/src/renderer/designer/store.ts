@@ -251,8 +251,14 @@ interface DesignerState {
     message: string;
     type: 'info' | 'confirm' | 'error';
     onConfirm?: () => void;
+    // Input modal extensions
+    hasInput?: boolean;
+    defaultValue?: string;
+    placeholder?: string;
+    onConfirmWithValue?: (value: string) => void;
   };
   showModal: (options: { title: string; message: string; type?: 'info' | 'confirm' | 'error'; onConfirm?: () => void }) => void;
+  showInputModal: (options: { title: string; message: string; defaultValue?: string; placeholder?: string; onConfirmWithValue: (value: string) => void }) => void;
   closeModal: () => void;
   organizationType: 'corporate' | 'education' | 'healthcare';
   setOrganizationType: (type: 'corporate' | 'education' | 'healthcare') => void;
@@ -379,7 +385,20 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     modal: {
       isOpen: true,
       type: 'info',
+      hasInput: false,
       ...options
+    }
+  }),
+  showInputModal: (options) => set({
+    modal: {
+      isOpen: true,
+      type: 'info',
+      message: options.message,
+      title: options.title,
+      hasInput: true,
+      defaultValue: options.defaultValue || '',
+      placeholder: options.placeholder || '',
+      onConfirmWithValue: options.onConfirmWithValue,
     }
   }),
   closeModal: () => set((state) => ({
@@ -538,8 +557,9 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
     set(updates);
 
-    // Notify layers panel to refresh
-    canvas.fire('object:modified');
+    // Notify layers panel to refresh using a custom event to avoid the
+    // object:modified → saveState() feedback loop
+    canvas.fire('layers:refresh');
   },
 
   undo: () => {
@@ -783,15 +803,14 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const activeObject = canvas.getActiveObject();
     if (!activeObject) return;
     activeObject.clone((cloned: any) => {
-      // @ts-ignore
-      window._clipboard = cloned;
+      // Unified clipboard key — also used by Canvas.tsx keyboard handler
+      (window as any)._clipboard = cloned;
     });
   },
 
   pasteObject: () => {
     const { canvas, saveState } = get();
-    // @ts-ignore
-    const clipboard = window._clipboard;
+    const clipboard = (window as any)._clipboard;
     if (!canvas || !clipboard) return;
     clipboard.clone((clonedObj: any) => {
       canvas.discardActiveObject();
@@ -821,7 +840,14 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const { canvas } = get();
     if (!canvas) return;
     canvas.discardActiveObject();
-    const sel = new fabric.ActiveSelection(canvas.getObjects(), {
+    // Filter out system objects so they can't be accidentally moved/deleted
+    const selectableObjects = canvas.getObjects().filter((obj: any) =>
+      obj.name !== 'slot-punch-overlay' &&
+      obj.name !== 'safe-zone-overlay' &&
+      obj.name !== 'smart-guide'
+    );
+    if (selectableObjects.length === 0) return;
+    const sel = new fabric.ActiveSelection(selectableObjects, {
       canvas: canvas,
     });
     canvas.setActiveObject(sel);

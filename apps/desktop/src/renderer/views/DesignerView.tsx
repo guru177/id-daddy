@@ -27,7 +27,11 @@ import {
   Star,
   Search,
   ChevronDown,
-  Check
+  Check,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  CheckCircle
 } from 'lucide-react';
 
 const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }: any) => {
@@ -192,13 +196,25 @@ export function DesignerView() {
     addGuideline,
     updateGuideline,
     removeGuideline,
-    zoom
+    zoom,
+    setZoom,
+    resetZoom
   } = useDesignerStore();
 
   // Sync templates from DB whenever the designer view opens
   useEffect(() => {
     void loadTemplatesFromDb();
   }, []);
+
+  // Save indicator state
+  const [savedIndicator, setSavedIndicator] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleSave = async () => {
+    setSavedIndicator('saving');
+    await saveDesign();
+    setSavedIndicator('saved');
+    setTimeout(() => setSavedIndicator('idle'), 2000);
+  };
 
   // True when the user has made changes that haven't been saved yet.
   // history[0] is the initial blank state; anything beyond that is a real edit.
@@ -416,15 +432,19 @@ export function DesignerView() {
 
   // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Single unified return ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tab bar always visible ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   return (
-    <div className="flex flex-col h-full bg-stone-100 overflow-hidden font-sans text-gray-900">
+    <div className="flex flex-col h-full bg-[#fdfaf5] overflow-hidden font-sans text-[#2c3e50]">
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared Tab Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
-      <header className="h-[73px] bg-green-50/50 border-b border-stone-200 flex items-center justify-center gap-10 px-4 shrink-0 z-20">
+      <header className="h-[73px] bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex items-center justify-center gap-10 px-4 shrink-0 z-20">
         {navItems.map(item => (
           <button
             key={item}
             onClick={() => setActiveTab(item)}
-            className={`text-[11px] uppercase tracking-wide font-black h-full border-b-[3px] px-2 transition-all pt-[3px] ${activeTab === item ? 'border-[#34a853] text-[#34a853]' : 'border-transparent text-gray-900 hover:text-gray-900'}`}
+            className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] ${
+              activeTab === item 
+                ? 'border-[#1a5d1a] text-[#1a5d1a]' 
+                : 'border-transparent text-[#2c3e50]/60 hover:text-[#1a5d1a]'
+            }`}
           >
             {item}
           </button>
@@ -452,7 +472,7 @@ export function DesignerView() {
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ My Designs Tab ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       {activeTab === 'My Designs' && (
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-stone-50">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fdfaf5]">
           <MyDesigns />
         </div>
       )}
@@ -461,13 +481,13 @@ export function DesignerView() {
       <div style={{ display: activeTab === 'Card Designer' ? 'flex' : 'none' }} className="flex-col flex-1 min-h-0">
 
         {/* Utility Toolbar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â only visible on Card Designer tab */}
-        <div className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-6 z-50 shrink-0 relative">
+        <div className="h-12 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex items-center justify-between px-6 z-50 shrink-0 relative backdrop-blur-sm">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <button onClick={undo} disabled={history.length <= 1} className="p-1.5 hover:bg-gray-50 text-gray-900 disabled:opacity-20 transition-all">
+              <button onClick={undo} disabled={history.length <= 1} className="p-1.5 rounded-lg hover:bg-[#e8d5c4]/50 text-[#2c3e50] disabled:opacity-20 transition-all">
                 <Undo2 size={16} />
               </button>
-              <button onClick={redo} disabled={redoStack.length === 0} className="p-1.5 hover:bg-gray-50 text-gray-900 disabled:opacity-20 transition-all">
+              <button onClick={redo} disabled={redoStack.length === 0} className="p-1.5 rounded-lg hover:bg-[#e8d5c4]/50 text-[#2c3e50] disabled:opacity-20 transition-all">
                 <Redo2 size={16} />
               </button>
             </div>
@@ -478,21 +498,31 @@ export function DesignerView() {
               setPreviewMemberId={setPreviewMemberId}
               canvas={canvas}
             />
-            <div className="h-6 w-px bg-gray-100" />
-            <div className="flex items-center gap-4 text-gray-900">
-              <button onClick={() => setShowGrid(!showGrid)} className={`transition-all ${showGrid ? 'text-green-600' : 'hover:text-green-600'}`}>
+            <div className="h-6 w-px bg-[#e8d5c4]" />
+            <div className="flex items-center gap-4 text-[#2c3e50]/70">
+              <button onClick={() => setShowGrid(!showGrid)} className={`transition-all ${showGrid ? 'text-[#1a5d1a]' : 'hover:text-[#1a5d1a]'}`}>
                 <Grid3X3 size={18} />
               </button>
-              <button onClick={downloadCanvas} className="hover:text-green-600 transition-all"><Download size={18} /></button>
-              <button onClick={newDesign} className="hover:text-green-600 transition-all"><Plus size={18} /></button>
+              <button onClick={downloadCanvas} className="hover:text-[#1a5d1a] transition-all"><Download size={18} /></button>
+              <button onClick={newDesign} className="hover:text-[#1a5d1a] transition-all"><Plus size={18} /></button>
             </div>
           </div>
           <button
-            onClick={saveDesign}
-            className="flex items-center gap-2 px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg  transition-all active:scale-95"
+            onClick={handleSave}
+            disabled={savedIndicator === 'saving'}
+            className={`flex items-center gap-2 px-6 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${
+              savedIndicator === 'saved'
+                ? 'bg-green-50 text-green-600 border border-green-200'
+                : 'bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-200'
+            }`}
           >
-            <Save size={14} />
-            Save
+            {savedIndicator === 'saved' ? (
+              <><CheckCircle size={14} /> Saved!</>
+            ) : savedIndicator === 'saving' ? (
+              <><Save size={14} className="animate-bounce" /> Saving...</>
+            ) : (
+              <><Save size={14} /> Save</>
+            )}
           </button>
         </div>
 
@@ -502,7 +532,7 @@ export function DesignerView() {
           <Toolbar />
 
           {/* Canvas Workspace Wrapper */}
-          <div className="flex-1 relative flex bg-stone-100 min-h-0">
+          <div className="flex-1 relative flex bg-[#f0ebe4] min-h-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #d4c4b0 1px, transparent 0)', backgroundSize: '24px 24px' }}>
             {/* Canvas Workspace */}
             <div
               ref={workspaceRef}
@@ -517,7 +547,7 @@ export function DesignerView() {
             <div className="absolute top-5 left-0 bottom-0 w-5 z-30">
               <Ruler type="vertical" size={workspaceRef.current?.clientHeight || 2000} scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} offset={workspaceOffset.y - 25} onStartDrag={startGuidelineDrag} />
             </div>
-            <div className="absolute top-0 left-0 w-5 h-5 bg-stone-100 border-r border-b border-stone-300 z-40" />
+            <div className="absolute top-0 left-0 w-5 h-5 bg-[#e8ddd4] border-r border-b border-[#d4c4b0] z-40" />
 
             {/* Card */}
             <div
@@ -564,11 +594,19 @@ export function DesignerView() {
             </div>
 
             {/* Front / Back Toggle on Center Right Edge */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md p-2 rounded-l-2xl border-l border-y border-stone-200  flex flex-col gap-2 z-50 pointer-events-auto">
-              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front' ? 'bg-green-500 text-white  scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#f5ece2]/95 backdrop-blur-md p-2 rounded-l-2xl border-l border-y border-[#e8d5c4] flex flex-col gap-2 z-50 pointer-events-auto">
+              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${
+                side === 'front' 
+                  ? 'bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] text-white scale-105 shadow-lg shadow-green-900/20' 
+                  : 'text-[#2c3e50] hover:bg-[#e8d5c4]/50'
+              }`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Front</span>
               </button>
-              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'back' ? 'bg-green-500 text-white  scale-105' : 'text-gray-900 hover:bg-gray-100'}`}>
+              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${
+                side === 'back' 
+                  ? 'bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] text-white scale-105 shadow-lg shadow-green-900/20' 
+                  : 'text-[#2c3e50] hover:bg-[#e8d5c4]/50'
+              }`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Back</span>
               </button>
             </div>

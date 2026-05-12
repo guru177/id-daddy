@@ -42,7 +42,21 @@ export function LoginView() {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#fdfaf5] relative font-medium">
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-[#fdfaf5] relative font-medium">
+      {/* Title Bar Drag Area */}
+      <div 
+        className="w-full h-8 shrink-0 flex items-center px-4 z-[9999]" 
+        style={{ WebkitAppRegion: "drag", WebkitUserSelect: "none" } as any}
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center shadow-sm">
+            <span className="text-white font-black text-[8px]">ID</span>
+          </div>
+          <span className="text-xs font-bold text-[#1a5d1a]">ID Daddy Desktop</span>
+        </div>
+      </div>
+
+      <div className="flex flex-1 min-h-0 relative">
       {/* Forgot Password Notification Overlay */}
       {showForgotHint && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/5 backdrop-blur-[2px] animate-in fade-in duration-300">
@@ -193,6 +207,7 @@ export function LoginView() {
             </p>
           </footer>
         </div>
+      </div>
       </div>
     </div>
   );

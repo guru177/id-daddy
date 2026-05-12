@@ -21,9 +21,15 @@ import {
   Group,
   Ungroup,
   AlignCenter,
+  AlignLeft,
+  AlignRight,
+  AlignStartVertical,
+  AlignCenterVertical,
+  AlignEndVertical,
   Palette,
   Settings2,
-  Edit3
+  Edit3,
+  LayoutGrid
 } from 'lucide-react';
 
 interface ContextMenuProps {
@@ -55,27 +61,36 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
     pasteStyle,
     renameLayer,
     mergeSelected,
-    saveState
+    saveState,
+    showModal,
+    showInputModal,
   } = useDesignerStore();
 
   useLayoutEffect(() => {
     if (menuRef.current) {
       const rect = menuRef.current.getBoundingClientRect();
       const padding = 12;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // Natural position
       let newX = x;
       let newY = y;
 
-      // Adjust X position
-      if (x + rect.width > window.innerWidth) {
-        newX = window.innerWidth - rect.width - padding;
-      }
-      
-      // Adjust Y position
-      if (y + rect.height > window.innerHeight) {
-        newY = window.innerHeight - rect.height - padding;
+      // Clamp X — if it overflows right, flip to left of cursor
+      if (newX + rect.width > vw - padding) {
+        newX = Math.max(padding, vw - rect.width - padding);
       }
 
-      // Final boundary check
+      // Clamp Y — if the menu bottom exceeds viewport, push up.
+      // The menu's rendered height may be taller than the viewport;
+      // in that case pin to top with padding (scroll handles the rest).
+      const menuH = Math.min(rect.height, vh - padding * 2);
+      if (newY + menuH > vh - padding) {
+        newY = Math.max(padding, vh - menuH - padding);
+      }
+
+      // Final safety clamp
       newX = Math.max(padding, newX);
       newY = Math.max(padding, newY);
 
@@ -92,11 +107,45 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
   };
 
   const isGroup = selectedObject.type === 'group';
+  const isMultiSelect = canvas && canvas.getActiveObjects().length > 1;
   // @ts-ignore
   const isClipped = selectedObject.isClipped;
   const canClip = canvas && canvas.getObjects().indexOf(selectedObject) > 0;
 
-  const MenuItem = ({ icon, label, onClick, disabled = false, danger = false }: any) => (
+  // Alignment helpers (relative to canvas center)
+  const alignObject = (alignType: string) => {
+    if (!canvas || !selectedObject) return;
+    const cw = canvas.width!;
+    const ch = canvas.height!;
+    const obj = selectedObject;
+
+    switch (alignType) {
+      case 'left':
+        obj.set({ left: 0, originX: 'left' });
+        break;
+      case 'center-h':
+        obj.set({ left: cw / 2, originX: 'center' });
+        break;
+      case 'right':
+        obj.set({ left: cw, originX: 'right' });
+        break;
+      case 'top':
+        obj.set({ top: 0, originY: 'top' });
+        break;
+      case 'center-v':
+        obj.set({ top: ch / 2, originY: 'center' });
+        break;
+      case 'bottom':
+        obj.set({ top: ch, originY: 'bottom' });
+        break;
+    }
+
+    obj.setCoords();
+    canvas.renderAll();
+    saveState();
+  };
+
+  const MenuItem = ({ icon, label, onClick, disabled = false, danger = false, shortcut }: any) => (
     <button
       onClick={() => !disabled && handleAction(onClick)}
       disabled={disabled}
@@ -107,10 +156,16 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
     >
       <div className="shrink-0">{icon}</div>
       <span className="flex-1 text-left">{label}</span>
+      {shortcut && <span className="text-[9px] text-gray-400 font-normal">{shortcut}</span>}
     </button>
   );
 
   const Separator = () => <div className="my-1 border-t border-gray-100" />;
+  const SectionLabel = ({ label }: { label: string }) => (
+    <div className="px-4 pt-2 pb-0.5">
+      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+    </div>
+  );
 
   return (
     <>
@@ -121,22 +176,23 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
       />
       <div 
         ref={menuRef}
-        className={`fixed z-[101] w-56 bg-white rounded-xl  border border-gray-100 py-1.5 transition-opacity duration-75 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-        style={{ left: pos.left, top: pos.top }}
+        className={`fixed z-[101] w-60 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 transition-opacity duration-75 overflow-y-auto custom-scrollbar ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        style={{ left: pos.left, top: pos.top, maxHeight: 'calc(100vh - 24px)' }}
       >
         {/* Group 1: Basic Management */}
-        <MenuItem icon={<Edit3 size={14} />} label="Rename Layer" onClick={() => {
-          const name = prompt('Enter new layer name:', (selectedObject as any).customName || '');
-          if (name) renameLayer((selectedObject as any).id, name);
+        <SectionLabel label="Layer" />
+        <MenuItem icon={<Edit3 size={14} />} label="Rename Layer" shortcut="Dbl-click" onClick={() => {
+          showInputModal({
+            title: 'Rename Layer',
+            message: 'Enter a new name for this layer.',
+            defaultValue: (selectedObject as any).customName || '',
+            placeholder: 'Layer name...',
+            onConfirmWithValue: (name) => {
+              if (name.trim()) renameLayer((selectedObject as any).id, name.trim());
+            }
+          });
         }} />
-        <MenuItem icon={<Copy size={14} />} label="Duplicate Layer" onClick={duplicateSelected} />
-        <MenuItem icon={<Trash2 size={14} />} label="Delete Layer" onClick={() => {
-          if ((selectedObject as any).placeholder) {
-            if (confirm('This layer is linked to a database field. Are you sure you want to delete it?')) deleteSelected();
-          } else {
-            deleteSelected();
-          }
-        }} danger />
+        <MenuItem icon={<Copy size={14} />} label="Duplicate Layer" shortcut="Ctrl+D" onClick={duplicateSelected} />
         <MenuItem 
           icon={selectedObject.visible ? <EyeOff size={14} /> : <Eye size={14} />} 
           label={selectedObject.visible ? 'Hide Layer' : 'Show Layer'} 
@@ -153,18 +209,57 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
             saveState(); 
           }} 
         />
+        <MenuItem icon={<Trash2 size={14} />} label="Delete Layer" shortcut="Del" onClick={() => {
+          if ((selectedObject as any).placeholder) {
+            showModal({
+              title: 'Delete Variable Layer',
+              message: 'This layer is linked to a database field. Are you sure you want to delete it?',
+              type: 'confirm',
+              onConfirm: () => deleteSelected()
+            });
+          } else {
+            deleteSelected();
+          }
+        }} danger />
 
         <Separator />
 
         {/* Group 2: Z-Order */}
-        <MenuItem icon={<ChevronsUp size={14} />} label="Bring to Front" onClick={bringToFront} />
-        <MenuItem icon={<ChevronUp size={14} />} label="Bring Forward" onClick={bringForward} />
-        <MenuItem icon={<ChevronDown size={14} />} label="Send Backward" onClick={sendBackward} />
-        <MenuItem icon={<ChevronsDown size={14} />} label="Send to Back" onClick={sendToBack} />
+        <SectionLabel label="Arrange" />
+        <MenuItem icon={<ChevronsUp size={14} />} label="Bring to Front" shortcut="Ctrl+Shift+]" onClick={bringToFront} />
+        <MenuItem icon={<ChevronUp size={14} />} label="Bring Forward" shortcut="Ctrl+]" onClick={bringForward} />
+        <MenuItem icon={<ChevronDown size={14} />} label="Send Backward" shortcut="Ctrl+[" onClick={sendBackward} />
+        <MenuItem icon={<ChevronsDown size={14} />} label="Send to Back" shortcut="Ctrl+Shift+[" onClick={sendToBack} />
 
         <Separator />
 
-        {/* Group 3: Masking */}
+        {/* Group 3: Alignment */}
+        <SectionLabel label="Align on Card" />
+        <div className="flex items-center justify-between px-3 py-1.5 gap-1">
+          {[
+            { title: 'Align Left', icon: <AlignLeft size={14} />, align: 'left' },
+            { title: 'Center Horizontally', icon: <AlignCenter size={14} />, align: 'center-h' },
+            { title: 'Align Right', icon: <AlignRight size={14} />, align: 'right' },
+            { title: 'Align Top', icon: <AlignStartVertical size={14} />, align: 'top' },
+            { title: 'Center Vertically', icon: <AlignCenterVertical size={14} />, align: 'center-v' },
+            { title: 'Align Bottom', icon: <AlignEndVertical size={14} />, align: 'bottom' },
+          ].map(({ title, icon, align }) => (
+            <button
+              key={align}
+              title={title}
+              onClick={() => handleAction(() => alignObject(align))}
+              className="flex-1 p-1.5 flex items-center justify-center rounded hover:bg-blue-50 hover:text-blue-600 text-gray-600 transition-colors"
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
+        <MenuItem icon={<LayoutGrid size={14} />} label="Center on Card" onClick={centerObject} />
+
+        <Separator />
+
+        {/* Group 4: Masking */}
+        <SectionLabel label="Masking" />
         <MenuItem 
           icon={<Scissors size={14} />} 
           label="Create Clipping Mask" 
@@ -180,9 +275,9 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
 
         <Separator />
 
-        {/* Group 4: ID Specific */}
-        <MenuItem icon={<Link2 size={14} />} label="Link to Database Field..." onClick={() => alert('Linking functionality will be available after database integration.')} />
-        <MenuItem icon={<ImageIcon size={14} />} label="Convert to Photo Placeholder" onClick={() => {
+        {/* Group 5: ID Specific */}
+        <SectionLabel label="Variable Data" />
+        <MenuItem icon={<ImageIcon size={14} />} label="Set as Photo Placeholder" onClick={() => {
           (selectedObject as any).variableType = 'image';
           (selectedObject as any).placeholder = '{{photo}}';
           canvas?.renderAll();
@@ -194,14 +289,14 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
           saveState();
         }} />
         
-        {/* Security Submenu Placeholder */}
+        {/* Security Submenu */}
         <div className="relative group/sub">
           <button className="w-full flex items-center gap-3 px-4 py-2 text-[11px] font-bold text-gray-900 hover:bg-blue-50 hover:text-blue-600 transition-colors">
             <ShieldAlert size={14} />
             <span className="flex-1 text-left">Set as Security Layer</span>
             <ChevronUp size={12} className="rotate-90 opacity-40" />
           </button>
-          <div className="hidden group-hover/sub:block absolute left-full top-0 w-48 bg-white rounded-xl  border border-gray-100 py-1.5 -ml-1">
+          <div className="hidden group-hover/sub:block absolute left-full top-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 -ml-1">
              <MenuItem label="UV Fluorescent" onClick={() => {}} />
              <MenuItem label="Holographic Overlay" onClick={() => {}} />
              <MenuItem label="Non-Printing Guide" onClick={() => {}} />
@@ -210,18 +305,18 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
 
         <Separator />
 
-        {/* Group 5: Grouping & Alignment */}
-        <MenuItem icon={<Group size={14} />} label="Group Layers" onClick={groupSelected} disabled={canvas && canvas.getActiveObjects().length <= 1} />
-        <MenuItem icon={<Layers size={14} />} label="Merge Layers (Flatten)" onClick={mergeSelected} disabled={canvas && canvas.getActiveObjects().length <= 1} />
+        {/* Group 6: Grouping */}
+        <SectionLabel label="Group" />
+        <MenuItem icon={<Group size={14} />} label="Group Layers" shortcut="Ctrl+G" onClick={groupSelected} disabled={!isMultiSelect} />
+        <MenuItem icon={<Layers size={14} />} label="Merge Layers (Flatten)" onClick={mergeSelected} disabled={!isMultiSelect} />
         <MenuItem icon={<Ungroup size={14} />} label="Ungroup Layers" onClick={ungroupSelected} disabled={!isGroup} />
-        <MenuItem icon={<AlignCenter size={14} />} label="Center on Card" onClick={centerObject} />
 
         <Separator />
 
-        {/* Group 6: Style */}
+        {/* Group 7: Style */}
+        <SectionLabel label="Style" />
         <MenuItem icon={<Copy size={14} />} label="Copy Style" onClick={copyStyle} />
         <MenuItem icon={<Palette size={14} />} label="Paste Style" onClick={pasteStyle} disabled={!(window as any)._copiedStyle} />
-        <MenuItem icon={<Settings2 size={14} />} label="Layer Properties..." onClick={() => {}} />
       </div>
     </>
   );

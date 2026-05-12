@@ -173,8 +173,35 @@ const Canvas = () => {
         clearSmartGuides();
         saveState();
       });
-      fabricCanvas.on('object:added', () => saveState());
-      fabricCanvas.on('object:removed', () => saveState());
+      // layers:refresh is fired by saveState() to avoid the
+      // object:modified → saveState() feedback loop
+      fabricCanvas.on('layers:refresh' as any, () => {});
+
+      // Only save history for real user objects — NOT system overlays or smart guides.
+      // Smart guide lines are added/removed on every mouse-move tick during a drag;
+      // without this guard each guide draw/clear would create a separate undo entry.
+      const isSystemObject = (obj: any) =>
+        obj?.name === 'smart-guide' ||
+        obj?.name === 'slot-punch-overlay' ||
+        obj?.name === 'safe-zone-overlay';
+
+      fabricCanvas.on('object:added', (e: any) => {
+        if (isSystemObject(e.target)) return;
+        saveState();
+      });
+      fabricCanvas.on('object:removed', (e: any) => {
+        if (isSystemObject(e.target)) return;
+        saveState();
+      });
+
+      // Guaranteed guide cleanup on every mouse release.
+      // object:modified doesn't always fire (e.g. when object snaps back to
+      // its starting position), which leaves guide lines stuck on the canvas.
+      // mouse:up always fires, so we use it as the definitive cleanup point.
+      fabricCanvas.on('mouse:up', () => {
+        clearSmartGuides();
+        fabricCanvas.requestRenderAll();
+      });
 
       // SMART GUIDES & ALIGNMENT SNAPPING
       fabricCanvas.on('object:moving', (options) => {
@@ -404,12 +431,12 @@ const Canvas = () => {
         else useDesignerStore.getState().sendBackward();
       }
 
-      // 5. Copy / Paste / Cut
+      // 5. Copy / Paste / Cut — unified _clipboard key
       if (cmd && e.key.toLowerCase() === 'c') {
         if (activeObject) {
           e.preventDefault();
           activeObject.clone((cloned: any) => {
-            (window as any)._fabricClipboard = cloned;
+            (window as any)._clipboard = cloned;
           });
         }
       }
@@ -417,13 +444,13 @@ const Canvas = () => {
         if (activeObject) {
           e.preventDefault();
           activeObject.clone((cloned: any) => {
-            (window as any)._fabricClipboard = cloned;
+            (window as any)._clipboard = cloned;
             useDesignerStore.getState().deleteSelected();
           });
         }
       }
       if (cmd && e.key.toLowerCase() === 'v') {
-        const clipboard = (window as any)._fabricClipboard;
+        const clipboard = (window as any)._clipboard;
         if (clipboard) {
           e.preventDefault();
           clipboard.clone((clonedObj: any) => {

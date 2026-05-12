@@ -52,7 +52,20 @@ export default function App() {
   }
 
   return (
-    <div className="relative flex h-screen bg-[#fdfaf5] text-[#2c3e50] font-medium">
+    <div className="relative flex flex-col h-screen bg-[#fdfaf5] text-[#2c3e50] font-medium">
+      {/* Title Bar Drag Area */}
+      <div 
+        className="w-full h-8 shrink-0 flex items-center px-4 z-[9999]" 
+        style={{ WebkitAppRegion: "drag", WebkitUserSelect: "none" } as any}
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center shadow-sm">
+            <span className="text-white font-black text-[8px]">ID</span>
+          </div>
+          <span className="text-xs font-bold text-[#1a5d1a]">ID Daddy Desktop</span>
+        </div>
+      </div>
+
       {/* ... (Blocked Notification Overlay remains the same) */}
       {isBlocked && (
         <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-6">
@@ -74,7 +87,8 @@ export default function App() {
         </div>
       )}
 
-      <aside className={clsx(
+      <div className="flex flex-1 min-h-0 relative">
+        <aside className={clsx(
         "flex w-80 shrink-0 flex-col border-r border-[#e8d5c4]/50 transition-all relative overflow-hidden",
         isBlocked && "grayscale"
       )}>
@@ -182,6 +196,7 @@ export default function App() {
         {page === "generate" ? <GenerateView /> : null}
         {page === "profile" ? <ProfileView /> : null}
       </main>
+      </div>
       <GlobalModal />
     </div>
   );
