@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
 
@@ -15,6 +15,13 @@ export class ReleasesService {
     yamlFile: Express.Multer.File,
     userId: string
   ) {
+    const existing = await this.prisma.appRelease.findUnique({
+      where: { version: data.version }
+    });
+    if (existing) {
+      throw new BadRequestException(`Release version ${data.version} already exists.`);
+    }
+
     const installerKey = `releases/${data.version}/${installerFile.originalname}`;
     const yamlKey = `releases/${data.version}/${yamlFile.originalname}`;
 

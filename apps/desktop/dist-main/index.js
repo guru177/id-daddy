@@ -44,6 +44,16 @@ electron_1.Menu.setApplicationMenu(null);
 electron_1.app.whenReady().then(() => {
     createWindow();
     electron_updater_1.autoUpdater.checkForUpdatesAndNotify().catch(() => undefined);
+    // Debugging auto-updater
+    electron_updater_1.autoUpdater.on("error", (err) => {
+        console.error("AutoUpdater Error:", err);
+    });
+    electron_updater_1.autoUpdater.on("update-available", (info) => {
+        console.log("Update available:", info.version);
+    });
+    electron_updater_1.autoUpdater.on("update-not-available", (info) => {
+        console.log("Update not available. Current version is up to date.");
+    });
     // Notify user when an update is fully downloaded
     electron_updater_1.autoUpdater.on("update-downloaded", (info) => {
         electron_1.dialog.showMessageBox({

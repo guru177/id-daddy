@@ -45,6 +45,19 @@ app.whenReady().then(() => {
   createWindow();
   autoUpdater.checkForUpdatesAndNotify().catch(() => undefined);
 
+  // Debugging auto-updater
+  autoUpdater.on("error", (err) => {
+    console.error("AutoUpdater Error:", err);
+  });
+  
+  autoUpdater.on("update-available", (info) => {
+    console.log("Update available:", info.version);
+  });
+  
+  autoUpdater.on("update-not-available", (info) => {
+    console.log("Update not available. Current version is up to date.");
+  });
+
   // Notify user when an update is fully downloaded
   autoUpdater.on("update-downloaded", (info) => {
     dialog.showMessageBox({

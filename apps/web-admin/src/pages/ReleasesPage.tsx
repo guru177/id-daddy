@@ -91,7 +91,7 @@ export function ReleasesPage() {
       fetchReleases();
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to create release");
+      alert(err.message || "Failed to create release");
     } finally {
       setIsSubmitting(false);
     }
