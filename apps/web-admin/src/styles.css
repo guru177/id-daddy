@@ -1,10 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  color: #17202a;
-  background: #f7f7f4;
+  --accent: #16a34a;
+  --accent-light: #f0fdf4;
+  --accent-mid: #bbf7d0;
+  color: #111827;
+  background: #f9fafb;
+  font-family: 'Inter', system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
@@ -16,28 +22,40 @@ body {
   min-height: 100vh;
 }
 
-button,
-input,
-select {
-  font: inherit;
-}
+button, input, select, textarea { font: inherit; }
 
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+
+/* Cards */
 .panel {
-  @apply rounded-lg border border-stone-200 bg-white shadow-sm;
+  @apply rounded-2xl border border-gray-100 bg-white shadow-sm;
 }
 
+/* Buttons */
 .btn {
-  @apply inline-flex h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-mint/30 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex h-9 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold
+         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/25
+         disabled:cursor-not-allowed disabled:opacity-50;
 }
+.btn-primary   { @apply btn bg-green-600 text-white hover:bg-green-700 active:scale-95 shadow-sm; }
+.btn-secondary { @apply btn border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 active:scale-95; }
+.btn-danger    { @apply btn bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 active:scale-95; }
 
-.btn-primary {
-  @apply btn bg-mint text-white hover:bg-teal-800;
-}
-
-.btn-secondary {
-  @apply btn border border-stone-300 bg-white text-ink hover:bg-stone-50;
-}
-
+/* Inputs */
 .input {
-  @apply h-10 w-full rounded-md border border-stone-300 bg-white px-3 text-sm outline-none focus:border-mint focus:ring-2 focus:ring-mint/20;
+  @apply h-10 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 text-sm font-medium
+         outline-none transition-all placeholder:text-gray-400
+         focus:border-green-500 focus:bg-white focus:ring-2 focus:ring-green-500/20;
 }
+
+/* Badges */
+.badge        { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold; }
+.badge-green  { @apply badge bg-green-50 text-green-700; }
+.badge-blue   { @apply badge bg-blue-50 text-blue-700; }
+.badge-amber  { @apply badge bg-amber-50 text-amber-700; }
+.badge-red    { @apply badge bg-red-50 text-red-700; }
+.badge-gray   { @apply badge bg-gray-100 text-gray-600; }

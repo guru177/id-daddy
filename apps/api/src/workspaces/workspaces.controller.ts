@@ -38,8 +38,15 @@ export class WorkspacesController {
   }
 
   @Get()
-  list(@CurrentUser() user: AuthUser, @Query("q") q?: string) {
-    return this.workspaces.list(user, q);
+  list(
+    @CurrentUser() user: AuthUser,
+    @Query("q") q?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    return this.workspaces.list(user, q, pageNumber, limitNumber);
   }
 
   @Post()

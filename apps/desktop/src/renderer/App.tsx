@@ -59,8 +59,8 @@ export default function App() {
         style={{ WebkitAppRegion: "drag", WebkitUserSelect: "none" } as any}
       >
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center shadow-sm">
-            <span className="text-white font-black text-[8px]">ID</span>
+          <div className="w-4 h-4 rounded overflow-hidden shadow-sm shrink-0">
+            <img src="/favicon.png" alt="ID Daddy" className="w-full h-full object-cover" />
           </div>
           <span className="text-xs font-bold text-[#1a5d1a]">ID Daddy Desktop</span>
         </div>
@@ -101,8 +101,8 @@ export default function App() {
           disabled={isBlocked}
         >
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center  ">
-              <span className="text-white font-black text-xl">ID</span>
+            <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0">
+              <img src="/favicon.png" alt="ID Daddy" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="font-black text-2xl tracking-tight group-hover:text-[#1a5d1a] transition-colors leading-none">ID Daddy</p>

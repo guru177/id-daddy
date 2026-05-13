@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Ban, Calendar, CheckCircle2, ChevronDown, Clock, Edit2, History, Key, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { Ban, Calendar, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, Edit2, History, Key, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { Plan } from "@id-daddy/shared";
 import { api } from "../api/client";
 import { WorkspaceRow } from "../types";
@@ -27,6 +27,11 @@ export function CompaniesPage() {
   const [newNameValue, setNewNameValue] = useState("");
   const [historyWorkspace, setHistoryWorkspace] = useState<any>(null);
   const [historyPayments, setHistoryPayments] = useState<any[]>([]);
+  
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const loadPayments = async (id: string) => {
     const payments = await api<any[]>(`/workspaces/${id}/payments`);
@@ -58,8 +63,15 @@ export function CompaniesPage() {
   async function load() {
     setLoading(true);
     try {
-      const result = await api<{ data: WorkspaceRow[]; total: number }>(`/workspaces${query ? `?q=${query}` : ""}`);
+      const params = new URLSearchParams();
+      if (query) params.append("q", query);
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+
+      const result = await api<{ data: WorkspaceRow[]; total: number; totalPages: number }>(`/workspaces?${params.toString()}`);
       setCompanies(result.data);
+      setTotalCount(result.total);
+      setTotalPages(result.totalPages || 1);
     } catch (err) {
       console.error("Failed to load companies:", err);
       const message = err instanceof Error ? err.message : "Unable to load companies";
@@ -74,8 +86,12 @@ export function CompaniesPage() {
   }
 
   useEffect(() => {
+    setPage(1);
+  }, [query, limit]);
+
+  useEffect(() => {
     void load();
-  }, [query]);
+  }, [query, page, limit]);
 
   async function createCompany(event: FormEvent) {
     event.preventDefault();
@@ -235,7 +251,7 @@ export function CompaniesPage() {
   }
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6 relative pb-24">
       {/* Plan Change Modal */}
       {confirmChange && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-stone-900/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
@@ -656,37 +672,61 @@ export function CompaniesPage() {
                     <td className="px-4 py-3">{company._count?.templates ?? 0}</td>
                     <td className="px-4 py-3">{company._count?.records ?? 0}</td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button 
-                          className="btn-secondary h-9 w-9 p-0 text-stone-400 hover:text-teal-600" 
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-teal-50 hover:text-teal-600 transition-colors"
                           onClick={() => { setHistoryWorkspace(company); loadPayments(company.id); }}
                           title="View Payment History"
                         >
                           <History className="h-4 w-4" />
                         </button>
                         {company.status === "ACTIVE" ? (
-                          <button className="btn-secondary h-9 w-9 p-0" onClick={() => void setStatus(company, "BLOCKED")} title="Block company">
+                          <button
+                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                            onClick={() => void setStatus(company, "BLOCKED")}
+                            title="Block company"
+                          >
                             <Ban className="h-4 w-4" />
                           </button>
                         ) : (
-                          <button className="btn-secondary h-9 w-9 p-0" onClick={() => void setStatus(company, "ACTIVE")} title="Unblock company">
+                          <button
+                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors"
+                            onClick={() => void setStatus(company, "ACTIVE")}
+                            title="Unblock company"
+                          >
                             <CheckCircle2 className="h-4 w-4" />
                           </button>
                         )}
-                         {company.plan === "FREE_TRIAL" && (
-                          <button className="btn-secondary h-9 w-9 p-0 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100" onClick={() => void extendTrial(company)} title="Extend trial (+3 days)">
+                        {company.plan === "FREE_TRIAL" && (
+                          <button
+                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                            onClick={() => void extendTrial(company)}
+                            title="Extend trial (+3 days)"
+                          >
                             <Calendar className="h-4 w-4" />
                           </button>
                         )}
                         {company.plan === "PRO_1Y" && (
-                          <button className="btn-secondary h-9 w-9 p-0 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100" onClick={() => void renewPlan(company)} title="Renew Pro Plan (+1 Year)">
+                          <button
+                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                            onClick={() => void renewPlan(company)}
+                            title="Renew Pro Plan (+1 Year)"
+                          >
                             <RefreshCw className="h-4 w-4" />
                           </button>
                         )}
-                        <button className="btn-secondary h-9 w-9 p-0 text-amber-600 hover:bg-amber-50 hover:border-amber-100" onClick={() => void setResettingId(company.id)} title="Reset admin password">
+                        <button
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                          onClick={() => void setResettingId(company.id)}
+                          title="Reset admin password"
+                        >
                           <Key className="h-4 w-4" />
                         </button>
-                        <button className="btn-secondary h-9 w-9 p-0 text-red-600 hover:bg-red-50 hover:border-red-100" onClick={() => deleteCompany(company)} title="Delete company">
+                        <button
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                          onClick={() => deleteCompany(company)}
+                          title="Delete company"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -696,6 +736,62 @@ export function CompaniesPage() {
               )}
             </tbody>
           </table>
+        </div>
+        
+        {/* Fixed Pagination Bar */}
+        <div className="fixed bottom-0 left-0 md:left-60 right-0 bg-white/95 backdrop-blur-sm border-t border-stone-100 p-4 px-8 flex items-center justify-between z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+          {/* Left Side: Page Controls */}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))} 
+              disabled={page === 1}
+              className="h-9 w-9 flex items-center justify-center rounded-xl border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            
+            <span className="font-black text-stone-900 text-sm tracking-widest uppercase">PAGE</span>
+            
+            <div className="h-9 px-4 flex items-center justify-center rounded-xl border border-stone-200 text-stone-900 font-bold text-sm bg-stone-50">
+              {page} / {totalPages || 1}
+            </div>
+
+            <button 
+              onClick={() => setPage(p => Math.min(totalPages || 1, p + 1))} 
+              disabled={page === (totalPages || 1)}
+              className="h-9 w-9 flex items-center justify-center rounded-xl border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Right Side: Rows and Info */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span className="font-black text-stone-900 text-sm tracking-widest uppercase">ROWS PER PAGE:</span>
+              <div className="flex items-center gap-2">
+                {[10, 20, 30, 50].map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => setLimit(val)}
+                    className={`h-9 w-11 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${
+                      limit === val 
+                        ? "bg-[#1B5E20] text-white shadow-sm border border-[#1B5E20]" 
+                        : "border border-stone-200 text-stone-600 hover:bg-stone-50"
+                    }`}
+                  >
+                    {val}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-6 w-px bg-stone-200"></div>
+
+            <div className="text-sm font-medium text-stone-500 text-right min-w-[200px]">
+              Showing <span className="font-bold text-stone-900">{totalCount === 0 ? 0 : (page - 1) * limit + 1}</span> to <span className="font-bold text-stone-900">{Math.min(page * limit, totalCount)}</span> of <span className="font-bold text-stone-900">{totalCount}</span> members
+            </div>
+          </div>
         </div>
       </div>
       {/* Renewal History Modal */}

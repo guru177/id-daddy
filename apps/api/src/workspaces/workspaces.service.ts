@@ -89,30 +89,46 @@ export class WorkspacesService {
     });
   }
 
-  async list(user: AuthUser, q?: string) {
+  async list(user: AuthUser, q?: string, page = 1, limit = 10) {
     return this.prisma.runAsPlatform(async (tx) => {
+      const baseWhere = {
+        users: {
+          some: { role: "COMPANY_ADMIN" as const }
+        }
+      };
+
       const where = q
         ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" as const } },
+          AND: [
+            baseWhere,
             {
-              users: {
-                some: {
-                  OR: [
-                    { email: { contains: q, mode: "insensitive" as const } },
-                    { phone: { contains: q, mode: "insensitive" as const } }
-                  ]
+              OR: [
+                { name: { contains: q, mode: "insensitive" as const } },
+                {
+                  users: {
+                    some: {
+                      OR: [
+                        { email: { contains: q, mode: "insensitive" as const } },
+                        { phone: { contains: q, mode: "insensitive" as const } }
+                      ]
+                    }
+                  }
                 }
-              }
+              ]
             }
           ]
         }
-        : {};
+        : baseWhere;
+
+      const skip = Math.max(0, (page - 1) * limit);
+      const take = limit;
 
       const [workspaces, total] = await Promise.all([
         tx.workspace.findMany({
           where,
           orderBy: { createdAt: "desc" },
+          skip,
+          take,
           include: {
             subscription: true,
             _count: { select: { users: true, templates: true, records: true, exports: true } }
@@ -136,7 +152,7 @@ export class WorkspacesService {
         users: admins.filter((a) => a.workspaceId === w.id)
       }));
 
-      return { data, total };
+      return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     });
   }
 
