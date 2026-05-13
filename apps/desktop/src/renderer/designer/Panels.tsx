@@ -39,7 +39,7 @@ import { AddImageDialog } from './ImageLibrary';
 import QRCode from 'qrcode';
 import bwipjs from 'bwip-js';
 import { removeBackground } from '@imgly/background-removal';
-import { generateDesignFromText, analyzeImageForDesign } from '../api';
+
 
 const GOOGLE_FONTS = Array.from(new Set([
   // Popular Global
@@ -82,7 +82,7 @@ const GOOGLE_FONTS = Array.from(new Set([
   "Anek Devanagari", "Anek Tamil", "Anek Telugu", "Anek Malayalam", "Anek Bengali", "Anek Gujarati", "Anek Kannada", "Anek Odia", "Anek Gurmukhi"
 ])).sort();
 
-export const loadGoogleFont = async (fontName: string) => {
+const loadGoogleFont = async (fontName: string) => {
   if (!fontName || ['Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Trebuchet MS', 'Impact'].includes(fontName)) return Promise.resolve();
   const linkId = `font-${fontName.replace(/\s+/g, '-')}`;
   if (!document.getElementById(linkId)) {
@@ -667,7 +667,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
   );
 };
 
-export const formatQRData = (type: string, fields: any, data: string) => {
+const formatQRData = (type: string, fields: any, data: string) => {
   if (!data && type === 'URL') return 'https://idcreator.com';
   switch (type) {
     case 'URL':
@@ -2462,144 +2462,3 @@ export const SecurityPanel = () => {
   );
 };
 
-export const AIDesignPanel = () => {
-  const { canvas, saveState, showModal, closeModal } = useDesignerStore();
-  const [prompt, setPrompt] = React.useState('');
-  const [isGenerating, setIsGenerating] = React.useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  const generateDesign = async (type: 'text' | 'image') => {
-    setIsGenerating(true);
-    showModal({
-      title: 'AI Designer',
-      message: type === 'text' ? 'Generating design from prompt...' : 'Analyzing image and creating template...',
-      type: 'info'
-    });
-
-    // Real AI Logic
-    try {
-      let designData;
-      if (type === 'text') {
-        designData = await generateDesignFromText(prompt);
-      } else {
-        const file = fileInputRef.current?.files?.[0];
-        if (!file) throw new Error('No image selected');
-        designData = await analyzeImageForDesign(file);
-      }
-
-      if (!canvas || !designData) throw new Error('Canvas or design data is missing');
-
-      // Normalize data: handle string response or nested wrapper
-      const template = typeof designData === 'string' ? JSON.parse(designData) : designData;
-
-      // Ensure template has the right Fabric.js structure
-      if (!template.objects || !Array.isArray(template.objects)) {
-        throw new Error('AI returned invalid template structure (missing objects array)');
-      }
-
-      // Load into canvas safely
-      canvas.clear();
-      canvas.loadFromJSON(
-        { version: template.version || '5.3.0', objects: template.objects, background: template.background },
-        () => {
-          canvas.renderAll();
-          saveState();
-          setIsGenerating(false);
-          closeModal();
-          setPrompt('');
-        }
-      );
-    } catch (error: any) {
-      console.error('AI Generation failed:', error);
-      showModal({
-        title: 'AI Error',
-        message: error.message || 'Failed to connect to AI service.',
-        type: 'error'
-      });
-      setIsGenerating(false);
-    }
-
-  };
-
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <section>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-green-200">
-            <Sparkles size={20} />
-          </div>
-          <div>
-            <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-tight">Text to Design</h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">AI-Powered Template Generation</p>
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe your design (e.g. 'Blue corporate ID with modern fonts and profile picture on left')..."
-            className="w-full h-32 p-5 border border-gray-100 rounded-[32px] text-xs outline-none focus:ring-2 focus:ring-green-500 bg-gray-50/50 resize-none placeholder:text-gray-300 font-bold transition-all"
-          />
-          <button
-            disabled={!prompt || isGenerating}
-            onClick={() => generateDesign('text')}
-            className="w-full py-4 bg-gray-900 text-white rounded-[32px] text-xs font-black hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none active:scale-95"
-          >
-            {isGenerating ? 'AI is thinking...' : 'Generate Design'}
-            <Sparkles size={14} className={isGenerating ? 'animate-spin' : ''} />
-          </button>
-        </div>
-      </section>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
-        <div className="relative flex justify-center text-[9px] uppercase font-black text-gray-400 px-3 bg-white w-fit mx-auto tracking-[0.2em]">Or analyze reference</div>
-      </div>
-
-      <section>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-            <ImageIcon size={20} />
-          </div>
-          <div>
-            <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-tight">Image to Design</h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Clone from existing sample</p>
-          </div>
-        </div>
-
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          className="hidden" 
-          accept="image/*"
-          onChange={(e) => {
-            if (e.target.files?.[0]) generateDesign('image');
-          }}
-        />
-        
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full py-12 border-2 border-dashed border-gray-100 rounded-[40px] flex flex-col items-center justify-center gap-4 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group"
-        >
-          <div className="w-14 h-14 rounded-3xl bg-indigo-50 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
-            <Upload size={28} />
-          </div>
-          <div className="text-center">
-            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest block mb-1">Click to Upload</span>
-            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Reference ID Card Photo</span>
-          </div>
-        </button>
-      </section>
-      
-      <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 rounded-[32px] border border-amber-100">
-        <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-          <span className="uppercase text-[11px] block mb-2 flex items-center gap-2">
-            <Info size={14} /> AI Intelligence Tip:
-          </span>
-          The more detail you provide in text, the better the result. Try specifying colors, fonts, and layout alignment.
-        </p>
-      </div>
-    </div>
-  );
-};

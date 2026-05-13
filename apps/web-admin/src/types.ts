@@ -23,19 +23,3 @@ export interface WorkspaceRow {
   } | null;
 }
 
-export interface UserRow {
-  id: string;
-  email: string;
-  role: Role;
-  workspaceId: string | null;
-  createdAt: string;
-  workspace?: { id: string; name: string } | null;
-}
-
-export interface ExportRow {
-  id: string;
-  workspaceId: string;
-  fileUrl: string | null;
-  status: ExportStatus;
-  createdAt: string;
-}

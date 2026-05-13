@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { ArrowRight, Fingerprint, Sparkles } from "lucide-react";
-import loginBg from "../desktop.jpg";
+import loginBg from "/desktop.jpg";
 import { login, register } from "../api";
 import { useAuthStore } from "../store";
 

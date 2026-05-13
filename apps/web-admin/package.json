@@ -13,13 +13,9 @@
   },
   "dependencies": {
     "@id-daddy/shared": "workspace:*",
-    "@types/fabric": "^5.3.11",
-    "@types/qrcode": "^1.5.5",
     "@vitejs/plugin-react": "^4.3.3",
     "clsx": "^2.1.1",
-    "fabric": "^5.3.0",
     "lucide-react": "^0.468.0",
-    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",

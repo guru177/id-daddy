@@ -48,9 +48,6 @@ export function register(workspaceName: string, adminEmail: string, adminPasswor
   });
 }
 
-export function getProfile() {
-  return api<any>("/auth/profile");
-}
 
 export function updateProfile(data: any) {
   return api<any>("/auth/profile", {
@@ -59,11 +56,6 @@ export function updateProfile(data: any) {
   });
 }
 
-export async function uploadImage(file: File) {
-  const body = new FormData();
-  body.append("file", file);
-  return api<{ fileUrl: string; downloadUrl: string }>("/files/upload", { method: "POST", body });
-}
 
 export function fetchRecords() {
   return api<{ data: { id: string; data: any }[]; total: number }>("/records");
