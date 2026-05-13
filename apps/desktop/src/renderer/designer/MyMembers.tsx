@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Loader2, X, Eye, FileDown, Image as ImageIcon, Search } from 'lucide-react';
+import { Download, Loader2, X, Eye, FileDown, Image as ImageIcon, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDesignerStore } from './store';
 import { generatePreviews, VdpResult, generateSingleHighRes } from './VdpEngine';
 import { jsPDF } from 'jspdf';
@@ -13,7 +13,9 @@ export const MyMembers = () => {
     previewResults, 
     setPreviewResults,
     isGeneratingPreviews,
-    setIsGeneratingPreviews 
+    setIsGeneratingPreviews,
+    selectedMembers,
+    setSelectedMembers
   } = useDesignerStore();
 
   const [selectedHighRes, setSelectedHighRes] = useState<{ member: any, design: any } | null>(null);
@@ -21,6 +23,10 @@ export const MyMembers = () => {
   const [isGeneratingHighRes, setIsGeneratingHighRes] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isExporting, setIsExporting] = useState<{ active: boolean, current: number, total: number, type: 'PDF' | 'PNG' | null }>({ active: false, current: 0, total: 0, type: null });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredPreviews = previewResults.filter((preview) => {
     if (!searchQuery) return true;
@@ -31,6 +37,15 @@ export const MyMembers = () => {
     const department = (member.department || '').toLowerCase();
     return fullName.includes(query) || department.includes(query);
   });
+
+  // Reset pagination when search or page size changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredPreviews.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedPreviews = filteredPreviews.slice(startIndex, startIndex + itemsPerPage);
 
   useEffect(() => {
     if (!selectedHighRes) {
@@ -153,15 +168,21 @@ export const MyMembers = () => {
     const design = savedDesigns.find(d => d.id === (activeTemplateId || savedDesigns[0]?.id));
     if (!design || members.length === 0) return;
 
-    setIsExporting({ active: true, current: 0, total: members.length, type: 'PDF' });
+    const membersToExport = selectedMembers.size > 0 
+      ? members.filter(m => selectedMembers.has(m.id))
+      : members;
+
+    if (membersToExport.length === 0) return;
+
+    setIsExporting({ active: true, current: 0, total: membersToExport.length, type: 'PDF' });
     const zip = new JSZip();
 
     const isHorizontal = design.config.orientation === 'horizontal';
     const cardWidth = isHorizontal ? 86 : 54;
     const cardHeight = isHorizontal ? 54 : 86;
 
-    for (let i = 0; i < members.length; i++) {
-      const member = members[i];
+    for (let i = 0; i < membersToExport.length; i++) {
+      const member = membersToExport[i];
       setIsExporting(prev => ({ ...prev, current: i + 1 }));
       
       // Use multiplier 4 for ultra-high quality PDF images
@@ -199,11 +220,17 @@ export const MyMembers = () => {
     const design = savedDesigns.find(d => d.id === (activeTemplateId || savedDesigns[0]?.id));
     if (!design || members.length === 0) return;
 
-    setIsExporting({ active: true, current: 0, total: members.length, type: 'PNG' });
+    const membersToExport = selectedMembers.size > 0 
+      ? members.filter(m => selectedMembers.has(m.id))
+      : members;
+
+    if (membersToExport.length === 0) return;
+
+    setIsExporting({ active: true, current: 0, total: membersToExport.length, type: 'PNG' });
     const zip = new JSZip();
 
-    for (let i = 0; i < members.length; i++) {
-      const member = members[i];
+    for (let i = 0; i < membersToExport.length; i++) {
+      const member = membersToExport[i];
       setIsExporting(prev => ({ ...prev, current: i + 1 }));
       
       // Use multiplier 4 for ultra-high quality PNG exports
@@ -259,6 +286,28 @@ export const MyMembers = () => {
         </div>
         
         <div className="flex items-center gap-4 shrink-0">
+          {filteredPreviews.length > 0 && (
+            <label className="flex items-center gap-2 cursor-pointer bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all text-xs font-bold text-gray-900 shadow-sm">
+              <input 
+                type="checkbox" 
+                checked={filteredPreviews.length > 0 && filteredPreviews.every(p => selectedMembers.has(p.memberId))}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  setSelectedMembers(prev => {
+                    const next = new Set(prev);
+                    filteredPreviews.forEach(p => {
+                      if (isChecked) next.add(p.memberId);
+                      else next.delete(p.memberId);
+                    });
+                    return next;
+                  });
+                }}
+                className="w-4 h-4 rounded border-gray-300 text-[#1a5d1a] focus:ring-[#1a5d1a]"
+              />
+              Select All
+            </label>
+          )}
+
           {savedDesigns.length > 0 && (
             <div className="flex items-center gap-2.5 bg-stone-50/50 px-4 py-2 rounded-xl border border-stone-100">
               <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Template:</span>
@@ -279,7 +328,7 @@ export const MyMembers = () => {
               {isExporting.active && isExporting.type === 'PDF' ? (
                 <><Loader2 size={16} className="animate-spin text-green-600" /> {isExporting.current}/{isExporting.total} PDFs</>
               ) : (
-                <><Download size={16} /> Export All (PDF)</>
+                <><Download size={16} /> Export {selectedMembers.size > 0 ? `Selected (${selectedMembers.size})` : 'All'} (PDF)</>
               )}
             </button>
             <button 
@@ -290,7 +339,7 @@ export const MyMembers = () => {
               {isExporting.active && isExporting.type === 'PNG' ? (
                 <><Loader2 size={16} className="animate-spin" /> {isExporting.current}/{isExporting.total} Folders</>
               ) : (
-                <><Download size={16} /> Export All (PNGs)</>
+                <><Download size={16} /> Export {selectedMembers.size > 0 ? `Selected (${selectedMembers.size})` : 'All'} (PNGs)</>
               )}
             </button>
           </div>
@@ -314,16 +363,36 @@ export const MyMembers = () => {
                 <p className="font-bold">No members match your search.</p>
               </div>
             ) : null}
-            {filteredPreviews.map((preview, index) => {
+            {paginatedPreviews.map((preview, index) => {
               const member = members.find(m => m.id === preview.memberId);
               return (
                 <div key={preview.memberId} className="bg-white rounded-[24px] border border-gray-100 overflow-hidden   transition-all duration-300">
                   <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center justify-between gap-3">
                      <div className="flex items-center gap-3 min-w-0">
+                       <input 
+                         type="checkbox" 
+                         checked={selectedMembers.has(preview.memberId)}
+                         onChange={(e) => {
+                           setSelectedMembers(prev => {
+                             const next = new Set(prev);
+                             if (e.target.checked) next.add(preview.memberId);
+                             else next.delete(preview.memberId);
+                             return next;
+                           });
+                         }}
+                         className="w-5 h-5 rounded border-gray-300 text-[#1a5d1a] focus:ring-[#1a5d1a] cursor-pointer shrink-0"
+                       />
                        <div className="w-8 h-8 rounded bg-gray-200 overflow-hidden shrink-0">
                          {member?.profileImage && <img src={member.profileImage} alt="" className="w-full h-full object-cover" />}
                        </div>
-                       <div className="flex-1 min-w-0">
+                       <div className="flex-1 min-w-0 cursor-pointer" onClick={() => {
+                           setSelectedMembers(prev => {
+                             const next = new Set(prev);
+                             if (next.has(preview.memberId)) next.delete(preview.memberId);
+                             else next.add(preview.memberId);
+                             return next;
+                           });
+                         }}>
                          <p className="text-sm font-black text-gray-900 truncate">{member?.firstName} {member?.lastName}</p>
                          <p className="text-xs text-gray-900 truncate">{member?.department || 'No Department'}</p>
                        </div>
@@ -360,6 +429,55 @@ export const MyMembers = () => {
           </div>
         )}
       </div>
+
+      {/* Footer / Pagination */}
+      {activeTemplateId && members.length > 0 && (
+        <div className="mt-auto bg-white border-t border-gray-200 px-8 py-2.5 flex items-center justify-between shrink-0 z-20">
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Rows per page:</span>
+            <div className="flex items-center gap-1.5">
+              {[10, 20, 30, 50].map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setItemsPerPage(size)}
+                  className={`min-w-[40px] h-8 rounded-lg text-[11px] font-black transition-all border ${itemsPerPage === size ? 'bg-[#1a5d1a] border-[#1a5d1a] text-white ' : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            <div className="h-4 w-px bg-gray-200 mx-2" />
+            <span className="text-[11px] font-medium text-gray-900">
+              Showing <span className="font-black text-gray-900">{filteredPreviews.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-gray-900">{Math.min(startIndex + itemsPerPage, filteredPreviews.length)}</span> of <span className="font-black text-gray-900">{filteredPreviews.length}</span> members
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-xl border border-gray-200 text-gray-900 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Page</span>
+              <div className="bg-gray-50 border border-gray-200 px-3 py-1 rounded-lg text-[11px] font-black text-gray-900">
+                {currentPage} / {totalPages || 1}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="p-2 rounded-xl border border-gray-200 text-gray-900 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 4K Modal Viewer */}
       {selectedHighRes && (
