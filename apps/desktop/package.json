@@ -1,6 +1,6 @@
 {
   "name": "@id-daddy/desktop",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "main": "dist-main/index.js",
@@ -72,7 +72,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://updates.example.com/id-daddy"
+        "url": "http://localhost:4000/updates"
       }
     ]
   }

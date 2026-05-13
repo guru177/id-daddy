@@ -11,6 +11,7 @@ import { UploadView } from "./views/UploadView";
 import { GenerateView } from "./views/GenerateView";
 import { ProfileView } from "./views/ProfileView";
 import { GlobalModal } from "./designer/GlobalModal";
+import faviconImg from "./assets/favicon.png";
 
 const pages: Array<{ id: DesktopPage; label: string; icon: typeof BarChart3 }> = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -59,8 +60,8 @@ export default function App() {
         style={{ WebkitAppRegion: "drag", WebkitUserSelect: "none" } as any}
       >
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded overflow-hidden shadow-sm shrink-0">
-            <img src="/favicon.png" alt="ID Daddy" className="w-full h-full object-cover" />
+          <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0">
+            <img src={faviconImg} alt="ID Daddy" className="w-full h-full object-cover" />
           </div>
           <span className="text-xs font-bold text-[#1a5d1a]">ID Daddy Desktop</span>
         </div>
@@ -102,7 +103,7 @@ export default function App() {
         >
           <div className="flex items-center gap-4 mb-2">
             <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0">
-              <img src="/favicon.png" alt="ID Daddy" className="w-full h-full object-cover" />
+              <img src={faviconImg} alt="ID Daddy" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="font-black text-2xl tracking-tight group-hover:text-[#1a5d1a] transition-colors leading-none">ID Daddy</p>

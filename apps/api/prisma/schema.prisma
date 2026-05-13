@@ -168,3 +168,20 @@ model Payment {
   @@index([workspaceId])
   @@map("payments")
 }
+
+model AppRelease {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  version      String   @unique
+  releaseNotes String?  @map("release_notes")
+  isMandatory  Boolean  @default(false) @map("is_mandatory")
+  platform     String   @default("windows")
+  
+  installerUrl String   @map("installer_url")
+  yamlUrl      String   @map("yaml_url")
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  publishedBy  String   @map("published_by")
+
+  @@map("app_releases")
+}
+

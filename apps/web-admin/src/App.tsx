@@ -7,6 +7,7 @@ import { CompaniesPage } from "./pages/CompaniesPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { TemplatesPage } from "./pages/TemplatesPage";
+import { ReleasesPage } from "./pages/ReleasesPage";
 
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/templates" element={<TemplatesPage />} />
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/releases" element={<ReleasesPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

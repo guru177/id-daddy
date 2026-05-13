@@ -15,6 +15,7 @@ import { TemplatesModule } from "./templates/templates.module";
 import { UsersModule } from "./users/users.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { AIModule } from "./ai/ai.module";
+import { ReleasesModule } from "./releases/releases.module";
 
 @Module({
   imports: [
@@ -45,7 +46,8 @@ import { AIModule } from "./ai/ai.module";
     BgRemovalModule,
     ExportsModule,
     BillingModule,
-    AIModule
+    AIModule,
+    ReleasesModule
   ],
   controllers: [HealthController]
 })

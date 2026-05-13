@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, dialog } from "electron";
 import { autoUpdater } from "electron-updater";
 import path from "node:path";
 
@@ -35,7 +35,7 @@ function createWindow() {
     void mainWindow.loadURL(devUrl);
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    void mainWindow.loadFile(path.join(__dirname, "../../dist-renderer/index.html"));
+    void mainWindow.loadFile(path.join(__dirname, "../dist-renderer/index.html"));
   }
 }
 
@@ -44,6 +44,20 @@ Menu.setApplicationMenu(null);
 app.whenReady().then(() => {
   createWindow();
   autoUpdater.checkForUpdatesAndNotify().catch(() => undefined);
+
+  // Notify user when an update is fully downloaded
+  autoUpdater.on("update-downloaded", (info) => {
+    dialog.showMessageBox({
+      type: "info",
+      title: "Update Available",
+      message: `Version ${info.version} has been downloaded and is ready to install.`,
+      buttons: ["Restart and Install", "Later"]
+    }).then((result) => {
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

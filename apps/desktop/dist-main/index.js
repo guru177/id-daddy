@@ -37,13 +37,26 @@ function createWindow() {
         mainWindow.webContents.openDevTools({ mode: "detach" });
     }
     else {
-        void mainWindow.loadFile(node_path_1.default.join(__dirname, "../../dist-renderer/index.html"));
+        void mainWindow.loadFile(node_path_1.default.join(__dirname, "../dist-renderer/index.html"));
     }
 }
 electron_1.Menu.setApplicationMenu(null);
 electron_1.app.whenReady().then(() => {
     createWindow();
     electron_updater_1.autoUpdater.checkForUpdatesAndNotify().catch(() => undefined);
+    // Notify user when an update is fully downloaded
+    electron_updater_1.autoUpdater.on("update-downloaded", (info) => {
+        electron_1.dialog.showMessageBox({
+            type: "info",
+            title: "Update Available",
+            message: `Version ${info.version} has been downloaded and is ready to install.`,
+            buttons: ["Restart and Install", "Later"]
+        }).then((result) => {
+            if (result.response === 0) {
+                electron_updater_1.autoUpdater.quitAndInstall();
+            }
+        });
+    });
     electron_1.app.on("activate", () => {
         if (electron_1.BrowserWindow.getAllWindows().length === 0) {
             createWindow();

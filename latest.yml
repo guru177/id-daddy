@@ -1,0 +1,8 @@
+version: 1.0.0
+files:
+  - url: IdDaddy-Setup-1.0.0.exe
+    sha512: dummysha512
+    size: 100000000
+path: IdDaddy-Setup-1.0.0.exe
+sha512: dummysha512
+releaseDate: '2026-05-13T00:00:00.000Z'
