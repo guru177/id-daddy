@@ -267,6 +267,7 @@ export const DataUpload = () => {
         let importedCount = 0;
         let skippedCount = 0;
         let failedCount = 0;
+        let firstErrorMessage = '';
 
         const user = useAuthStore.getState().user;
         const isFreeTrial = user?.plan === 'FREE_TRIAL';
@@ -382,6 +383,9 @@ export const DataUpload = () => {
           }
           } catch (error) {
             failedCount++;
+            if (!firstErrorMessage) {
+              firstErrorMessage = getErrorMessage(error);
+            }
             console.error("Failed to import member row", error);
           }
         }
@@ -395,7 +399,9 @@ export const DataUpload = () => {
               : 'Import Successful',
           message: `Successfully imported ${importedCount} members from Excel.`
             + extraMsg
-            + (failedCount > 0 ? `\n\n${failedCount} record${failedCount === 1 ? '' : 's'} could not be saved to the database.` : ''),
+            + (failedCount > 0
+              ? `\n\n${failedCount} record${failedCount === 1 ? '' : 's'} could not be saved to the database.${firstErrorMessage ? ` First error: ${firstErrorMessage}` : ''}`
+              : ''),
           type: failedCount > 0 || skippedCount > 0 ? 'error' : 'info'
         });
       } catch (err) {
