@@ -15,10 +15,10 @@ import { UpdateNotification } from "./UpdateNotification";
 import faviconImg from "./assets/favicon.png";
 
 const pages: Array<{ id: DesktopPage; label: string; icon: typeof BarChart3 }> = [
-  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-  { id: "designer", label: "Designer", icon: LayoutTemplate },
   { id: "upload", label: "Data Upload", icon: Database },
+  { id: "designer", label: "Designer", icon: LayoutTemplate },
   { id: "generate", label: "Bulk Generator", icon: FileDown },
+  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
   { id: "profile", label: "Profile", icon: UserIcon as any }
 ];
 
@@ -311,10 +311,11 @@ export default function App() {
           </div>
         </aside>
         <main className={clsx("min-w-0 flex-1 overflow-hidden transition-all", (isBlocked || isTrialExpired) && "grayscale")}>
-          {page === "dashboard" ? <DashboardView /> : null}
+          {page === "upload" ? <UploadView /> : null}
           {page === "designer" ? <DesignerView /> : null}
           {page === "upload" ? <UploadView /> : null}
           {page === "generate" ? <GenerateView /> : null}
+          {page === "dashboard" ? <DashboardView /> : null}
           {page === "profile" ? <ProfileView /> : null}
         </main>
       </div>

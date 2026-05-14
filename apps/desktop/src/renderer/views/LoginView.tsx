@@ -7,6 +7,7 @@ import { useAuthStore } from "../store";
 
 export function LoginView() {
   const setSession = useAuthStore((state) => state.setSession);
+  const setPage = useAuthStore((state) => state.setPage);
   const [appVersion, setAppVersion] = useState("1.0.0");
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export function LoginView() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    window.idDaddy?.getAppVersion?.().then((v) => setAppVersion(v)).catch(() => {});
+    window.idDaddy?.getAppVersion?.().then((v) => setAppVersion(v)).catch(() => { });
   }, []);
 
   async function submit(event: FormEvent) {
@@ -41,6 +42,7 @@ export function LoginView() {
         return;
       }
       setSession(session.accessToken, session.refreshToken, session.user);
+      setPage("upload");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Action failed");
     } finally {
