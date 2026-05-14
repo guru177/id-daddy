@@ -1,11 +1,13 @@
-import { FormEvent, useState } from "react";
-import { ArrowRight, Fingerprint, Sparkles } from "lucide-react";
+import { FormEvent, useState, useEffect } from "react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import loginBg from "../assets/desktop.jpg";
+import faviconImg from "../assets/favicon.png";
 import { login, register } from "../api";
 import { useAuthStore } from "../store";
 
 export function LoginView() {
   const setSession = useAuthStore((state) => state.setSession);
+  const [appVersion, setAppVersion] = useState("1.0.0");
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -13,6 +15,10 @@ export function LoginView() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForgotHint, setShowForgotHint] = useState(false);
+
+  useEffect(() => {
+    window.idDaddy?.getAppVersion?.().then((v) => setAppVersion(v)).catch(() => {});
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -49,10 +55,12 @@ export function LoginView() {
         style={{ WebkitAppRegion: "drag", WebkitUserSelect: "none" } as any}
       >
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] flex items-center justify-center shadow-sm">
-            <span className="text-white font-black text-[8px]">ID</span>
+          <div className="w-5 h-5 rounded overflow-hidden shrink-0">
+            <img src={faviconImg} alt="ID Daddy" className="w-full h-full object-cover" />
           </div>
-          <span className="text-xs font-bold text-[#1a5d1a]">ID Daddy Desktop</span>
+          <span className="text-xs font-bold text-[#1a5d1a]">
+            ID Daddy v{appVersion}
+          </span>
         </div>
       </div>
 
@@ -96,8 +104,8 @@ export function LoginView() {
           <div className="w-full max-w-[440px]">
             {/* Mobile Branding */}
             <div className="mb-12 lg:hidden flex flex-col items-center">
-              <div className="h-20 w-20 rounded-[32px] bg-[#1a5d1a] flex items-center justify-center text-white  mb-4">
-                <Fingerprint size={40} />
+              <div className="h-20 w-20 rounded-[32px] overflow-hidden mb-4">
+                <img src={faviconImg} alt="ID Daddy" className="w-full h-full object-cover" />
               </div>
               <h1 className="text-3xl font-black text-[#1a5d1a] tracking-tighter uppercase">ID DADDY</h1>
             </div>

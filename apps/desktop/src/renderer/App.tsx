@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, Sparkles, User as UserIcon } from "lucide-react";
 import clsx from "clsx";
 import { api } from "./api";
@@ -11,6 +11,7 @@ import { UploadView } from "./views/UploadView";
 import { GenerateView } from "./views/GenerateView";
 import { ProfileView } from "./views/ProfileView";
 import { GlobalModal } from "./designer/GlobalModal";
+import { UpdateNotification } from "./UpdateNotification";
 import faviconImg from "./assets/favicon.png";
 
 const pages: Array<{ id: DesktopPage; label: string; icon: typeof BarChart3 }> = [
@@ -28,6 +29,11 @@ export default function App() {
   const setPage = useAuthStore((state) => state.setPage);
   const updateUser = useAuthStore((state) => state.updateUser);
   const logout = useAuthStore((state) => state.logout);
+  const [appVersion, setAppVersion] = useState("1.0.0");
+
+  useEffect(() => {
+    window.idDaddy?.getAppVersion?.().then((v) => setAppVersion(v)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -60,10 +66,12 @@ export default function App() {
         style={{ WebkitAppRegion: "drag", WebkitUserSelect: "none" } as any}
       >
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0">
+          <div className="w-5 h-5 rounded overflow-hidden shrink-0">
             <img src={faviconImg} alt="ID Daddy" className="w-full h-full object-cover" />
           </div>
-          <span className="text-xs font-bold text-[#1a5d1a]">ID Daddy Desktop</span>
+          <span className="text-xs font-bold text-[#1a5d1a]">
+            ID Daddy v{appVersion}
+          </span>
         </div>
       </div>
 
@@ -199,6 +207,7 @@ export default function App() {
       </main>
       </div>
       <GlobalModal />
+      <UpdateNotification />
     </div>
   );
 }
