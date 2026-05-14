@@ -172,14 +172,21 @@ export class RecordsService {
 
   private async checkLimit(tx: Prisma.TransactionClient, user: AuthUser, incoming: number) {
     const workspaceId = this.requireWorkspace(user);
-    const workspace = await tx.workspace.findUnique({ where: { id: workspaceId } });
-    if (!workspace) throw new BadRequestException("Workspace not found");
-
     const settings = this.workspaces.getSettings();
-    const plan = workspace.plan;
+    let plan = user.plan;
+
+    if (!plan) {
+      const workspace = await tx.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { plan: true }
+      });
+      if (!workspace) throw new BadRequestException("Workspace not found");
+      plan = workspace.plan as AuthUser["plan"];
+    }
+
     const limit = settings[`${plan}_LIMIT`];
 
-    if (limit === null) return; // Unlimited
+    if (limit == null) return; // Unlimited or unset
 
     const current = await tx.record.count({ where: { workspaceId } });
     if (current + incoming > limit) {

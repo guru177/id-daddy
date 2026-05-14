@@ -7,7 +7,6 @@ import { PrismaService } from "../prisma/prisma.service";
 
 interface JwtPayload {
   sub: string;
-  workspaceId: string | null;
   email: string;
   role: Role;
 }
@@ -29,21 +28,46 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException("Invalid token payload");
     }
 
-    if (payload.workspaceId && payload.role !== "SUPER_ADMIN") {
-      const workspace = await this.prisma.workspace.findUnique({
-        where: { id: payload.workspaceId },
-        select: { status: true }
-      });
-      if (workspace?.status === "BLOCKED") {
+    const user = await this.prisma.runAsPlatform((tx) =>
+      tx.user.findUnique({
+        where: { id: payload.sub },
+        select: {
+          id: true,
+          workspaceId: true,
+          email: true,
+          role: true,
+          workspace: {
+            select: {
+              name: true,
+              plan: true,
+              status: true
+            }
+          }
+        }
+      })
+    );
+
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    if (user.workspaceId && !user.workspace) {
+      throw new UnauthorizedException("Workspace not found");
+    }
+
+    if (user.workspace && user.role !== "SUPER_ADMIN") {
+      if (user.workspace.status === "BLOCKED") {
         throw new ForbiddenException("WORKSPACE_BLOCKED");
       }
     }
 
     return {
-      id: payload.sub,
-      workspaceId: payload.workspaceId,
-      email: payload.email,
-      role: payload.role
+      id: user.id,
+      workspaceId: user.workspaceId,
+      workspaceName: user.workspace?.name,
+      email: user.email,
+      role: user.role as Role,
+      plan: user.workspace?.plan as AuthUser["plan"]
     };
   }
 }
