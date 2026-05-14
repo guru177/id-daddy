@@ -54,7 +54,7 @@ Menu.setApplicationMenu(null);
 function fetchReleaseMetadata(version: string): Promise<{ isMandatory: boolean; releaseNotes: string }> {
   return new Promise((resolve) => {
     // The update server URL from electron-builder publish config
-    const updateUrl = "http://localhost:4000";
+    const updateUrl = "https://dev.iddaddy.com/api/";
     const url = `${updateUrl}/updates/release-meta?version=${encodeURIComponent(version)}`;
     const mod = url.startsWith("https") ? https : http;
 

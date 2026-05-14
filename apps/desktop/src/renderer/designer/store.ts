@@ -387,13 +387,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       });
     } catch (e) {
       console.error("Failed to create record", e);
-      // Fallback
-      const newMember = { ...member, id: Math.random().toString(36).substr(2, 9) };
-      set((state) => {
-        const updated = [newMember, ...state.members];
-        localStorage.setItem('saved_id_members', JSON.stringify(updated));
-        return { members: updated, previewResults: [] };
-      });
+      throw e;
     }
   },
   updateMember: async (id, updatedMember) => {
@@ -410,11 +404,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       });
     } catch (e) {
       console.error("Failed to update record", e);
-      set((state) => {
-        const updated = state.members.map(m => m.id === id ? mergedMember : m);
-        localStorage.setItem('saved_id_members', JSON.stringify(updated));
-        return { members: updated, previewResults: [] };
-      });
+      throw e;
     }
   },
   deleteMember: async (id) => {
@@ -427,11 +417,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       });
     } catch (e) {
       console.error("Failed to delete record", e);
-      set((state) => {
-        const updated = state.members.filter(m => m.id !== id);
-        localStorage.setItem('saved_id_members', JSON.stringify(updated));
-        return { members: updated, previewResults: [] };
-      });
+      throw e;
     }
   },
   activeTemplateId: null,

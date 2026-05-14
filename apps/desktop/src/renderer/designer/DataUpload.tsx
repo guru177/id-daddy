@@ -85,6 +85,7 @@ export const DataUpload = () => {
   const excelInputRef = useRef<HTMLInputElement>(null);
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSavingMember, setIsSavingMember] = useState(false);
 
   const [imageViewerMemberId, setImageViewerMemberId] = useState<string | null>(null);
 
@@ -134,16 +135,28 @@ export const DataUpload = () => {
     setSelectedMembers(next);
   };
 
-  const handleBulkDelete = () => {
-    selectedMembers.forEach(id => {
-      deleteMember(id);
-    });
+  const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Please try again.';
+
+  const handleBulkDelete = async () => {
+    let failedCount = 0;
+
+    for (const id of selectedMembers) {
+      try {
+        await deleteMember(id);
+      } catch (error) {
+        failedCount++;
+        console.error("Failed to delete member", error);
+      }
+    }
+
     setSelectedMembers(new Set());
     setIsDeleteConfirmOpen(false);
     showModal({
-      title: 'Success',
-      message: 'Selected members have been deleted.',
-      type: 'info'
+      title: failedCount ? 'Delete Failed' : 'Success',
+      message: failedCount
+        ? `${failedCount} member${failedCount === 1 ? '' : 's'} could not be deleted from the database.`
+        : 'Selected members have been deleted.',
+      type: failedCount ? 'error' : 'info'
     });
   };
 
@@ -253,6 +266,7 @@ export const DataUpload = () => {
 
         let importedCount = 0;
         let skippedCount = 0;
+        let failedCount = 0;
 
         const user = useAuthStore.getState().user;
         const isFreeTrial = user?.plan === 'FREE_TRIAL';
@@ -267,7 +281,8 @@ export const DataUpload = () => {
           }
         }
 
-        data.forEach((row: any) => {
+        for (const row of data as any[]) {
+          try {
           const getVal = (possibleKeys: string[]) => {
             for (const k of possibleKeys) {
               const exact = row[k];
@@ -349,29 +364,39 @@ export const DataUpload = () => {
             });
 
             if (existingMember) {
-              updateMember(existingMember.id, cleanNewMember);
+              await updateMember(existingMember.id, cleanNewMember);
               importedCount++;
             } else {
               const currentLength = useDesignerStore.getState().members.length;
               if (isFreeTrial && currentLength >= limit) {
                 skippedCount++;
-                return;
+                continue;
               }
               // Ensure we don't save the placeholder text for new members either
               ['profileImage', 'signature', 'fingerprint', 'divisionLogo'].forEach(imgField => {
                 if (cleanNewMember[imgField] === '[Image Attached]') cleanNewMember[imgField] = '';
               });
-              addMember({ ...cleanNewMember, customImage: '' });
+              await addMember({ ...cleanNewMember, customImage: '' });
               importedCount++;
             }
           }
-        });
+          } catch (error) {
+            failedCount++;
+            console.error("Failed to import member row", error);
+          }
+        }
 
         const extraMsg = skippedCount > 0 ? `\n\nNote: ${skippedCount} records were skipped because you reached your Free Trial limit of ${limit} members. Upgrade your plan to add unlimited members.` : '';
         showModal({
-          title: skippedCount > 0 ? 'Import Complete with Skipped Records' : 'Import Successful',
-          message: `Successfully imported ${importedCount} members from Excel.` + extraMsg,
-          type: skippedCount > 0 ? 'error' : 'info'
+          title: failedCount > 0
+            ? 'Import Complete with Errors'
+            : skippedCount > 0
+              ? 'Import Complete with Skipped Records'
+              : 'Import Successful',
+          message: `Successfully imported ${importedCount} members from Excel.`
+            + extraMsg
+            + (failedCount > 0 ? `\n\n${failedCount} record${failedCount === 1 ? '' : 's'} could not be saved to the database.` : ''),
+          type: failedCount > 0 || skippedCount > 0 ? 'error' : 'info'
         });
       } catch (err) {
         showModal({
@@ -474,14 +499,21 @@ export const DataUpload = () => {
     }
 
     // Apply accumulated updates
-    membersUpdates.forEach((update, id) => {
-      updateMember(id, update as any);
-    });
+    let failedCount = 0;
+    for (const [id, update] of membersUpdates) {
+      try {
+        await updateMember(id, update as any);
+      } catch (error) {
+        failedCount++;
+        console.error("Failed to update member image", error);
+      }
+    }
 
     showModal({
-      title: 'Bulk Upload Complete',
-      message: `Successfully matched ${matchCount} images to member profiles out of ${files.length} uploaded files.`,
-      type: 'info'
+      title: failedCount ? 'Bulk Upload Complete with Errors' : 'Bulk Upload Complete',
+      message: `Successfully matched ${matchCount - failedCount} images to member profiles out of ${files.length} uploaded files.`
+        + (failedCount ? ` ${failedCount} update${failedCount === 1 ? '' : 's'} could not be saved to the database.` : ''),
+      type: failedCount ? 'error' : 'info'
     });
 
     if (bulkImageInputRef.current) bulkImageInputRef.current.value = '';
@@ -520,7 +552,7 @@ export const DataUpload = () => {
     return field;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.firstName) {
       showModal({
         title: 'Missing Field',
@@ -537,24 +569,35 @@ export const DataUpload = () => {
       }
     });
 
-    if (editingMemberId) {
-      updateMember(editingMemberId, { ...formData, customFields: customFieldsRecord } as any);
-    } else {
-      addMember({ ...formData, customFields: customFieldsRecord } as any);
+    setIsSavingMember(true);
+    try {
+      if (editingMemberId) {
+        await updateMember(editingMemberId, { ...formData, customFields: customFieldsRecord } as any);
+      } else {
+        await addMember({ ...formData, customFields: customFieldsRecord } as any);
+      }
+
+      setFormData(initialFormState);
+      setCustomFieldsList([]);
+      setIsModalOpen(false);
+      setEditingMemberId(null);
+
+      showModal({
+        title: 'Success',
+        message: editingMemberId
+          ? `${formData.firstName}'s data has been updated.`
+          : `${formData.firstName} has been added to your members list.`,
+        type: 'info'
+      });
+    } catch (error) {
+      showModal({
+        title: 'Save Failed',
+        message: `${formData.firstName}'s data was not saved to the database. ${getErrorMessage(error)}`,
+        type: 'error'
+      });
+    } finally {
+      setIsSavingMember(false);
     }
-
-    setFormData(initialFormState);
-    setCustomFieldsList([]);
-    setIsModalOpen(false);
-    setEditingMemberId(null);
-
-    showModal({
-      title: 'Success',
-      message: editingMemberId
-        ? `${formData.firstName}'s data has been updated.`
-        : `${formData.firstName} has been added to your members list.`,
-      type: 'info'
-    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -697,7 +740,7 @@ export const DataUpload = () => {
                               ctx.fillRect(0, 0, canvas.width, canvas.height);
                               ctx.drawImage(img, 0, 0);
                               const newImage = canvas.toDataURL('image/jpeg', 0.9);
-                              updateMember(memberId, { 
+                              await updateMember(memberId, {
                                 profileImage: newImage,
                                 originalProfileImage: member.originalProfileImage || member.profileImage
                               });
@@ -746,24 +789,31 @@ export const DataUpload = () => {
 
               {Array.from(selectedMembers).some(id => members.find(m => m.id === id)?.originalProfileImage) && (
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     let restoredCount = 0;
-                    selectedMembers.forEach(id => {
+                    let failedCount = 0;
+                    for (const id of selectedMembers) {
                       const member = members.find(m => m.id === id);
                       if (member && member.originalProfileImage) {
-                        updateMember(id, { 
-                          profileImage: member.originalProfileImage,
-                          originalProfileImage: undefined // Reset it
-                        });
-                        restoredCount++;
+                        try {
+                          await updateMember(id, {
+                            profileImage: member.originalProfileImage,
+                            originalProfileImage: undefined // Reset it
+                          });
+                          restoredCount++;
+                        } catch (error) {
+                          failedCount++;
+                          console.error("Failed to restore member image", error);
+                        }
                       }
-                    });
+                    }
                     
-                    if (restoredCount > 0) {
+                    if (restoredCount > 0 || failedCount > 0) {
                       showModal({
-                        title: 'Restoration Complete',
-                        message: `Successfully restored original profile images for ${restoredCount} members.`,
-                        type: 'info'
+                        title: failedCount ? 'Restoration Complete with Errors' : 'Restoration Complete',
+                        message: `Successfully restored original profile images for ${restoredCount} members.`
+                          + (failedCount ? ` ${failedCount} update${failedCount === 1 ? '' : 's'} could not be saved to the database.` : ''),
+                        type: failedCount ? 'error' : 'info'
                       });
                     }
                   }}
@@ -1180,7 +1230,17 @@ export const DataUpload = () => {
                           Edit
                         </button>
                         <button
-                          onClick={() => deleteMember(member.id)}
+                          onClick={async () => {
+                            try {
+                              await deleteMember(member.id);
+                            } catch (error) {
+                              showModal({
+                                title: 'Delete Failed',
+                                message: `The member was not deleted from the database. ${getErrorMessage(error)}`,
+                                type: 'error'
+                              });
+                            }
+                          }}
                           className="text-red-500 hover:text-red-700 font-bold text-xs"
                         >
                           Delete
@@ -1301,9 +1361,10 @@ export const DataUpload = () => {
               <div className="flex items-center gap-4">
                 <button
                   onClick={handleSave}
-                  className="bg-[#34a853] hover:bg-green-600 text-white px-8 py-2 rounded font-bold text-sm transition-colors "
+                  disabled={isSavingMember}
+                  className="bg-[#34a853] hover:bg-green-600 text-white px-8 py-2 rounded font-bold text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Save Member
+                  {isSavingMember ? 'Saving...' : 'Save Member'}
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -1618,8 +1679,16 @@ export const DataUpload = () => {
                   const file = e.target.files?.[0];
                   if (file) {
                     const reader = new FileReader();
-                    reader.onload = (f) => {
-                      updateMember(imageViewerMemberId, { profileImage: f.target?.result as string });
+                    reader.onload = async (f) => {
+                      try {
+                        await updateMember(imageViewerMemberId, { profileImage: f.target?.result as string });
+                      } catch (error) {
+                        showModal({
+                          title: 'Save Failed',
+                          message: `The profile photo was not saved to the database. ${getErrorMessage(error)}`,
+                          type: 'error'
+                        });
+                      }
                     };
                     reader.readAsDataURL(file);
                   }

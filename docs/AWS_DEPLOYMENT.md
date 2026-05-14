@@ -168,11 +168,16 @@ jobs:
 
 ## 7. Post-Deployment Checklist
 
-- [ ] Run Prisma migrations: `npx prisma migrate deploy` inside the API container.
-- [ ] Seed initial data: `pnpm db:seed`.
-- [ ] Verify S3 connectivity by uploading a test logo.
-- [ ] Check Redis connection for background jobs (BullMQ).
-- [ ] Ensure `API_PUBLIC_URL` in the frontend matches the actual API domain.
+- [ ] **Run Database Migrations**:
+  - Docker: `docker exec -it <api_container_name> npx prisma migrate deploy`
+  - Manual: `pnpm --filter @id-daddy/api prisma migrate deploy`
+- [ ] **Seed Initial Data** (Create Super Admin):
+  - Docker: `docker exec -it <api_container_name> pnpm run prisma:seed`
+  - Manual: `pnpm db:seed`
+- [ ] **Verify S3 Connectivity**: Upload a test logo in the settings panel.
+- [ ] **Check Redis Connection**: Ensure background PDF generation jobs (BullMQ) are processing.
+- [ ] **API Prefix**: Ensure `app.setGlobalPrefix('api')` is present in `main.ts` to match Nginx `/api` routing.
+- [ ] **Environment Sync**: Double-check that `API_PUBLIC_URL` and `WEB_ADMIN_URL` are set correctly for production domains.
 ---
 
 ## 8. Desktop App Distribution (To Clients)

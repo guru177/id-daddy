@@ -1,7 +1,7 @@
 import { AuthResponse } from "@id-daddy/shared";
 import { useAuthStore } from "./store";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+const API_URL = import.meta.env.VITE_API_URL ?? "https://dev.iddaddy.com/api";
 
 interface Options extends RequestInit {
   auth?: boolean;

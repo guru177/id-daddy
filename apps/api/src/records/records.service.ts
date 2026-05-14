@@ -33,8 +33,8 @@ export class RecordsService {
 
   async create(user: AuthUser, data: any) {
     const workspaceId = this.requireWorkspace(user);
-    await this.checkLimit(user, 1);
     return this.prisma.runScoped(user, async (tx) => {
+      await this.checkLimit(tx, user, 1);
       return tx.record.create({
         data: {
           workspaceId,
@@ -89,9 +89,8 @@ export class RecordsService {
       throw new BadRequestException("No records found in uploaded file");
     }
 
-    await this.checkLimit(user, mappedRows.length);
-
     return this.prisma.runScoped(user, async (tx) => {
+      await this.checkLimit(tx, user, mappedRows.length);
       await tx.record.createMany({
         data: mappedRows.map((data) => ({
           workspaceId,
@@ -171,9 +170,9 @@ export class RecordsService {
     return user.workspaceId;
   }
 
-  private async checkLimit(user: AuthUser, incoming: number) {
+  private async checkLimit(tx: Prisma.TransactionClient, user: AuthUser, incoming: number) {
     const workspaceId = this.requireWorkspace(user);
-    const workspace = await this.prisma.workspace.findUnique({ where: { id: workspaceId } });
+    const workspace = await tx.workspace.findUnique({ where: { id: workspaceId } });
     if (!workspace) throw new BadRequestException("Workspace not found");
 
     const settings = this.workspaces.getSettings();
@@ -182,7 +181,7 @@ export class RecordsService {
 
     if (limit === null) return; // Unlimited
 
-    const current = await this.prisma.record.count({ where: { workspaceId } });
+    const current = await tx.record.count({ where: { workspaceId } });
     if (current + incoming > limit) {
       throw new BadRequestException(`Record limit reached (${limit}). Please upgrade your plan to add more records.`);
     }
