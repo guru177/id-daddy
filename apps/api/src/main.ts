@@ -11,6 +11,7 @@ import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true, bodyParser: false });
+  app.setGlobalPrefix("api");
   const config = app.get(ConfigService);
 
   app.use("/billing/webhook", express.raw({ type: "application/json" }));
