@@ -1,14 +1,45 @@
 import { app, BrowserWindow, ipcMain, Menu } from "electron";
 import { autoUpdater } from "electron-updater";
+import fs from "node:fs";
 import path from "node:path";
 import https from "node:https";
 import http from "node:http";
 
 let mainWindow: BrowserWindow | null = null;
 
+function logStartup(message: string, error?: unknown) {
+  try {
+    const logsDir = path.join(app.getPath("userData"), "logs");
+    fs.mkdirSync(logsDir, { recursive: true });
+    const details = error instanceof Error ? `${error.stack ?? error.message}` : error ? String(error) : "";
+    fs.appendFileSync(
+      path.join(logsDir, "main.log"),
+      `[${new Date().toISOString()}] ${message}${details ? `\n${details}` : ""}\n`
+    );
+  } catch {
+    // Logging must never block app startup.
+  }
+}
+
+function showMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+process.on("uncaughtException", (error) => {
+  logStartup("Uncaught exception", error);
+});
+
+process.on("unhandledRejection", (error) => {
+  logStartup("Unhandled rejection", error);
+});
+
 function createWindow() {
+  logStartup("Creating main window");
   mainWindow = new BrowserWindow({
-    show: false,
+    show: true,
     width: 1280,
     height: 820,
     minWidth: 800,
@@ -29,20 +60,54 @@ function createWindow() {
       sandbox: true
     }
   });
+  logStartup("Main window created");
 
   mainWindow.removeMenu();
   mainWindow.setMenuBarVisibility(false);
 
   mainWindow.once("ready-to-show", () => {
-    mainWindow?.show();
+    logStartup("Main window ready to show");
+    showMainWindow();
+  });
+
+  mainWindow.webContents.once("did-finish-load", () => {
+    logStartup("Renderer finished load");
+    showMainWindow();
+  });
+
+  mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+    logStartup(`Renderer failed to load ${validatedURL}: ${errorCode} ${errorDescription}`);
+    showMainWindow();
+  });
+
+  mainWindow.webContents.on("render-process-gone", (_event, details) => {
+    logStartup(`Renderer process gone: ${details.reason}`);
+  });
+
+  mainWindow.on("unresponsive", () => {
+    logStartup("Main window became unresponsive");
+  });
+
+  mainWindow.on("closed", () => {
+    logStartup("Main window closed");
+    mainWindow = null;
   });
 
   const devUrl = process.env.VITE_DEV_SERVER_URL;
   if (devUrl) {
-    void mainWindow.loadURL(devUrl);
+    logStartup(`Loading dev URL ${devUrl}`);
+    void mainWindow.loadURL(devUrl).catch((error) => {
+      logStartup(`Failed to load dev URL ${devUrl}`, error);
+      showMainWindow();
+    });
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    void mainWindow.loadFile(path.join(__dirname, "../dist-renderer/index.html"));
+    const rendererPath = path.join(__dirname, "../dist-renderer/index.html");
+    logStartup(`Loading renderer ${rendererPath}`);
+    void mainWindow.loadFile(rendererPath).catch((error) => {
+      logStartup(`Failed to load renderer ${rendererPath}`, error);
+      showMainWindow();
+    });
   }
 }
 
@@ -83,6 +148,7 @@ let pendingUpdateInfo: { version: string; releaseNotes: string; mandatory: boole
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
+  logStartup("App ready");
   createWindow();
 
   // ── IPC: version ───────────────────────────────────────────────────────────
@@ -174,6 +240,7 @@ app.whenReady().then(() => {
 
 // Mandatory update: install on close instead of quitting
 app.on("before-quit", (event) => {
+  logStartup("Before quit");
   if (pendingUpdateInfo?.mandatory) {
     event.preventDefault();
     autoUpdater.quitAndInstall();
@@ -181,6 +248,7 @@ app.on("before-quit", (event) => {
 });
 
 app.on("window-all-closed", () => {
+  logStartup("All windows closed");
   if (process.platform !== "darwin") {
     app.quit();
   }

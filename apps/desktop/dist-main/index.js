@@ -5,13 +5,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const electron_updater_1 = require("electron-updater");
+const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
 const node_https_1 = __importDefault(require("node:https"));
 const node_http_1 = __importDefault(require("node:http"));
 let mainWindow = null;
+function logStartup(message, error) {
+    try {
+        const logsDir = node_path_1.default.join(electron_1.app.getPath("userData"), "logs");
+        node_fs_1.default.mkdirSync(logsDir, { recursive: true });
+        const details = error instanceof Error ? `${error.stack ?? error.message}` : error ? String(error) : "";
+        node_fs_1.default.appendFileSync(node_path_1.default.join(logsDir, "main.log"), `[${new Date().toISOString()}] ${message}${details ? `\n${details}` : ""}\n`);
+    }
+    catch {
+        // Logging must never block app startup.
+    }
+}
+function showMainWindow() {
+    if (!mainWindow || mainWindow.isDestroyed())
+        return;
+    if (mainWindow.isMinimized())
+        mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+}
+process.on("uncaughtException", (error) => {
+    logStartup("Uncaught exception", error);
+});
+process.on("unhandledRejection", (error) => {
+    logStartup("Unhandled rejection", error);
+});
 function createWindow() {
+    logStartup("Creating main window");
     mainWindow = new electron_1.BrowserWindow({
-        show: false,
+        show: true,
         width: 1280,
         height: 820,
         minWidth: 800,
@@ -32,18 +59,47 @@ function createWindow() {
             sandbox: true
         }
     });
+    logStartup("Main window created");
     mainWindow.removeMenu();
     mainWindow.setMenuBarVisibility(false);
     mainWindow.once("ready-to-show", () => {
-        mainWindow?.show();
+        logStartup("Main window ready to show");
+        showMainWindow();
+    });
+    mainWindow.webContents.once("did-finish-load", () => {
+        logStartup("Renderer finished load");
+        showMainWindow();
+    });
+    mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+        logStartup(`Renderer failed to load ${validatedURL}: ${errorCode} ${errorDescription}`);
+        showMainWindow();
+    });
+    mainWindow.webContents.on("render-process-gone", (_event, details) => {
+        logStartup(`Renderer process gone: ${details.reason}`);
+    });
+    mainWindow.on("unresponsive", () => {
+        logStartup("Main window became unresponsive");
+    });
+    mainWindow.on("closed", () => {
+        logStartup("Main window closed");
+        mainWindow = null;
     });
     const devUrl = process.env.VITE_DEV_SERVER_URL;
     if (devUrl) {
-        void mainWindow.loadURL(devUrl);
+        logStartup(`Loading dev URL ${devUrl}`);
+        void mainWindow.loadURL(devUrl).catch((error) => {
+            logStartup(`Failed to load dev URL ${devUrl}`, error);
+            showMainWindow();
+        });
         mainWindow.webContents.openDevTools({ mode: "detach" });
     }
     else {
-        void mainWindow.loadFile(node_path_1.default.join(__dirname, "../dist-renderer/index.html"));
+        const rendererPath = node_path_1.default.join(__dirname, "../dist-renderer/index.html");
+        logStartup(`Loading renderer ${rendererPath}`);
+        void mainWindow.loadFile(rendererPath).catch((error) => {
+            logStartup(`Failed to load renderer ${rendererPath}`, error);
+            showMainWindow();
+        });
     }
 }
 electron_1.Menu.setApplicationMenu(null);
@@ -77,6 +133,7 @@ function fetchReleaseMetadata(version) {
 let pendingUpdateInfo = null;
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 electron_1.app.whenReady().then(() => {
+    logStartup("App ready");
     createWindow();
     // ── IPC: version ───────────────────────────────────────────────────────────
     electron_1.ipcMain.handle("get-app-version", () => electron_1.app.getVersion());
@@ -152,12 +209,14 @@ electron_1.app.whenReady().then(() => {
 });
 // Mandatory update: install on close instead of quitting
 electron_1.app.on("before-quit", (event) => {
+    logStartup("Before quit");
     if (pendingUpdateInfo?.mandatory) {
         event.preventDefault();
         electron_updater_1.autoUpdater.quitAndInstall();
     }
 });
 electron_1.app.on("window-all-closed", () => {
+    logStartup("All windows closed");
     if (process.platform !== "darwin") {
         electron_1.app.quit();
     }
