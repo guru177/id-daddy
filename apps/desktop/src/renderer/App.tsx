@@ -1,92 +1,161 @@
 import { useEffect, useState, useMemo } from "react";
-import { BarChart3, Database, FileDown, LayoutTemplate, LogOut, Sparkles, User as UserIcon, CheckCircle2, X } from "lucide-react";
+import {
+  BarChart3,
+  Database,
+  FileDown,
+  LayoutTemplate,
+  LogOut,
+  Sparkles,
+  User as UserIcon,
+  CheckCircle2,
+  X,
+} from "lucide-react";
+
 import clsx from "clsx";
+
 import { api } from "./api";
 import { DesktopPage, useAuthStore } from "./store";
 import { useDesignerStore } from "./designer/store";
+
 import { LoginView } from "./views/LoginView";
 import { DashboardView } from "./views/DashboardView";
 import { DesignerView } from "./views/DesignerView";
 import { UploadView } from "./views/UploadView";
 import { GenerateView } from "./views/GenerateView";
 import { ProfileView } from "./views/ProfileView";
+
 import { GlobalModal } from "./designer/GlobalModal";
 import { UpdateNotification } from "./UpdateNotification";
+
 import faviconImg from "./assets/favicon.png";
 
-const pages: Array<{ id: DesktopPage; label: string; icon: typeof BarChart3 }> = [
-  { id: "upload", label: "Data Upload", icon: Database },
-  { id: "designer", label: "Designer", icon: LayoutTemplate },
-  { id: "generate", label: "Bulk Generator", icon: FileDown },
-  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-  { id: "profile", label: "Profile", icon: UserIcon as any }
-];
+const pages: Array<{
+  id: DesktopPage;
+  label: string;
+  icon: typeof BarChart3;
+}> = [
+    { id: "upload", label: "Data Upload", icon: Database },
+    { id: "designer", label: "Designer", icon: LayoutTemplate },
+    { id: "generate", label: "Bulk Generator", icon: FileDown },
+    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+    { id: "profile", label: "Profile", icon: UserIcon as any },
+  ];
 
 export default function App() {
   const user = useAuthStore((state) => state.user);
   const page = useAuthStore((state) => state.page);
+
   const isBlocked = useAuthStore((state) => state.isBlocked);
+
   const setPage = useAuthStore((state) => state.setPage);
-  const setSystemSettings = useAuthStore((state) => state.setSystemSettings);
-  const updateUser = useAuthStore((state) => state.updateUser);
+
+  const setSystemSettings = useAuthStore(
+    (state) => state.setSystemSettings
+  );
+
+  const updateUser = useAuthStore(
+    (state) => state.updateUser
+  );
+
   const logout = useAuthStore((state) => state.logout);
+
   const [appVersion, setAppVersion] = useState("1.0.0");
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  const [showUpgradePrompt, setShowUpgradePrompt] =
+    useState(false);
+
   const [pricing, setPricing] = useState({
     PRO_1Y_PRICE: 2999,
     LIFETIME_PRICE: 9999,
-    CURRENCY: "INR"
+    CURRENCY: "INR",
   });
 
   const isTrialExpired = useMemo(() => {
-    if (!user || user.plan !== "FREE_TRIAL" || !user.subscriptionEnd) return false;
-    return new Date(user.subscriptionEnd).getTime() < new Date().getTime();
+    if (
+      !user ||
+      user.plan !== "FREE_TRIAL" ||
+      !user.subscriptionEnd
+    )
+      return false;
+
+    return (
+      new Date(user.subscriptionEnd).getTime() <
+      new Date().getTime()
+    );
   }, [user]);
 
   useEffect(() => {
-    if (user && user.plan === "FREE_TRIAL" && !isTrialExpired) {
-      // Show every 20 minutes
+    if (
+      user &&
+      user.plan === "FREE_TRIAL" &&
+      !isTrialExpired
+    ) {
       const interval = setInterval(() => {
         setShowUpgradePrompt(true);
       }, 15 * 60 * 1000);
+
       return () => clearInterval(interval);
     }
   }, [user, isTrialExpired]);
 
   useEffect(() => {
-    window.idDaddy?.getAppVersion?.().then((v) => setAppVersion(v)).catch(() => { });
+    window.idDaddy
+      ?.getAppVersion?.()
+      .then((v) => setAppVersion(v))
+      .catch(() => { });
 
     api<any>("/auth/system-settings")
-      .then(data => {
+      .then((data) => {
         if (data) {
           setSystemSettings(data);
-          setPricing(prev => ({
+
+          setPricing((prev) => ({
             ...prev,
-            PRO_1Y_PRICE: data.PRO_1Y_PRICE ?? prev.PRO_1Y_PRICE,
-            LIFETIME_PRICE: data.LIFETIME_PRICE ?? prev.LIFETIME_PRICE,
-            CURRENCY: data.CURRENCY ?? prev.CURRENCY
+            PRO_1Y_PRICE:
+              data.PRO_1Y_PRICE ?? prev.PRO_1Y_PRICE,
+            LIFETIME_PRICE:
+              data.LIFETIME_PRICE ?? prev.LIFETIME_PRICE,
+            CURRENCY: data.CURRENCY ?? prev.CURRENCY,
           }));
         }
       })
-      .catch(err => console.error("Failed to fetch system settings:", err));
+      .catch((err) =>
+        console.error(
+          "Failed to fetch system settings:",
+          err
+        )
+      );
   }, []);
 
   useEffect(() => {
     if (user) {
       api<any>("/auth/profile")
-        .then(data => {
-          updateUser({ plan: data.plan, subscriptionEnd: data.subscriptionEnd });
+        .then((data) => {
+          updateUser({
+            plan: data.plan,
+            subscriptionEnd: data.subscriptionEnd,
+          });
+
           if (data.settings) {
-            const designerStore = useDesignerStore.getState();
+            const designerStore =
+              useDesignerStore.getState();
+
             if (data.settings.organizationType) {
-              designerStore.setOrganizationType(data.settings.organizationType);
+              designerStore.setOrganizationType(
+                data.settings.organizationType
+              );
             }
+
             if (data.settings.formConfig) {
-              designerStore.setFormConfig(data.settings.formConfig);
+              designerStore.setFormConfig(
+                data.settings.formConfig
+              );
             }
           }
         })
-        .catch(err => console.error("Failed to sync profile:", err));
+        .catch((err) =>
+          console.error("Failed to sync profile:", err)
+        );
     }
   }, []);
 
@@ -95,35 +164,53 @@ export default function App() {
   }
 
   return (
-    <div className="relative flex flex-col h-screen bg-[#fdfaf5] text-[#2c3e50] font-medium">
-      {/* Title Bar Drag Area */}
+    <div className="relative flex flex-col h-screen bg-[#fdfaf5] text-[#2c3e50] font-medium overflow-hidden">
+
+      {/* TITLE BAR */}
       <div
         className="w-full h-8 shrink-0 flex items-center px-4 z-[9999]"
-        style={{ WebkitAppRegion: "drag", WebkitUserSelect: "none" } as any}
+        style={
+          {
+            WebkitAppRegion: "drag",
+            WebkitUserSelect: "none",
+          } as any
+        }
       >
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded overflow-hidden shrink-0">
-            <img src={faviconImg} alt="ID Daddy" className="w-full h-full object-cover" />
+            <img
+              src={faviconImg}
+              alt="ID Daddy"
+              className="w-full h-full object-cover"
+            />
           </div>
+
           <span className="text-xs font-bold text-[#1a5d1a]">
             ID Daddy v{appVersion}
           </span>
         </div>
       </div>
 
-      {/* ... (Blocked Notification Overlay remains the same) */}
+      {/* BLOCKED OVERLAY */}
       {isBlocked && (
         <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-6">
-          <div className="w-full max-w-sm bg-white rounded-[40px] p-10  text-center border-2 border-red-500/20 animate-in fade-in zoom-in duration-300">
+
+          <div className="w-full max-w-sm bg-white rounded-[40px] p-10 text-center border-2 border-red-500/20">
+
             <div className="h-20 w-20 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
               <LogOut className="h-10 w-10 text-red-600" />
             </div>
-            <h2 className="text-2xl font-black text-stone-900 mb-3">Account Blocked</h2>
+
+            <h2 className="text-2xl font-black text-stone-900 mb-3">
+              Account Blocked
+            </h2>
+
             <p className="text-stone-900 font-medium text-lg leading-relaxed mb-8">
-              Your account has been blocked by the admin. Please contact support for more information.
+              Your account has been blocked by the admin.
             </p>
+
             <button
-              className="w-full h-14 bg-gray-900 text-white font-black text-lg rounded-[24px] hover:bg-black transition-all  active:scale-95"
+              className="w-full h-14 bg-gray-900 text-white font-black text-lg rounded-[24px]"
               onClick={logout}
             >
               OK, Log out
@@ -132,136 +219,89 @@ export default function App() {
         </div>
       )}
 
-      {/* Pricing / Trial Over Modal */}
-      {(isTrialExpired || showUpgradePrompt) && (
-        <div className="absolute inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
-          <div className="w-full max-w-4xl bg-white rounded-[40px] p-10 flex flex-col items-center border border-gray-100 animate-in fade-in zoom-in duration-300 relative">
-            {!isTrialExpired && (
-              <button onClick={() => setShowUpgradePrompt(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
-                <X size={24} />
-              </button>
-            )}
-            <div className="h-16 w-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-6">
-              <Sparkles className="h-8 w-8 text-amber-500" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 text-center tracking-tight">
-              {!isTrialExpired ? "Upgrade Your Workspace" : "Your Free Trial Has Expired"}
-            </h2>
-            <p className="text-gray-600 font-medium text-base md:text-lg text-center mb-10 max-w-2xl">
-              {!isTrialExpired
-                ? "You are currently enjoying a free trial. Upgrade now to secure your access to professional features and remove limitations."
-                : "Your trial period has concluded. To continue using ID Daddy, please upgrade your workspace to a premium plan."}
-            </p>
+      {/* MAIN APP */}
+      <div className="flex flex-1 min-h-0 relative overflow-hidden">
 
-            <div className="grid md:grid-cols-2 gap-8 w-full mb-10">
-              {/* Pro Plan */}
-              <div className="border-2 border-stone-200 rounded-[32px] p-8 flex flex-col hover:border-[#1a5d1a] transition-all relative overflow-hidden group">
-                <div className="absolute top-0 right-0 bg-stone-100 px-4 py-1.5 rounded-bl-[24px] font-black text-[10px] uppercase tracking-widest text-stone-600">Popular</div>
-                <h3 className="text-2xl font-black text-gray-900 mb-2">Pro Plan</h3>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-black text-[#1a5d1a]">{pricing.CURRENCY} {pricing.PRO_1Y_PRICE}</span>
-                  <span className="text-gray-500 font-bold">/year</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-1">
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> Unlimited ID Card Generation</li>
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> Advanced Barcode & QR Features</li>
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> Custom Data Uploads</li>
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> Priority Email Support</li>
-                </ul>
-              </div>
-
-              {/* Lifetime Plan */}
-              <div className="border-2 border-[#1a5d1a] bg-green-50/30 rounded-[32px] p-8 flex flex-col relative overflow-hidden shadow-xl shadow-green-900/5">
-                <div className="absolute top-0 right-0 bg-[#1a5d1a] text-white px-4 py-1.5 rounded-bl-[24px] font-black text-[10px] uppercase tracking-widest">Best Value</div>
-                <h3 className="text-2xl font-black text-gray-900 mb-2">Lifetime Plan</h3>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-black text-[#1a5d1a]">{pricing.CURRENCY} {pricing.LIFETIME_PRICE}</span>
-                  <span className="text-gray-500 font-bold">one-time</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-1">
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> All Pro Features Forever</li>
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> No Recurring Fees</li>
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> Free Major Upgrades</li>
-                  <li className="flex gap-3 text-gray-700 font-bold"><CheckCircle2 className="text-[#1a5d1a] shrink-0" size={20} /> 24/7 Priority Phone Support</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <p className="text-xs font-black text-gray-400 mb-4 uppercase tracking-[0.2em]">How to upgrade</p>
-              <div className="flex flex-col md:flex-row items-center gap-4 bg-gray-50 border border-gray-100 px-8 py-5 rounded-2xl text-center md:text-left">
-                <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shrink-0 border border-gray-200">
-                  <UserIcon className="h-5 w-5 text-gray-600" />
-                </div>
-                <span className="font-black text-gray-900 text-sm md:text-base">Please contact the Administrator to purchase or upgrade your plan.</span>
-              </div>
-              {isTrialExpired && (
-                <button
-                  className="mt-8 text-red-500 font-black hover:underline uppercase tracking-widest text-xs"
-                  onClick={logout}
-                >
-                  Return to Login
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-1 min-h-0 relative">
-        <aside className={clsx(
-          "flex w-64 lg:w-80 shrink-0 flex-col border-r border-[#e8d5c4]/50 transition-all relative overflow-hidden",
-          (isBlocked || isTrialExpired) && "grayscale"
-        )}>
+        {/* SIDEBAR */}
+        <aside
+          className={clsx(
+            "flex w-64 lg:w-80 shrink-0 flex-col border-r border-[#e8d5c4]/50 relative overflow-hidden",
+            (isBlocked || isTrialExpired) &&
+            "grayscale"
+          )}
+        >
           <div className="absolute inset-0 bg-[#f5ece2]/50 -z-10" />
+
           <div className="absolute inset-0 bg-gradient-to-br from-[#f5ece2] via-[#f5ece2] to-[#d4e7d4]/30 -z-10" />
 
+          {/* BRAND */}
           <button
             className="px-8 py-8 text-left hover:bg-white/40 transition-all group relative"
-            onClick={() => !isBlocked && setPage("profile")}
+            onClick={() =>
+              !isBlocked && setPage("profile")
+            }
             disabled={isBlocked}
           >
             <div className="flex items-center gap-4 mb-2">
+
               <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0">
-                <img src={faviconImg} alt="ID Daddy" className="w-full h-full object-cover" />
+                <img
+                  src={faviconImg}
+                  alt="ID Daddy"
+                  className="w-full h-full object-cover"
+                />
               </div>
+
               <div>
-                <p className="font-black text-2xl tracking-tight group-hover:text-[#1a5d1a] transition-colors leading-none">ID Daddy</p>
-                <p className="text-sm font-bold text-stone-900 mt-1 opacity-70">Desktop Professional</p>
+                <p className="font-black text-2xl tracking-tight leading-none">
+                  ID Daddy
+                </p>
+
+                <p className="text-sm font-bold text-stone-900 mt-1 opacity-70">
+                  Desktop Professional
+                </p>
               </div>
             </div>
 
             <div className="mt-4">
-              <div className={clsx(
-                "inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-2xl  border",
-                user.plan === "LIFETIME" ? "bg-amber-100 text-amber-700 border-amber-200" :
-                  user.plan === "PRO_1Y" ? "bg-green-100 text-green-700 border-green-200" :
-                    "bg-stone-100 text-stone-900 border-stone-200"
-              )}>
-                <Sparkles size={11} className="opacity-50" />
-                {(() => {
-                  if (user.plan === "FREE_TRIAL") {
-                    if (!user.subscriptionEnd) return "Trial Version";
-                    const diffDays = Math.ceil((new Date(user.subscriptionEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    return diffDays < 0 ? "Trial Expired" : `${diffDays} Days Left`;
-                  }
-                  if (user.plan === "PRO_1Y") {
-                    if (!user.subscriptionEnd) return "Pro (1 Year)";
-                    const diffDays = Math.ceil((new Date(user.subscriptionEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    return diffDays < 0 ? "Pro Expired" : `Pro (${diffDays} Days Left)`;
-                  }
-                  return "Lifetime Membership";
-                })()}
+              <div
+                className={clsx(
+                  "inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-2xl border",
+                  user.plan === "LIFETIME"
+                    ? "bg-amber-100 text-amber-700 border-amber-200"
+                    : user.plan === "PRO_1Y"
+                      ? "bg-green-100 text-green-700 border-green-200"
+                      : "bg-stone-100 text-stone-900 border-stone-200"
+                )}
+              >
+                <Sparkles
+                  size={11}
+                  className="opacity-50"
+                />
+
+                {user.plan === "LIFETIME"
+                  ? "Lifetime Membership"
+                  : user.plan === "PRO_1Y"
+                    ? "PRO Membership"
+                    : "Trial Version"}
               </div>
             </div>
           </button>
 
+          {/* NAVIGATION */}
           <nav className="flex-1 space-y-2 px-6 py-2 overflow-y-auto custom-scrollbar">
+
             {pages
               .filter((item) => {
-                if (user.role === "SUPER_ADMIN") {
-                  return !["dashboard", "profile"].includes(item.id);
+                if (
+                  user.role === "SUPER_ADMIN"
+                ) {
+                  return ![
+                    "dashboard",
+                    "profile",
+                  ].includes(item.id);
                 }
+
                 return true;
               })
               .map((item) => (
@@ -271,37 +311,72 @@ export default function App() {
                     "flex h-16 w-full items-center gap-4 px-6 text-left transition-all duration-300 group rounded-lg",
                     page === item.id
                       ? "bg-gradient-to-r from-[#1a5d1a] to-[#2d7a2d] text-white scale-[1.02]"
-                      : "text-stone-900 hover:bg-white/60 hover:text-[#1a5d1a] hover:translate-x-1"
+                      : "text-stone-900 hover:bg-white/60 hover:text-[#1a5d1a]"
                   )}
-                  onClick={() => !isBlocked && setPage(item.id)}
+                  onClick={() =>
+                    !isBlocked &&
+                    setPage(item.id)
+                  }
                   disabled={isBlocked}
                 >
-                  <div className={clsx(
-                    "p-2.5 rounded-md transition-colors",
-                    page === item.id ? "bg-white/20" : "bg-stone-100 group-hover:bg-white"
-                  )}>
-                    <item.icon className={clsx("h-6 w-6", page === item.id ? "text-white" : "text-stone-900 group-hover:text-[#1a5d1a]")} />
+                  <div
+                    className={clsx(
+                      "p-2.5 rounded-md transition-colors",
+                      page === item.id
+                        ? "bg-white/20"
+                        : "bg-stone-100 group-hover:bg-white"
+                    )}
+                  >
+                    <item.icon
+                      className={clsx(
+                        "h-6 w-6",
+                        page === item.id
+                          ? "text-white"
+                          : "text-stone-900 group-hover:text-[#1a5d1a]"
+                      )}
+                    />
                   </div>
-                  <span className={clsx("font-black text-lg", page === item.id ? "text-white" : "text-stone-900")}>
+
+                  <span
+                    className={clsx(
+                      "font-black text-lg",
+                      page === item.id
+                        ? "text-white"
+                        : "text-stone-900"
+                    )}
+                  >
                     {item.label}
                   </span>
                 </button>
               ))}
           </nav>
 
+          {/* USER CARD */}
           <div className="p-6">
             <div className="bg-white/40 backdrop-blur-sm rounded-[32px] p-5 border border-white/60">
+
               <div className="flex items-center gap-3 mb-4 px-2">
+
                 <div className="w-10 h-10 rounded-full bg-[#e8d5c4] flex items-center justify-center text-[#1a5d1a] font-black">
-                  {user.workspaceName ? user.workspaceName[0].toUpperCase() : user.email[0].toUpperCase()}
+                  {user.workspaceName
+                    ? user.workspaceName[0].toUpperCase()
+                    : user.email[0].toUpperCase()}
                 </div>
+
                 <div className="min-w-0">
-                  <p className="text-sm font-black truncate">{user.workspaceName || user.email.split('@')[0]}</p>
-                  <p className="text-[10px] font-bold text-stone-900 truncate">{user.email}</p>
+                  <p className="text-sm font-black truncate">
+                    {user.workspaceName ||
+                      user.email.split("@")[0]}
+                  </p>
+
+                  <p className="text-[10px] font-bold text-stone-900 truncate">
+                    {user.email}
+                  </p>
                 </div>
               </div>
+
               <button
-                className="w-full h-12 bg-white text-stone-900 font-black rounded-2xl border border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2 "
+                className="w-full h-12 bg-white text-stone-900 font-black rounded-2xl border border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2"
                 onClick={logout}
               >
                 <LogOut className="h-4 w-4" />
@@ -310,16 +385,39 @@ export default function App() {
             </div>
           </div>
         </aside>
-        <main className={clsx("min-w-0 flex-1 overflow-hidden transition-all", (isBlocked || isTrialExpired) && "grayscale")}>
-          {page === "upload" ? <UploadView /> : null}
-          {page === "designer" ? <DesignerView /> : null}
-          {page === "upload" ? <UploadView /> : null}
-          {page === "generate" ? <GenerateView /> : null}
-          {page === "dashboard" ? <DashboardView /> : null}
-          {page === "profile" ? <ProfileView /> : null}
+
+        {/* MAIN CONTENT */}
+        <main
+          className={clsx(
+            "min-w-0 flex-1 overflow-hidden transition-all w-full",
+            (isBlocked || isTrialExpired) &&
+            "grayscale"
+          )}
+        >
+          {page === "upload" ? (
+            <UploadView />
+          ) : null}
+
+          {page === "designer" ? (
+            <DesignerView />
+          ) : null}
+
+          {page === "generate" ? (
+            <GenerateView />
+          ) : null}
+
+          {page === "dashboard" ? (
+            <DashboardView />
+          ) : null}
+
+          {page === "profile" ? (
+            <ProfileView />
+          ) : null}
         </main>
       </div>
+
       <GlobalModal />
+
       <UpdateNotification />
     </div>
   );

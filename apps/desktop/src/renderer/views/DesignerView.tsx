@@ -37,13 +37,13 @@ import {
 const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }: any) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
-  
-  const filteredMembers = members.filter((m: any) => 
+
+  const filteredMembers = members.filter((m: any) =>
     `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase())
   );
-  
+
   const selectedMember = previewMemberId ? members.find((m: any) => m.id === previewMemberId) : members[0];
-  
+
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (!(e.target as Element).closest('.member-dropdown')) setIsOpen(false);
@@ -56,10 +56,10 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
     setPreviewMemberId(id);
     setIsOpen(false);
     setSearch('');
-    
+
     if (!canvas) return;
     const targetMember = id ? members.find((m: any) => m.id === id) || members[0] : members[0];
-    
+
     canvas.getObjects().forEach(async (obj: any) => {
       if (obj.placeholder || obj.isVariable) {
         if (obj.type === 'i-text' || obj.type === 'textbox') {
@@ -86,10 +86,10 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
             else if (targetMember.customFields && targetMember.customFields[key]) {
               url = targetMember.customFields[key];
             }
-            
+
             if (url) {
               obj.setSrc(url, () => {
-                 canvas.renderAll();
+                canvas.renderAll();
               }, { crossOrigin: 'anonymous' });
             }
           }
@@ -102,7 +102,7 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
   return (
     <div className="relative member-dropdown flex items-center gap-2">
       <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider hidden md:block">Preview:</span>
-      <div 
+      <div
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all  w-48 justify-between"
       >
@@ -116,15 +116,15 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
         </div>
         <ChevronDown size={14} className="text-gray-900 flex-shrink-0" />
       </div>
-      
+
       {isOpen && (
         <div className="absolute top-full left-[55px] mt-1 w-64 bg-white border border-gray-100  rounded-xl z-50 overflow-hidden flex flex-col">
           <div className="p-2 border-b border-gray-100 bg-gray-50/50">
             <div className="relative">
               <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-900" />
-              <input 
-                type="text" 
-                placeholder="Search members..." 
+              <input
+                type="text"
+                placeholder="Search members..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 autoFocus
@@ -141,9 +141,9 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
               >
                 <div className="flex items-center gap-2 truncate">
                   {m.profileImage ? (
-                     <img src={m.profileImage} className="w-6 h-6 rounded-full object-cover shrink-0 border border-gray-200" />
+                    <img src={m.profileImage} className="w-6 h-6 rounded-full object-cover shrink-0 border border-gray-200" />
                   ) : (
-                     <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
+                    <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
                   )}
                   <span className="truncate">{m.firstName} {m.lastName}</span>
                 </div>
@@ -263,9 +263,9 @@ export function DesignerView() {
     const handleMove = (e: MouseEvent) => {
       if (!workspaceRef.current) return;
       const rect = workspaceRef.current.getBoundingClientRect();
-      
-      const scale = config.orientation === 'horizontal' ? 700/1013 : 400/638;
-      
+
+      const scale = config.orientation === 'horizontal' ? 700 / 1013 : 400 / 638;
+
       if (draggingGuideline.type === 'horizontal') {
         const y = (e.clientY - rect.top - workspaceOffset.y) / scale;
         setDraggingGuideline({ ...draggingGuideline, pos: y });
@@ -299,6 +299,21 @@ export function DesignerView() {
   };
 
   const [activeTab, setActiveTab] = useState('Get Started');
+  useEffect(() => {
+    const sidebar = document.querySelector("aside");
+
+    if (!sidebar) return;
+
+    if (activeTab === "Card Designer") {
+      sidebar.classList.add("hidden");
+    } else {
+      sidebar.classList.remove("hidden");
+    }
+
+    return () => {
+      sidebar.classList.remove("hidden");
+    };
+  }, [activeTab]);
   const navItems = ['Get Started', 'Card Designer', 'My Designs'];
 
   const MyDesigns = () => {
@@ -430,28 +445,31 @@ export function DesignerView() {
   };
 
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Single unified return ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tab bar always visible ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   return (
-    <div className="flex flex-col h-full bg-[#fdfaf5] overflow-hidden font-sans text-[#2c3e50]">
+    <div
+      className={`flex flex-col h-full bg-[#fdfaf5] overflow-hidden font-sans text-[#2c3e50] transition-all ${activeTab === "Card Designer"
+        ? "fixed left-0 right-0 bottom-0 top-8 z-[9999] w-screen"
+        : ""
+        }`}
+    >
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared Tab Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      { }
       <header className="h-[73px] bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex items-center justify-center gap-10 px-4 shrink-0 z-20">
         {navItems.map(item => (
           <button
             key={item}
             onClick={() => setActiveTab(item)}
-            className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] ${
-              activeTab === item 
-                ? 'border-[#1a5d1a] text-[#1a5d1a]' 
-                : 'border-transparent text-[#2c3e50]/60 hover:text-[#1a5d1a]'
-            }`}
+            className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] ${activeTab === item
+              ? 'border-[#1a5d1a] text-[#1a5d1a]'
+              : 'border-transparent text-[#2c3e50]/60 hover:text-[#1a5d1a]'
+              }`}
           >
             {item}
           </button>
         ))}
       </header>
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Get Started Tab ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      { }
       {activeTab === 'Get Started' && (
         <Dashboard onSelect={(design) => {
           const action = () => {
@@ -477,8 +495,15 @@ export function DesignerView() {
         </div>
       )}
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Card Designer Tab ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ always mounted, hidden when on other tabs to preserve canvas state */}
-      <div style={{ display: activeTab === 'Card Designer' ? 'flex' : 'none' }} className="flex-col flex-1 min-h-0">
+      <div
+        style={{
+          display:
+            activeTab === "Card Designer"
+              ? "flex"
+              : "none",
+        }}
+        className="flex-col flex-1 min-h-0 w-full h-full"
+      >
 
         {/* Utility Toolbar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â only visible on Card Designer tab */}
         <div className="h-12 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex items-center justify-between px-6 z-50 shrink-0 relative backdrop-blur-sm">
@@ -510,11 +535,10 @@ export function DesignerView() {
           <button
             onClick={handleSave}
             disabled={savedIndicator === 'saving'}
-            className={`flex items-center gap-2 px-6 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${
-              savedIndicator === 'saved'
-                ? 'bg-green-50 text-green-600 border border-green-200'
-                : 'bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-200'
-            }`}
+            className={`flex items-center gap-2 px-6 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${savedIndicator === 'saved'
+              ? 'bg-green-50 text-green-600 border border-green-200'
+              : 'bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-200'
+              }`}
           >
             {savedIndicator === 'saved' ? (
               <><CheckCircle size={14} /> Saved!</>
@@ -527,86 +551,85 @@ export function DesignerView() {
         </div>
 
         {/* Main Editor Row */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 w-full overflow-hidden">
           {/* Left Toolbar */}
           <Toolbar />
 
           {/* Canvas Workspace Wrapper */}
-          <div className="flex-1 relative flex bg-[#f0ebe4] min-h-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #d4c4b0 1px, transparent 0)', backgroundSize: '24px 24px' }}>
+          <div
+            className="flex-1 relative flex bg-[#f0ebe4] min-h-0 w-full overflow-hidden" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #d4c4b0 1px, transparent 0)', backgroundSize: '24px 24px' }}>
             {/* Canvas Workspace */}
             <div
               ref={workspaceRef}
-              className="flex-1 flex flex-col items-center relative overflow-auto"
+              className="flex-1 flex flex-col items-center relative overflow-auto w-full h-full"
               onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY }); }}
-            onClick={(e) => { if (e.target === e.currentTarget && canvas) { canvas.discardActiveObject(); canvas.requestRenderAll(); } }}
-          >
-            {/* Rulers */}
-            <div className="absolute top-0 left-5 right-0 h-5 z-30">
-              <Ruler type="horizontal" size={workspaceRef.current?.clientWidth || 2000} scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} offset={workspaceOffset.x - 20} onStartDrag={startGuidelineDrag} />
-            </div>
-            <div className="absolute top-5 left-0 bottom-0 w-5 z-30">
-              <Ruler type="vertical" size={workspaceRef.current?.clientHeight || 2000} scale={(config.orientation === 'horizontal' ? 700/1013 : 400/638) * zoom} offset={workspaceOffset.y - 25} onStartDrag={startGuidelineDrag} />
-            </div>
-            <div className="absolute top-0 left-0 w-5 h-5 bg-[#e8ddd4] border-r border-b border-[#d4c4b0] z-40" />
-
-            {/* Card */}
-            <div
-              className="flex-1 w-full flex items-start justify-center pt-20 px-20 pb-40 min-h-0 shrink-0"
               onClick={(e) => { if (e.target === e.currentTarget && canvas) { canvas.discardActiveObject(); canvas.requestRenderAll(); } }}
             >
-              <div ref={cardRef} className="relative " style={{ width: (config.orientation === 'horizontal' ? 700 : 400) * zoom, height: (config.orientation === 'horizontal' ? 441 : 633) * zoom }}>
-                <Canvas />
+              {/* Rulers */}
+              <div className="absolute top-0 left-5 right-0 h-5 z-30">
+                <Ruler type="horizontal" size={workspaceRef.current?.clientWidth || 2000} scale={(config.orientation === 'horizontal' ? 700 / 1013 : 400 / 638) * zoom} offset={workspaceOffset.x - 20} onStartDrag={startGuidelineDrag} />
               </div>
-            </div>
+              <div className="absolute top-5 left-0 bottom-0 w-5 z-30">
+                <Ruler type="vertical" size={workspaceRef.current?.clientHeight || 2000} scale={(config.orientation === 'horizontal' ? 700 / 1013 : 400 / 638) * zoom} offset={workspaceOffset.y - 25} onStartDrag={startGuidelineDrag} />
+              </div>
+              <div className="absolute top-0 left-0 w-5 h-5 bg-[#e8ddd4] border-r border-b border-[#d4c4b0] z-40" />
 
-            {/* Guidelines Overlay */}
-            <div className="absolute inset-0 pointer-events-none z-40">
-              {(() => {
-                const scale = config.orientation === 'horizontal' ? 700/1013 : 400/638;
-                return (
-                  <>
-                    {guidelines.horizontal.map((canvasY, i) => {
-                      const y = canvasY * scale + workspaceOffset.y;
-                      return (
-                        <div key={`h-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'horizontal', pos: canvasY, index: i }); }} onDoubleClick={() => removeGuideline('horizontal', i)} className="absolute left-5 right-0 h-2 -mt-1 bg-transparent pointer-events-auto cursor-ns-resize group z-50" style={{ top: y }}>
-                          <div className="h-px w-full bg-red-500/60 group-hover:bg-red-600 mt-1" />
-                          <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
-                        </div>
-                      );
-                    })}
-                    {guidelines.vertical.map((canvasX, i) => {
-                      const x = canvasX * scale + workspaceOffset.x;
-                      return (
-                        <div key={`v-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'vertical', pos: canvasX, index: i }); }} onDoubleClick={() => removeGuideline('vertical', i)} className="absolute top-5 bottom-0 w-2 -ml-1 bg-transparent pointer-events-auto cursor-ew-resize group z-50" style={{ left: x }}>
-                          <div className="w-px h-full bg-red-500/60 group-hover:bg-red-600 ml-1" />
-                          <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
-                        </div>
-                      );
-                    })}
-                    {draggingGuideline && (
-                      <div className={`absolute bg-red-400/80 ${draggingGuideline.type === 'horizontal' ? 'left-5 right-0 h-px' : 'top-5 bottom-0 w-px'}`} style={{ [draggingGuideline.type === 'horizontal' ? 'top' : 'left']: draggingGuideline.pos * scale + (draggingGuideline.type === 'horizontal' ? workspaceOffset.y : workspaceOffset.x) }} />
-                    )}
-                  </>
-                );
-              })()}
-            </div>
+              {/* Card */}
+              <div
+                className="flex-1 w-full h-full flex items-start justify-center pt-20 px-20 pb-40 min-h-0 shrink-0 overflow-auto"
+                onClick={(e) => { if (e.target === e.currentTarget && canvas) { canvas.discardActiveObject(); canvas.requestRenderAll(); } }}
+              >
+                <div ref={cardRef} className="relative " style={{ width: (config.orientation === 'horizontal' ? 700 : 400) * zoom, height: (config.orientation === 'horizontal' ? 441 : 633) * zoom }}>
+                  <Canvas />
+                </div>
+              </div>
+
+              {/* Guidelines Overlay */}
+              <div className="absolute inset-0 pointer-events-none z-40">
+                {(() => {
+                  const scale = config.orientation === 'horizontal' ? 700 / 1013 : 400 / 638;
+                  return (
+                    <>
+                      {guidelines.horizontal.map((canvasY, i) => {
+                        const y = canvasY * scale + workspaceOffset.y;
+                        return (
+                          <div key={`h-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'horizontal', pos: canvasY, index: i }); }} onDoubleClick={() => removeGuideline('horizontal', i)} className="absolute left-5 right-0 h-2 -mt-1 bg-transparent pointer-events-auto cursor-ns-resize group z-50" style={{ top: y }}>
+                            <div className="h-px w-full bg-red-500/60 group-hover:bg-red-600 mt-1" />
+                            <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                          </div>
+                        );
+                      })}
+                      {guidelines.vertical.map((canvasX, i) => {
+                        const x = canvasX * scale + workspaceOffset.x;
+                        return (
+                          <div key={`v-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'vertical', pos: canvasX, index: i }); }} onDoubleClick={() => removeGuideline('vertical', i)} className="absolute top-5 bottom-0 w-2 -ml-1 bg-transparent pointer-events-auto cursor-ew-resize group z-50" style={{ left: x }}>
+                            <div className="w-px h-full bg-red-500/60 group-hover:bg-red-600 ml-1" />
+                            <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                          </div>
+                        );
+                      })}
+                      {draggingGuideline && (
+                        <div className={`absolute bg-red-400/80 ${draggingGuideline.type === 'horizontal' ? 'left-5 right-0 h-px' : 'top-5 bottom-0 w-px'}`} style={{ [draggingGuideline.type === 'horizontal' ? 'top' : 'left']: draggingGuideline.pos * scale + (draggingGuideline.type === 'horizontal' ? workspaceOffset.y : workspaceOffset.x) }} />
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
 
             </div>
 
             {/* Front / Back Toggle on Center Right Edge */}
             <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#f5ece2]/95 backdrop-blur-md p-2 rounded-l-2xl border-l border-y border-[#e8d5c4] flex flex-col gap-2 z-50 pointer-events-auto">
-              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${
-                side === 'front' 
-                  ? 'bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] text-white scale-105 shadow-lg shadow-green-900/20' 
-                  : 'text-[#2c3e50] hover:bg-[#e8d5c4]/50'
-              }`}>
+              <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front'
+                ? 'bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] text-white scale-105 shadow-lg shadow-green-900/20'
+                : 'text-[#2c3e50] hover:bg-[#e8d5c4]/50'
+                }`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Front</span>
               </button>
-              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${
-                side === 'back' 
-                  ? 'bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] text-white scale-105 shadow-lg shadow-green-900/20' 
-                  : 'text-[#2c3e50] hover:bg-[#e8d5c4]/50'
-              }`}>
+              <button onClick={() => setSide('back')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'back'
+                ? 'bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] text-white scale-105 shadow-lg shadow-green-900/20'
+                : 'text-[#2c3e50] hover:bg-[#e8d5c4]/50'
+                }`}>
                 <span className="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase">Back</span>
               </button>
             </div>
