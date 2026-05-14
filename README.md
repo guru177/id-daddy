@@ -153,6 +153,11 @@ Super-admin operations use `PrismaService.runAsPlatform()` and are explicitly re
 
 Generation is blocked before a job is queued if the monthly usage plus requested records exceeds the plan limit.
 
+## Deployment Guide
+
+> [!TIP]
+> For specific instructions on deploying to AWS (RDS, ElastiCache, EC2, App Runner), please see the [AWS Deployment Guide](./AWS_DEPLOYMENT.md).
+
 ## Deployment
 
 See:
