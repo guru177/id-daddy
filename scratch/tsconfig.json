@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@prisma/client": ["../apps/api/node_modules/@prisma/client"]
+    }
+  },
+  "include": ["**/*.ts"]
+}
