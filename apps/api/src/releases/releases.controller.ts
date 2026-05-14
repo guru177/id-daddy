@@ -17,6 +17,24 @@ export class ReleasesController {
 
   // --- Public Update Endpoints (For Electron App) ---
 
+  /**
+   * Returns isMandatory + releaseNotes for a given version.
+   * Called by the Electron main process right after update-downloaded fires.
+   * Example: GET /updates/release-meta?version=2.0.0
+   */
+  @Public()
+  @Get("updates/release-meta")
+  async getReleaseMeta(@Req() req: any) {
+    const version = req.query?.version as string;
+    if (!version) return { isMandatory: false, releaseNotes: "" };
+    try {
+      const release = await this.releasesService.getReleaseByVersion(version);
+      return { isMandatory: release.isMandatory ?? false, releaseNotes: release.releaseNotes ?? "" };
+    } catch {
+      return { isMandatory: false, releaseNotes: "" };
+    }
+  }
+
   @Public()
   @Get("updates/latest.yml")
   async getLatestYml(@Res({ passthrough: true }) res: Response) {
