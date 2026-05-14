@@ -7,16 +7,25 @@ import { CreateCheckoutDto } from "./dto/create-checkout.dto";
 
 @Injectable()
 export class BillingService {
-  private readonly stripe: Stripe;
+  private readonly stripe: Stripe | undefined;
 
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService
   ) {
-    this.stripe = new Stripe(config.getOrThrow<string>("STRIPE_SECRET_KEY"));
+    const secretKey = config.get<string>("STRIPE_SECRET_KEY");
+    if (secretKey && secretKey !== "unused") {
+      this.stripe = new Stripe(secretKey);
+    } else {
+      console.warn("Stripe Secret Key is missing or set to 'unused'. Stripe functionality will be disabled.");
+    }
   }
 
   async createCheckoutSession(user: AuthUser, dto: CreateCheckoutDto) {
+    if (!this.stripe) {
+      throw new BadRequestException("Payments are currently disabled on this platform.");
+    }
+
     if (!user.workspaceId) {
       throw new BadRequestException("Workspace context is required");
     }
@@ -46,6 +55,10 @@ export class BillingService {
   }
 
   async handleWebhook(rawBody: Buffer, signature?: string) {
+    if (!this.stripe) {
+      throw new BadRequestException("Webhook handling is disabled (Stripe is not configured).");
+    }
+
     if (!signature) {
       throw new BadRequestException("Missing Stripe signature");
     }
