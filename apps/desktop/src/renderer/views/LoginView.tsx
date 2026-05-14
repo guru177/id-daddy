@@ -1,5 +1,5 @@
 import { FormEvent, useState, useEffect } from "react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Eye, EyeOff } from "lucide-react";
 import loginBg from "../assets/desktop.jpg";
 import faviconImg from "../assets/favicon.png";
 import { login, register } from "../api";
@@ -15,6 +15,7 @@ export function LoginView() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForgotHint, setShowForgotHint] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     window.idDaddy?.getAppVersion?.().then((v) => setAppVersion(v)).catch(() => {});
@@ -161,14 +162,23 @@ export function LoginView() {
                     </button>
                   )}
                 </div>
-                <input
-                  className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a]  placeholder:text-stone-200"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <input
+                    className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 pl-6 pr-14 text-stone-900 font-black text-lg outline-none transition-all focus:border-[#1a5d1a]  placeholder:text-stone-200"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-6 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {error ? (

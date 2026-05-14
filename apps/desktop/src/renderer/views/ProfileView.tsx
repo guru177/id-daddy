@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Key, Mail, Phone, Save, Building2, Edit2, CheckCircle2, X } from "lucide-react";
+import { Key, Mail, Phone, Save, Building2, Edit2, CheckCircle2, X, Eye, EyeOff } from "lucide-react";
 import { api } from "../api";
 import { useAuthStore } from "../store";
 
@@ -13,6 +13,8 @@ export function ProfileView() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -196,24 +198,42 @@ export function ProfileView() {
               <div className="grid gap-6">
                 <div className="space-y-3">
                   <label className="text-xs font-black text-stone-900 uppercase tracking-wider ml-1">New Password</label>
-                  <input
-                    type="password"
-                    className="w-full h-14 px-5 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all "
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={e => setForm({ ...form, password: e.target.value })}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="w-full h-14 pl-5 pr-12 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all "
+                      placeholder="••••••••"
+                      value={form.password}
+                      onChange={e => setForm({ ...form, password: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
                   <label className="text-xs font-black text-stone-900 uppercase tracking-wider ml-1">Confirm Password</label>
-                  <input
-                    type="password"
-                    className="w-full h-14 px-5 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all "
-                    placeholder="••••••••"
-                    value={form.confirmPassword}
-                    onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      className="w-full h-14 pl-5 pr-12 rounded-2xl bg-stone-50 border-2 border-stone-100 text-stone-900 font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all "
+                      placeholder="••••••••"
+                      value={form.confirmPassword}
+                      onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
                 <p className="mt-4 text-xs text-stone-900 font-medium italic">Leave password fields blank to keep your current credentials.</p>
               </div>

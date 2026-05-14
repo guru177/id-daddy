@@ -11,6 +11,7 @@ const node_http_1 = __importDefault(require("node:http"));
 let mainWindow = null;
 function createWindow() {
     mainWindow = new electron_1.BrowserWindow({
+        show: false,
         width: 1280,
         height: 820,
         minWidth: 1024,
@@ -33,6 +34,9 @@ function createWindow() {
     });
     mainWindow.removeMenu();
     mainWindow.setMenuBarVisibility(false);
+    mainWindow.once("ready-to-show", () => {
+        mainWindow?.show();
+    });
     const devUrl = process.env.VITE_DEV_SERVER_URL;
     if (devUrl) {
         void mainWindow.loadURL(devUrl);
