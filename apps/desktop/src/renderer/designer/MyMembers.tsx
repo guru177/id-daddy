@@ -261,19 +261,19 @@ export const MyMembers = () => {
   return (
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-900 font-medium">
       {/* Header Toolbar */}
-      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 sticky top-0 z-10  overflow-hidden">
-        <div className="flex items-center gap-6 min-w-0">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 xl:gap-8 shrink-0 sticky top-0 z-10 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 min-w-0">
           <div className="flex items-center gap-4 shrink-0">
             <h1 className="text-xl font-black text-gray-900 shrink-0">Member Previews</h1>
             {isGeneratingPreviews && (
-              <div className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100  animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100 animate-in fade-in zoom-in duration-300">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Rendering {previewResults.length}/{members.length}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Rendering {previewResults.length}/{members.length}</span>
               </div>
             )}
           </div>
           
-          <div className="relative w-48 xl:w-80">
+          <div className="relative w-full sm:w-64 xl:w-80">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-900" />
             <input 
               type="text" 
@@ -285,7 +285,7 @@ export const MyMembers = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           {filteredPreviews.length > 0 && (
             <label className="flex items-center gap-2 cursor-pointer bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all text-xs font-bold text-gray-900 shadow-sm">
               <input 
@@ -317,13 +317,13 @@ export const MyMembers = () => {
             </div>
           )}
 
-          <div className="h-8 w-px bg-gray-200 mx-1" />
+          <div className="hidden sm:block h-8 w-px bg-gray-200 mx-1" />
           
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
             <button 
               onClick={handleExportPDF} 
               disabled={isExporting.active}
-              className="h-11 bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all  flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-300"
+              className="flex-1 sm:flex-none h-11 bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 px-4 sm:px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-300 whitespace-nowrap"
             >
               {isExporting.active && isExporting.type === 'PDF' ? (
                 <><Loader2 size={16} className="animate-spin text-green-600" /> {isExporting.current}/{isExporting.total} PDFs</>
@@ -334,12 +334,12 @@ export const MyMembers = () => {
             <button 
               onClick={handleExportPNG} 
               disabled={isExporting.active}
-              className="h-11 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] hover:scale-[1.02] active:scale-[0.98] text-white px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all   flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-none h-11 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] hover:scale-[1.02] active:scale-[0.98] text-white px-4 sm:px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {isExporting.active && isExporting.type === 'PNG' ? (
-                <><Loader2 size={16} className="animate-spin" /> {isExporting.current}/{isExporting.total} Folders</>
+                <><Loader2 size={16} className="animate-spin" /> <span className="hidden sm:inline">{isExporting.current}/{isExporting.total} Folders</span></>
               ) : (
-                <><Download size={16} /> Export {selectedMembers.size > 0 ? `Selected (${selectedMembers.size})` : 'All'} (PNGs)</>
+                <><Download size={16} /> Export <span className="hidden sm:inline">{selectedMembers.size > 0 ? `Selected (${selectedMembers.size})` : 'All'} (PNGs)</span></>
               )}
             </button>
           </div>
@@ -433,21 +433,23 @@ export const MyMembers = () => {
       {/* Footer / Pagination */}
       {activeTemplateId && members.length > 0 && (
         <div className="mt-auto bg-white border-t border-gray-200 px-8 py-2.5 flex items-center justify-between shrink-0 z-20">
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Rows per page:</span>
-            <div className="flex items-center gap-1.5">
-              {[10, 20, 30, 50].map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setItemsPerPage(size)}
-                  className={`min-w-[40px] h-8 rounded-lg text-[11px] font-black transition-all border ${itemsPerPage === size ? 'bg-[#1a5d1a] border-[#1a5d1a] text-white ' : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
-                >
-                  {size}
-                </button>
-              ))}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:inline text-[11px] font-black text-gray-900 uppercase tracking-widest">Rows:</span>
+              <div className="flex items-center gap-1.5">
+                {[10, 20, 30, 50].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setItemsPerPage(size)}
+                    className={`min-w-[40px] h-8 rounded-lg text-[11px] font-black transition-all border ${itemsPerPage === size ? 'bg-[#1a5d1a] border-[#1a5d1a] text-white ' : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="h-4 w-px bg-gray-200 mx-2" />
-            <span className="text-[11px] font-medium text-gray-900">
+            <div className="hidden sm:block h-4 w-px bg-gray-200 mx-2" />
+            <span className="text-[11px] font-medium text-gray-900 text-center sm:text-left">
               Showing <span className="font-black text-gray-900">{filteredPreviews.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-gray-900">{Math.min(startIndex + itemsPerPage, filteredPreviews.length)}</span> of <span className="font-black text-gray-900">{filteredPreviews.length}</span> members
             </span>
           </div>

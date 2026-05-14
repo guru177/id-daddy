@@ -43,28 +43,28 @@ export function DashboardView() {
 
   return (
     <div className="h-full flex flex-col overflow-y-auto custom-scrollbar bg-[#fdfaf5] p-6 lg:p-10 gap-6 lg:gap-8">
-      <div className="flex shrink-0 items-center justify-between">
+      <div className="flex shrink-0 flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl lg:text-4xl font-black text-stone-900 tracking-tight">Welcome back{user ? `, ${user.workspaceName || user.email.split('@')[0]}` : ''}</h1>
-          <p className="text-stone-900 font-bold mt-1 text-base lg:text-lg">Here is your workspace overview.</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-900 tracking-tight">Welcome back{user ? `, ${user.workspaceName || user.email.split('@')[0]}` : ''}</h1>
+          <p className="text-stone-900 font-bold mt-1 text-sm sm:text-base lg:text-lg">Here is your workspace overview.</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={() => setPage('designer')} className="h-12 lg:h-14 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white flex items-center gap-2 lg:gap-3 rounded-2xl px-6 lg:px-8   hover:scale-105 transition-all active:scale-95 font-black text-base lg:text-lg">
-            <PlusCircle className="h-5 w-5" /> New Design
+        <div className="flex flex-wrap sm:flex-nowrap gap-3">
+          <button onClick={() => setPage('designer')} className="flex-1 sm:flex-none h-12 lg:h-14 bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white flex items-center justify-center gap-2 lg:gap-3 rounded-2xl px-4 lg:px-8 hover:scale-105 transition-all active:scale-95 font-black text-sm sm:text-base lg:text-lg whitespace-nowrap">
+            <PlusCircle className="h-4 sm:h-5 w-4 sm:w-5" /> New Design
           </button>
-          <button onClick={() => setPage('upload')} className="h-12 lg:h-14 bg-white text-[#1a5d1a] border-2 border-stone-100 flex items-center gap-2 lg:gap-3 rounded-2xl px-6 lg:px-8   hover:border-[#1a5d1a]/20 transition-all active:scale-95 font-black text-base lg:text-lg">
-            <Upload className="h-5 w-5" /> Upload Data
+          <button onClick={() => setPage('upload')} className="flex-1 sm:flex-none h-12 lg:h-14 bg-white text-[#1a5d1a] border-2 border-stone-100 flex items-center justify-center gap-2 lg:gap-3 rounded-2xl px-4 lg:px-8 hover:border-[#1a5d1a]/20 transition-all active:scale-95 font-black text-sm sm:text-base lg:text-lg whitespace-nowrap">
+            <Upload className="h-4 sm:h-5 w-4 sm:w-5" /> Upload Data
           </button>
         </div>
       </div>
 
-      <div className="grid shrink-0 gap-4 lg:gap-6 md:grid-cols-3">
+      <div className="grid shrink-0 gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <Metric label="Active Templates" value={savedDesigns.length} icon={LayoutTemplate} />
         <Metric label="Total Members" value={members.length} icon={Database} />
         <Metric label={deptLabelPlural} value={chartData.length} icon={Briefcase} />
       </div>
 
-      <div className="grid shrink-0 lg:flex-1 lg:min-h-0 gap-4 lg:gap-6 md:grid-cols-3">
+      <div className="grid shrink-0 lg:flex-1 lg:min-h-0 gap-4 lg:gap-6 grid-cols-1 md:grid-cols-3">
         <div className="md:col-span-2 bg-white rounded-[32px] p-6 lg:p-8   border border-white flex flex-col min-h-[300px]">
           <h2 className="font-black text-xl lg:text-2xl text-stone-900 mb-4 lg:mb-6 shrink-0 flex items-center gap-3">
             <div className="w-1.5 lg:w-2 h-6 lg:h-8 bg-[#1a5d1a] rounded-full" />
@@ -94,7 +94,7 @@ export function DashboardView() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-stone-900 font-bold">No member data available</div>
+              <div className="flex h-full items-center justify-center text-stone-900 font-bold text-center px-4">No member data available</div>
             )}
           </div>
         </div>
@@ -107,11 +107,11 @@ export function DashboardView() {
           <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar flex flex-col">
             <div className="flex flex-col gap-3">
               {members.slice(0, 5).map(m => (
-                <div key={m.id} className="flex items-center gap-3 lg:gap-4 bg-[#fdfaf5] hover:bg-white  hover:scale-[1.02] border border-stone-100 rounded-[24px] lg:rounded-[28px] p-3 transition-all group">
+                <div key={m.id} className="flex items-center gap-3 lg:gap-4 bg-[#fdfaf5] hover:bg-white hover:scale-[1.02] border border-stone-100 rounded-[24px] lg:rounded-[28px] p-3 transition-all group">
                   {m.profileImage ? (
-                    <img src={m.profileImage} alt="" className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl object-cover shrink-0 bg-white border-2 border-white  group-hover:rotate-3 transition-transform" />
+                    <img src={m.profileImage} alt="" className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl object-cover shrink-0 bg-white border-2 border-white group-hover:rotate-3 transition-transform" />
                   ) : (
-                    <div className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl bg-white flex items-center justify-center shrink-0 border-2 border-white  text-stone-300">
+                    <div className="h-10 lg:h-12 w-10 lg:w-12 rounded-2xl bg-white flex items-center justify-center shrink-0 border-2 border-white text-stone-300">
                       <User className="h-6 w-6" />
                     </div>
                   )}
@@ -122,14 +122,14 @@ export function DashboardView() {
                 </div>
               ))}
               {members.length === 0 && (
-                <div className="flex h-full items-center justify-center text-stone-900 font-bold py-10">No members found</div>
+                <div className="flex h-full items-center justify-center text-stone-900 font-bold py-10 text-center px-4">No members found</div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid shrink-0 gap-4 lg:gap-6 md:grid-cols-3">
+      <div className="grid shrink-0 gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <QuickLink icon={LayoutTemplate} label="Manage Designs" desc="Edit or create templates" onClick={() => setPage('designer')} />
         <QuickLink icon={Database} label="Manage Data" desc="Upload and preview data" onClick={() => setPage('upload')} />
         <QuickLink icon={PlayCircle} label="Bulk Generate" desc="Create print-ready files" onClick={() => setPage('generate')} />

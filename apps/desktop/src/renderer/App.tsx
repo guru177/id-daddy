@@ -98,7 +98,7 @@ export default function App() {
 
       <div className="flex flex-1 min-h-0 relative">
         <aside className={clsx(
-        "flex w-80 shrink-0 flex-col border-r border-[#e8d5c4]/50 transition-all relative overflow-hidden",
+        "flex w-64 lg:w-80 shrink-0 flex-col border-r border-[#e8d5c4]/50 transition-all relative overflow-hidden",
         isBlocked && "grayscale"
       )}>
         <div className="absolute inset-0 bg-[#f5ece2]/50 -z-10" />
