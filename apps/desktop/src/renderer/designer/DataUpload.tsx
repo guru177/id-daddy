@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search, ChevronLeft, ChevronRight, Sparkles, RotateCcw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useDesignerStore } from './store';
+import { useAuthStore } from '../store';
 import { api } from '../api';
 
 const initialFormState = {
@@ -237,12 +238,12 @@ export const DataUpload = () => {
     XLSX.writeFile(workbook, "ID_Daddy_Members.xlsx");
   };
 
-  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const bstr = evt.target?.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
@@ -251,6 +252,20 @@ export const DataUpload = () => {
         const data = XLSX.utils.sheet_to_json(ws);
 
         let importedCount = 0;
+        let skippedCount = 0;
+
+        const user = useAuthStore.getState().user;
+        const isFreeTrial = user?.plan === 'FREE_TRIAL';
+        let limit = 50;
+        
+        if (isFreeTrial) {
+          try {
+            const sysSettings = await api<any>("/auth/system-settings");
+            limit = sysSettings?.FREE_TRIAL_LIMIT ?? 50;
+          } catch (e) {
+            console.error("Failed to fetch fresh settings");
+          }
+        }
 
         data.forEach((row: any) => {
           const getVal = (possibleKeys: string[]) => {
@@ -335,21 +350,28 @@ export const DataUpload = () => {
 
             if (existingMember) {
               updateMember(existingMember.id, cleanNewMember);
+              importedCount++;
             } else {
+              const currentLength = useDesignerStore.getState().members.length;
+              if (isFreeTrial && currentLength >= limit) {
+                skippedCount++;
+                return;
+              }
               // Ensure we don't save the placeholder text for new members either
               ['profileImage', 'signature', 'fingerprint', 'divisionLogo'].forEach(imgField => {
                 if (cleanNewMember[imgField] === '[Image Attached]') cleanNewMember[imgField] = '';
               });
               addMember({ ...cleanNewMember, customImage: '' });
+              importedCount++;
             }
-            importedCount++;
           }
         });
 
+        const extraMsg = skippedCount > 0 ? `\n\nNote: ${skippedCount} records were skipped because you reached your Free Trial limit of ${limit} members. Upgrade your plan to add unlimited members.` : '';
         showModal({
-          title: 'Import Successful',
-          message: `Successfully imported ${importedCount} members from Excel.`,
-          type: 'info'
+          title: skippedCount > 0 ? 'Import Complete with Skipped Records' : 'Import Successful',
+          message: `Successfully imported ${importedCount} members from Excel.` + extraMsg,
+          type: skippedCount > 0 ? 'error' : 'info'
         });
       } catch (err) {
         showModal({
@@ -774,7 +796,25 @@ export const DataUpload = () => {
             </button>
           ) : (
             <button
-              onClick={() => {
+              onClick={async () => {
+                const user = useAuthStore.getState().user;
+                if (user?.plan === 'FREE_TRIAL') {
+                  try {
+                    const sysSettings = await api<any>("/auth/system-settings");
+                    const limit = sysSettings?.FREE_TRIAL_LIMIT ?? 50;
+                    if (members.length >= limit) {
+                      showModal({
+                        title: 'Free Trial Limit Reached',
+                        message: `You have reached the maximum limit of ${limit} records for the free trial. Please upgrade your plan to add more members.`,
+                        type: 'error'
+                      });
+                      return;
+                    }
+                  } catch (e) {
+                    console.error("Failed to check limit", e);
+                  }
+                }
+
                 setEditingMemberId(null);
                 setFormData(initialFormState);
                 setCustomFieldsList([]);

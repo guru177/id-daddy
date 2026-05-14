@@ -10,9 +10,11 @@ interface AuthState {
   user: AuthUser | null;
   page: DesktopPage;
   isBlocked: boolean;
+  systemSettings: any | null;
   setSession: (accessToken: string, refreshToken: string, user: AuthUser) => void;
   setPage: (page: DesktopPage) => void;
   setIsBlocked: (isBlocked: boolean) => void;
+  setSystemSettings: (settings: any) => void;
   updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
 }
@@ -25,12 +27,14 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       page: "dashboard",
       isBlocked: false,
+      systemSettings: null,
       setSession: (accessToken, refreshToken, user) => {
         const page = user.role === "SUPER_ADMIN" ? "designer" : "dashboard";
         set({ accessToken, refreshToken, user, page, isBlocked: false });
       },
       setPage: (page) => set({ page }),
       setIsBlocked: (isBlocked) => set({ isBlocked }),
+      setSystemSettings: (systemSettings) => set({ systemSettings }),
       updateUser: (updates) => set((state) => ({ user: state.user ? { ...state.user, ...updates } : null })),
       logout: () => {
         localStorage.removeItem("saved_id_members");
