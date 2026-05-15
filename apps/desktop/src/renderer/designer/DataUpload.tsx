@@ -637,7 +637,7 @@ export const DataUpload = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-900">
+    <div className="flex flex-col h-full bg-[#F4EFE6] overflow-hidden text-gray-900">
 
       {/* ══════════════════════════════════════════════════════
            FOLDER GRID VIEW  (landing screen)
@@ -645,7 +645,7 @@ export const DataUpload = () => {
       {view === 'folders' && (
         <div className="flex flex-col h-full">
           {/* Folder view header */}
-          <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-6 shrink-0">
+          <div className="bg-[#FAF7F2] border-b border-[#E8DFD0] px-8 py-5 flex items-center justify-between gap-6 shrink-0">
             <div>
               <h1 className="text-xl font-black text-gray-900">Data Upload</h1>
               <p className="text-xs text-gray-400 mt-0.5 font-medium">Select a folder to view or add members</p>
@@ -734,9 +734,9 @@ export const DataUpload = () => {
                 <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
                   <Users size={28} className="text-[#1a5d1a]" />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-black text-gray-900 truncate w-full">All Members</p>
-                  <p className="text-[11px] text-gray-400 font-bold mt-0.5">{members.length} records</p>
+                <div className="text-center w-full">
+                  <p className="text-base font-black text-gray-900 truncate w-full">All Members</p>
+                  <p className="text-xs text-gray-500 font-bold mt-0.5">{members.length} records</p>
                 </div>
               </button>
 
@@ -773,8 +773,8 @@ export const DataUpload = () => {
                           <Folder size={28} className="text-amber-500" />
                         </div>
                         <div className="text-center w-full">
-                          <p className="text-sm font-black text-gray-900 truncate w-full">{folder.name}</p>
-                          <p className="text-[11px] text-gray-400 font-bold mt-0.5">{count} records</p>
+                          <p className="text-base font-black text-gray-900 truncate w-full">{folder.name}</p>
+                          <p className="text-xs text-gray-500 font-bold mt-0.5">{count} records</p>
                         </div>
                       </button>
                     )}
@@ -934,7 +934,7 @@ export const DataUpload = () => {
       )}
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 z-10  overflow-hidden">
+      <div className="bg-[#FAF7F2] border-b border-[#E8DFD0] px-8 py-5 flex items-center justify-between gap-8 shrink-0 z-10  overflow-hidden">
         <div className="flex items-center gap-6 min-w-0">
           {/* Back button */}
           <button onClick={() => { setView('folders'); setSelectedMembers(new Set()); }} className="flex items-center gap-1.5 text-gray-400 hover:text-[#1a5d1a] transition-colors shrink-0">
@@ -1468,10 +1468,10 @@ export const DataUpload = () => {
       )}
 
       {/* Main Content: Table */}
-      <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
+      <div className="flex-1 flex flex-col bg-transparent overflow-hidden relative">
         <div className="flex-1 overflow-auto custom-scrollbar">
             <table className="w-full border-collapse min-w-[1000px]">
-              <thead className="sticky top-0 bg-stone-50 z-10">
+              <thead className="sticky top-0 bg-[#FAF7F2] z-10">
                 <tr className="border-b border-gray-200">
                   <th className="p-5 text-left w-12">
                     <input
@@ -1488,7 +1488,7 @@ export const DataUpload = () => {
                   <th className="px-6 py-4 text-left text-[10px] font-black text-gray-900 uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-[#E8DFD0] bg-[#F4EFE6]">
                 {paginatedMembers.map((member) => (
                   <tr key={member.id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 py-3 text-center">

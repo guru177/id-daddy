@@ -225,6 +225,11 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       set((state) => ({ folders: [newFolder as any, ...state.folders] }));
     } catch (e) {
       console.error("Failed to create folder", e);
+      get().showModal({
+        title: "Folder Creation Failed",
+        message: e instanceof Error ? e.message : "Could not create folder. Please try again.",
+        type: "error"
+      });
     }
   },
   renameFolder: async (id, name) => {

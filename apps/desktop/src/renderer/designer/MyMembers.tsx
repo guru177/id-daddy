@@ -9,6 +9,7 @@ export const MyMembers = () => {
   const { 
     savedDesigns, 
     members, 
+    folders,
     activeTemplateId, 
     previewResults, 
     setPreviewResults,
@@ -22,6 +23,7 @@ export const MyMembers = () => {
   const [highResImages, setHighResImages] = useState<{ front: string, back: string } | null>(null);
   const [isGeneratingHighRes, setIsGeneratingHighRes] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<{ active: boolean, current: number, total: number, type: 'PDF' | 'PNG' | null }>({ active: false, current: 0, total: 0, type: null });
 
   // Pagination state
@@ -29,19 +31,24 @@ export const MyMembers = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredPreviews = previewResults.filter((preview) => {
-    if (!searchQuery) return true;
     const member = members.find(m => m.id === preview.memberId);
     if (!member) return false;
+
+    if (selectedFolderId !== null && member.folderId !== selectedFolderId) {
+      return false;
+    }
+
+    if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const fullName = `${member.firstName || ''} ${member.lastName || ''}`.toLowerCase();
     const department = (member.department || '').toLowerCase();
     return fullName.includes(query) || department.includes(query);
   });
 
-  // Reset pagination when search or page size changes
+  // Reset pagination when search, folder, or page size changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, itemsPerPage]);
+  }, [searchQuery, itemsPerPage, selectedFolderId]);
 
   const totalPages = Math.ceil(filteredPreviews.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -283,6 +290,17 @@ export const MyMembers = () => {
               className="pl-11 pr-4 h-11 bg-gray-50 border border-gray-200 rounded-xl text-sm w-full focus:outline-none focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all placeholder:text-gray-900"
             />
           </div>
+          
+          <select
+            value={selectedFolderId || ''}
+            onChange={(e) => setSelectedFolderId(e.target.value || null)}
+            className="h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:outline-none focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all text-gray-900 font-bold w-full sm:w-auto"
+          >
+            <option value="">All Folders</option>
+            {folders.map(f => (
+              <option key={f.id} value={f.id}>{f.name}</option>
+            ))}
+          </select>
         </div>
         
         <div className="flex flex-wrap items-center gap-3 shrink-0">
