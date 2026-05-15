@@ -95,7 +95,7 @@ Multi-tenant ID card generator SaaS with a NestJS API, PostgreSQL RLS, Prisma, R
 
 8. Open:
 
-   - API docs: `http://localhost:4000/docs`
+   - API docs: `https://dev.iddaddy.com/api//docs`
    - Super admin: `http://localhost:5173`
    - Electron client: launched by Electron dev script
 

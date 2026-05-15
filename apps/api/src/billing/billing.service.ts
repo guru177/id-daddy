@@ -31,7 +31,7 @@ export class BillingService {
     }
 
     const priceId = this.priceForPlan(dto.plan);
-    const apiUrl = this.config.get<string>("API_PUBLIC_URL", "http://localhost:4000");
+    const apiUrl = this.config.get<string>("API_PUBLIC_URL", "https://dev.iddaddy.com/api/");
 
     const session = await this.stripe.checkout.sessions.create({
       mode: "subscription",

@@ -48,11 +48,16 @@ export class AuthService {
     // If Super Admin has no workspace, create/assign one for testing/template purposes
     if (user.role === "SUPER_ADMIN" && !user.workspaceId) {
       const platformWorkspace = await this.prisma.runAsPlatform(async (tx) => {
-        let ws = await tx.workspace.findFirst({ where: { name: "Platform Admin" } });
+        let ws = await tx.workspace.findFirst({ 
+          where: { 
+            name: "Platform Admin System",
+            users: { some: { role: "SUPER_ADMIN" } }
+          } 
+        });
         if (!ws) {
           ws = await tx.workspace.create({
             data: {
-              name: "Platform Admin",
+              name: "Platform Admin System",
               plan: "LIFETIME" as any,
               status: "ACTIVE",
               subscription: {
