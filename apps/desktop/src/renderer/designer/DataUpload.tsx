@@ -112,8 +112,8 @@ export const DataUpload = () => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const fullName = `${m.firstName || ''} ${m.lastName || ''}`.toLowerCase();
-    const idNum = (m.idNumber || '').toLowerCase();
-    const empId = (m.employeeId || '').toLowerCase();
+    const idNum = String(m.idNumber || '').toLowerCase();
+    const empId = String(m.employeeId || '').toLowerCase();
     const dept = (m.department || '').toLowerCase();
     return fullName.includes(query) || idNum.includes(query) || empId.includes(query) || dept.includes(query);
   });
@@ -122,9 +122,9 @@ export const DataUpload = () => {
     const matchesSearch = !searchQuery || (() => {
       const q = searchQuery.toLowerCase();
       return ` `.toLowerCase().includes(q)
-        || (m.idNumber||'').toLowerCase().includes(q)
-        || (m.employeeId||'').toLowerCase().includes(q)
-        || (m.department||'').toLowerCase().includes(q);
+        || String(m.idNumber||'').toLowerCase().includes(q)
+        || String(m.employeeId||'').toLowerCase().includes(q)
+        || String(m.department||'').toLowerCase().includes(q);
     })();
     const matchesFolder = selectedFolderId === null ? true : (m.folderId ?? null) === selectedFolderId;
     return matchesSearch && matchesFolder;
@@ -306,9 +306,9 @@ export const DataUpload = () => {
           const getVal = (possibleKeys: string[]) => {
             for (const k of possibleKeys) {
               const exact = row[k];
-              if (exact) return exact;
+              if (exact !== undefined && exact !== null && exact !== '') return String(exact);
               const keyMatch = Object.keys(row).find(rk => rk.toLowerCase().replace(/\s/g, '') === k.toLowerCase().replace(/\s/g, ''));
-              if (keyMatch) return row[keyMatch];
+              if (keyMatch !== undefined) return row[keyMatch] !== undefined && row[keyMatch] !== null ? String(row[keyMatch]) : '';
             }
             return '';
           };
@@ -365,8 +365,8 @@ export const DataUpload = () => {
 
             // Deduplication logic: Match by Employee ID, ID Number, or Full Name
             const existingMember = currentMembers.find(m => {
-              if (m.employeeId && newMember.employeeId && m.employeeId.toLowerCase() === newMember.employeeId.toLowerCase()) return true;
-              if (m.idNumber && newMember.idNumber && m.idNumber.toLowerCase() === newMember.idNumber.toLowerCase()) return true;
+              if (m.employeeId && newMember.employeeId && String(m.employeeId).toLowerCase() === String(newMember.employeeId).toLowerCase()) return true;
+              if (m.idNumber && newMember.idNumber && String(m.idNumber).toLowerCase() === String(newMember.idNumber).toLowerCase()) return true;
 
               const mName = `${m.firstName || ''} ${m.lastName || ''}`.trim().toLowerCase();
               const newName = `${newMember.firstName || ''} ${newMember.lastName || ''}`.trim().toLowerCase();
@@ -485,9 +485,9 @@ export const DataUpload = () => {
           const fileLower = fileNameWithoutExt.toLowerCase();
           const fileLowerSpaces = fileLower.replace(/_/g, ' ').replace(/-/g, ' ');
           if (
-            (m.idNumber && m.idNumber.toLowerCase() === fileLower) ||
-            (m.employeeId && m.employeeId.toLowerCase() === fileLower) ||
-            (m.rfidNo && m.rfidNo.toLowerCase() === fileLower) ||
+            (m.idNumber && String(m.idNumber).toLowerCase() === fileLower) ||
+            (m.employeeId && String(m.employeeId).toLowerCase() === fileLower) ||
+            (m.rfidNo && String(m.rfidNo).toLowerCase() === fileLower) ||
             (fullName && fullName === fileLower) ||
             (fullName && fullName === fileLowerSpaces)
           ) {

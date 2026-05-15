@@ -63,7 +63,7 @@ export async function generatePreviews(
           });
 
           // Inject member data
-          await processCanvasObjects(canvas, member);
+          await processCanvasObjects(canvas, member, design.config.safeMargin);
 
           // Add slot punch if configured
           if (design.config.slotPunch !== 'none') {
@@ -139,7 +139,7 @@ export async function generateSingleHighRes(design: any, member: Member, multipl
       });
     });
 
-    await processCanvasObjects(canvas, member);
+    await processCanvasObjects(canvas, member, design.config.safeMargin);
 
     if (design.config.slotPunch !== 'none') {
       const punch = new fabric.Rect({
@@ -182,12 +182,24 @@ export async function generateSingleHighRes(design: any, member: Member, multipl
 
 const imageCache = new Map<string, fabric.Image>();
 
-async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member) {
+async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member, globalSafeMargin?: number) {
   const objects = canvas.getObjects();
 
   const tasks = objects.map(async (obj) => {
     if (obj.type === 'i-text' || obj.type === 'textbox') {
       const textObj = obj as any;
+      
+      // FIX: Align originX with textAlign to ensure it expands correctly when text changes
+      if (textObj.textAlign === 'center' && textObj.originX !== 'center') {
+        const currentLeft = textObj.left || 0;
+        const currentWidth = (textObj.width || 0) * (textObj.scaleX || 1);
+        textObj.set({ originX: 'center', left: currentLeft + (currentWidth / 2) });
+      } else if (textObj.textAlign === 'right' && textObj.originX !== 'right') {
+        const currentLeft = textObj.left || 0;
+        const currentWidth = (textObj.width || 0) * (textObj.scaleX || 1);
+        textObj.set({ originX: 'right', left: currentLeft + currentWidth });
+      }
+
       const rawTemplate = textObj.placeholder || textObj.text;
       let text = rawTemplate;
 
@@ -202,12 +214,12 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member)
 
           textObj.set('text', text);
 
-          // Re-calculate variable colors specifically for this member's string length
+          // Re-calculate variable colors — every character gets an explicit style entry
+          // so Fabric uses the same measurement path across the whole string.
           if (textObj.variableColors && Object.keys(textObj.variableColors).length > 0) {
-            const charStyles: Record<number, { fill: string }> = {};
-            let charPos = 0;
+            const baseFill = textObj.fill || '#000000';
+            const charColors: string[] = [];
             const segments = rawTemplate.split(/({{[^}]+}})/g);
-            let lastColor: string | null = null;
 
             for (const segment of segments) {
               if (!segment) continue;
@@ -215,30 +227,63 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member)
               if (varMatch) {
                 const varKey = varMatch[1].trim() as keyof Member;
                 const varValue = String(member[varKey] ?? (member.customFields && member.customFields[varKey as string]) ?? '');
-                const varColor = textObj.variableColors[varKey as string];
-                if (varColor) lastColor = varColor;
-
-                if (varColor && varValue.length > 0) {
-                  const styleInstance = { fill: varColor };
-                  for (let i = 0; i < varValue.length; i++) {
-                    charStyles[charPos + i] = styleInstance;
-                  }
-                }
-                charPos += varValue.length;
+                const varColor = textObj.variableColors[varKey as string] || baseFill;
+                for (let i = 0; i < varValue.length; i++) charColors.push(varColor);
               } else {
-                if (lastColor) {
-                  const spaceStyle = { fill: lastColor, _isSpace: true };
-                  for (let i = 0; i < segment.length; i++) {
-                    charStyles[charPos + i] = spaceStyle;
-                  }
-                }
-                charPos += segment.length;
+                for (let i = 0; i < segment.length; i++) charColors.push(baseFill);
               }
             }
-            textObj.set('styles', { 0: charStyles });
+
+            // Map to Fabric per-line format
+            const resolvedLines = text.split('\n');
+            const newStyles: any = {};
+            let charIdx = 0;
+            for (let lineIdx = 0; lineIdx < resolvedLines.length; lineIdx++) {
+              const line = resolvedLines[lineIdx];
+              const lineStyles: Record<number, { fill: string }> = {};
+              for (let col = 0; col < line.length; col++) {
+                lineStyles[col] = { fill: charColors[charIdx] ?? baseFill };
+                charIdx++;
+              }
+              if (lineIdx < resolvedLines.length - 1) charIdx++;
+              newStyles[lineIdx] = lineStyles;
+            }
+
+            textObj.set('styles', newStyles);
             textObj.set('charSpacing', 0);
             if (textObj.initDimensions) textObj.initDimensions();
           }
+        }
+      }
+
+      // Smart Margin & Shift-to-Fit: prevent variable text from running off the edges
+      if (textObj.initDimensions) textObj.initDimensions();
+      textObj.setCoords();
+
+      if (canvas && typeof canvas.getWidth === 'function') {
+        const margin = textObj.safeMargin ?? globalSafeMargin ?? 25;
+        const cw = canvas.getWidth();
+        const currentWidth = (textObj.width || 0) * (textObj.scaleX || 1);
+        let allowedWidth = currentWidth;
+        const originX = textObj.originX || 'left';
+        const posX = textObj.left || 0;
+
+        if (originX === 'left') {
+          if (posX + currentWidth > cw - margin) allowedWidth = (cw - margin) - posX;
+        } else if (originX === 'right') {
+          if (posX - currentWidth < margin) allowedWidth = posX - margin;
+        } else if (originX === 'center') {
+          const rightSpace = (cw - margin) - posX;
+          const leftSpace = posX - margin;
+          const maxHalfWidth = Math.min(rightSpace, leftSpace);
+          if (currentWidth / 2 > maxHalfWidth) allowedWidth = maxHalfWidth * 2;
+        }
+
+        if (allowedWidth < currentWidth && allowedWidth > 0) {
+          const scaleRatio = allowedWidth / currentWidth;
+          textObj.set('scaleX', (textObj.scaleX || 1) * scaleRatio);
+          textObj.set('scaleY', (textObj.scaleY || 1) * scaleRatio);
+          textObj.setCoords();
         }
       }
     }
@@ -320,6 +365,36 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member)
               }
               resolve();
             }, options);
+          });
+        } else {
+          // No image — load a grey SVG placeholder that inherits the original clipPath (e.g. circle crop)
+          const w = obj.width || 100;
+          const h = obj.height || 100;
+          const svgPlaceholder = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='${w}' height='${h}' fill='%23d1d5db'/><circle cx='${w/2}' cy='${h*0.38}' r='${Math.min(w,h)*0.18}' fill='%239ca3af'/><ellipse cx='${w/2}' cy='${h*0.72}' rx='${Math.min(w,h)*0.24}' ry='${Math.min(w,h)*0.16}' fill='%239ca3af'/></svg>`;
+
+          await new Promise<void>(resolve => {
+            fabric.Image.fromURL(svgPlaceholder, (img) => {
+              if (img) {
+                img.set({
+                  left: obj.left,
+                  top: obj.top,
+                  scaleX: obj.scaleX,
+                  scaleY: obj.scaleY,
+                  angle: obj.angle,
+                  originX: obj.originX,
+                  originY: obj.originY,
+                  clipPath: obj.clipPath,
+                  selectable: false,
+                  evented: false,
+                });
+                const idx = canvas.getObjects().indexOf(obj);
+                if (idx > -1) {
+                  canvas.remove(obj);
+                  canvas.insertAt(img, idx, false);
+                }
+              }
+              resolve();
+            }, {});
           });
         }
       }

@@ -108,9 +108,9 @@ const Canvas = () => {
       const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
 
       // Safe Zone Indicator (3mm margin roughly 35px at this resolution)
-      const { showSafeZones } = useDesignerStore.getState();
+      const { showSafeZones, config: currentConfig } = useDesignerStore.getState();
       if (showSafeZones) {
-        const margin = 35; 
+        const margin = currentConfig.safeMargin ?? 25; 
         const safeZone = new fabric.Rect({
           left: margin,
           top: margin,
@@ -515,7 +515,7 @@ const Canvas = () => {
     const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
 
     if (showSafeZones) {
-      const margin = 35;
+      const margin = config.safeMargin ?? 25;
       const safeZone = new fabric.Rect({
         left: margin,
         top: margin,
@@ -557,7 +557,7 @@ const Canvas = () => {
       punch.bringToFront();
     }
     canvas.renderAll();
-  }, [config.backgroundColorFront, config.backgroundColorBack, config.slotPunch, showSafeZones]);
+  }, [config.backgroundColorFront, config.backgroundColorBack, config.slotPunch, showSafeZones, config.safeMargin]);
 
   return (
     <div

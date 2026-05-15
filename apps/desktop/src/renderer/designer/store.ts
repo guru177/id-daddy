@@ -20,6 +20,7 @@ interface CardConfig {
     track2: string;
     track3: string;
   };
+  safeMargin?: number;
 }
 
 export interface SavedDesign {
@@ -104,8 +105,8 @@ interface DesignerState {
   frontData: any;
   backData: any;
   selectedObject: fabric.Object | null;
-  history: string[];
-  redoStack: string[];
+  history: any[];
+  redoStack: any[];
   config: CardConfig;
   customVariables: string[];
   activePanel: string | null;
@@ -127,6 +128,7 @@ interface DesignerState {
   saveState: () => void;
   undo: () => void;
   redo: () => void;
+  discardChanges: () => void;
 
   deleteSelected: () => void;
   duplicateSelected: () => void;
@@ -568,6 +570,19 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       if (get().side === 'front') updates.frontData = nextState;
       else updates.backData = nextState;
       set(updates);
+    });
+  },
+
+  discardChanges: () => {
+    const { history, canvas } = get();
+    if (!canvas || history.length === 0) {
+      set({ history: [], redoStack: [] });
+      return;
+    }
+    const initialState = history[0];
+    canvas.loadFromJSON(initialState, () => {
+      canvas.renderAll();
+      set({ history: [initialState], redoStack: [] });
     });
   },
 
@@ -1140,7 +1155,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         previewResults: [],
         frontThumbnail: fThumb,
         backThumbnail: bThumb,
-        history: [JSON.stringify(currentData)],
+        history: [currentData],
         redoStack: []
       });
       localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));

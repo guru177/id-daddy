@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Loader2, X, Eye, FileDown, Image as ImageIcon, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Loader2, X, Eye, FileDown, Image as ImageIcon, Search, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useDesignerStore } from './store';
 import { generatePreviews, VdpResult, generateSingleHighRes } from './VdpEngine';
 import { jsPDF } from 'jspdf';
@@ -25,6 +25,7 @@ export const MyMembers = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<{ active: boolean, current: number, total: number, type: 'PDF' | 'PNG' | null }>({ active: false, current: 0, total: 0, type: null });
+  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -268,7 +269,7 @@ export const MyMembers = () => {
   return (
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-900 font-medium">
       {/* Header Toolbar */}
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 xl:gap-8 shrink-0 sticky top-0 z-10 overflow-hidden">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 xl:gap-8 shrink-0 sticky top-0 z-[60] overflow-visible">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 min-w-0">
           <div className="flex items-center gap-4 shrink-0">
             <h1 className="text-xl font-black text-gray-900 shrink-0">Member Previews</h1>
@@ -327,11 +328,46 @@ export const MyMembers = () => {
           )}
 
           {savedDesigns.length > 0 && (
-            <div className="flex items-center gap-2.5 bg-stone-50/50 px-4 py-2 rounded-xl border border-stone-100">
-              <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Template:</span>
-              <span className="text-xs font-black text-[#1a5d1a]">
-                {savedDesigns.find(d => d.id === (activeTemplateId || savedDesigns[0].id))?.name}
-              </span>
+            <div className="relative">
+              <div 
+                onClick={() => setIsTemplateDropdownOpen(!isTemplateDropdownOpen)}
+                className="flex items-center gap-2.5 bg-stone-50/50 px-4 py-2 rounded-xl border border-stone-100 cursor-pointer hover:bg-stone-100 transition-colors"
+              >
+                <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Template:</span>
+                <span className="text-xs font-black text-[#1a5d1a] truncate max-w-[120px]">
+                  {savedDesigns.find(d => d.id === (activeTemplateId || savedDesigns[0].id))?.name}
+                </span>
+                <ChevronDown size={14} className="text-[#1a5d1a] ml-1" />
+              </div>
+
+              {isTemplateDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsTemplateDropdownOpen(false)} />
+                  <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-2xl shadow-xl shadow-black/5 border border-gray-100 z-50 overflow-hidden py-2 max-h-80 overflow-y-auto custom-scrollbar">
+                    {savedDesigns.map(design => (
+                      <div
+                        key={design.id}
+                        onClick={() => {
+                          useDesignerStore.setState({ activeTemplateId: design.id, previewResults: [] });
+                          setIsTemplateDropdownOpen(false);
+                        }}
+                        className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          (activeTemplateId || savedDesigns[0].id) === design.id ? 'bg-green-50/50' : ''
+                        }`}
+                      >
+                        {design.thumbnailFront ? (
+                          <img src={design.thumbnailFront} alt="" className="w-10 h-6 object-cover rounded shadow-sm border border-gray-200" />
+                        ) : (
+                          <div className="w-10 h-6 bg-gray-100 rounded border border-gray-200" />
+                        )}
+                        <span className="text-sm font-bold text-gray-900 truncate">
+                          {design.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 

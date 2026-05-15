@@ -65,10 +65,62 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
     canvas.getObjects().forEach(async (obj: any) => {
       if (obj.placeholder || obj.isVariable) {
         if (obj.type === 'i-text' || obj.type === 'textbox') {
+          // Store original scale if not set yet, so we don't permanently shrink the template
+          if (obj.originalScaleX === undefined) {
+             obj.originalScaleX = obj.scaleX || 1;
+             obj.originalScaleY = obj.scaleY || 1;
+          }
+          // Restore before calculating new layout
+          obj.set('scaleX', obj.originalScaleX);
+          obj.set('scaleY', obj.originalScaleY);
+
+          // Fix originX alignment so it expands properly from its center/right anchor
+          if (obj.textAlign === 'center' && obj.originX !== 'center') {
+            const currentLeft = obj.left || 0;
+            const currentWidth = (obj.width || 0) * (obj.scaleX || 1);
+            obj.set({ originX: 'center', left: currentLeft + (currentWidth / 2) });
+          } else if (obj.textAlign === 'right' && obj.originX !== 'right') {
+            const currentLeft = obj.left || 0;
+            const currentWidth = (obj.width || 0) * (obj.scaleX || 1);
+            obj.set({ originX: 'right', left: currentLeft + currentWidth });
+          }
+
           const rawText = obj.placeholder || obj.text;
           const previewText = getPreviewText(rawText, members);
           obj.set('text', previewText);
           applyVariableStyles(obj, members);
+
+          // Smart Margin & Shift-to-Fit for live preview
+          if (obj.initDimensions) obj.initDimensions();
+          obj.setCoords();
+          if (canvas && typeof canvas.getWidth === 'function') {
+             const { config } = useDesignerStore.getState();
+             const margin = obj.safeMargin ?? config.safeMargin ?? 25;
+             const cw = canvas.getWidth();
+             const currentWidth = (obj.width || 0) * (obj.scaleX || 1);
+             let allowedWidth = currentWidth;
+             const originX = obj.originX || 'left';
+             const posX = obj.left || 0;
+
+             if (originX === 'left') {
+               if (posX + currentWidth > cw - margin) allowedWidth = (cw - margin) - posX;
+             } else if (originX === 'right') {
+               if (posX - currentWidth < margin) allowedWidth = posX - margin;
+             } else if (originX === 'center') {
+               const rightSpace = (cw - margin) - posX;
+               const leftSpace = posX - margin;
+               const maxHalfWidth = Math.min(rightSpace, leftSpace);
+               if (currentWidth / 2 > maxHalfWidth) allowedWidth = maxHalfWidth * 2;
+             }
+
+             if (allowedWidth < currentWidth && allowedWidth > 0) {
+               const scaleRatio = allowedWidth / currentWidth;
+               obj.set('scaleX', (obj.scaleX || 1) * scaleRatio);
+               obj.set('scaleY', (obj.scaleY || 1) * scaleRatio);
+               obj.setCoords();
+             }
+          }
+          canvas.renderAll();
         } else if (obj.type === 'image' && obj.placeholder) {
           const ph = obj.placeholder;
           if (ph === '{{barcode}}' || ph === '{{qr_code}}' || ph === '{{pdf417}}' || ph === '{{datamatrix}}') {
@@ -93,6 +145,15 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
               obj.setSrc(url, () => {
                 canvas.renderAll();
               }, { crossOrigin: 'anonymous' });
+            } else {
+              // No image for this member — reset to grey placeholder so previous photo doesn't persist.
+              // Use obj.width/height (intrinsic), NOT multiplied by scale — Fabric applies scale separately.
+              const w = obj.width || 100;
+              const h = obj.height || 100;
+              const svgPlaceholder = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='${w}' height='${h}' fill='%23d1d5db'/><circle cx='${w/2}' cy='${h*0.38}' r='${Math.min(w,h)*0.18}' fill='%239ca3af'/><ellipse cx='${w/2}' cy='${h*0.72}' rx='${Math.min(w,h)*0.24}' ry='${Math.min(w,h)*0.16}' fill='%239ca3af'/></svg>`;
+              obj.setSrc(svgPlaceholder, () => {
+                canvas.renderAll();
+              }, {});
             }
           }
         }
@@ -301,6 +362,62 @@ export function DesignerView() {
   };
 
   const [activeTab, setActiveTab] = useState('Get Started');
+
+  // Re-apply member preview whenever the safe margin changes so the live canvas always respects the rule
+  useEffect(() => {
+    if (!canvas || !members || members.length === 0) return;
+    const { previewMemberId: pid } = useDesignerStore.getState();
+    const targetMember = pid ? members.find((m: any) => m.id === pid) || members[0] : members[0];
+    if (!targetMember) return;
+
+    // Restore originalScale then re-apply
+    canvas.getObjects().forEach(async (obj: any) => {
+      if ((obj.placeholder || obj.isVariable) && (obj.type === 'i-text' || obj.type === 'textbox')) {
+        // Restore original scale so we work from a clean baseline
+        if (obj.originalScaleX !== undefined) {
+          obj.set('scaleX', obj.originalScaleX);
+          obj.set('scaleY', obj.originalScaleY);
+        }
+
+        const rawText = obj.placeholder || obj.text;
+        const previewText = getPreviewText(rawText, members);
+        obj.set('text', previewText);
+        applyVariableStyles(obj, members);
+
+        if (obj.initDimensions) obj.initDimensions();
+        obj.setCoords();
+
+        if (canvas && typeof canvas.getWidth === 'function') {
+          const margin = obj.safeMargin ?? config.safeMargin ?? 25;
+          const cw = canvas.getWidth();
+          const currentWidth = (obj.width || 0) * (obj.scaleX || 1);
+          let allowedWidth = currentWidth;
+          const originX = obj.originX || 'left';
+          const posX = obj.left || 0;
+
+          if (originX === 'left') {
+            if (posX + currentWidth > cw - margin) allowedWidth = (cw - margin) - posX;
+          } else if (originX === 'right') {
+            if (posX - currentWidth < margin) allowedWidth = posX - margin;
+          } else if (originX === 'center') {
+            const rightSpace = (cw - margin) - posX;
+            const leftSpace = posX - margin;
+            const maxHalfWidth = Math.min(rightSpace, leftSpace);
+            if (currentWidth / 2 > maxHalfWidth) allowedWidth = maxHalfWidth * 2;
+          }
+
+          if (allowedWidth < currentWidth && allowedWidth > 0) {
+            const scaleRatio = allowedWidth / currentWidth;
+            obj.set('scaleX', (obj.scaleX || 1) * scaleRatio);
+            obj.set('scaleY', (obj.scaleY || 1) * scaleRatio);
+            obj.setCoords();
+          }
+        }
+      }
+    });
+    canvas.renderAll();
+  }, [config.safeMargin, canvas]);
+
   useEffect(() => {
     const sidebar = document.querySelector("aside");
 
@@ -699,7 +816,7 @@ export function DesignerView() {
                 <Save className="h-4 w-4" /> Save & Continue
               </button>
               <button
-                onClick={() => { const a = pendingAction; setPendingAction(null); a?.(); }}
+                onClick={() => { useDesignerStore.getState().discardChanges(); const a = pendingAction; setPendingAction(null); a?.(); }}
                 className="w-full h-12 bg-gray-100 hover:bg-red-50 text-gray-900 hover:text-red-600 font-black rounded-2xl transition-all active:scale-95"
               >
                 Discard & Continue

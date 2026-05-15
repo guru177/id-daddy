@@ -314,21 +314,36 @@ export const CardOptionsPanel = () => {
       <section className="pt-2">
         <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-4">Visual Guides</label>
         <div className="space-y-3">
-          <button
-            onClick={() => setShowSafeZones(!showSafeZones)}
-            className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${showSafeZones ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
-          >
-            <div className="flex items-center gap-3">
-              <Shield className={`w-5 h-5 ${showSafeZones ? 'text-green-600' : 'text-gray-900'}`} />
-              <div className="text-left">
-                <span className={`text-[11px] font-bold block ${showSafeZones ? 'text-green-700' : 'text-gray-900'}`}>Show Safe Zones</span>
-                <span className="text-[9px] text-gray-900 font-medium">3mm Print Bleed Protection</span>
+          <div className={`w-full border rounded-2xl transition-all overflow-hidden ${showSafeZones ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}>
+            <button
+              onClick={() => setShowSafeZones(!showSafeZones)}
+              className={`w-full flex items-center justify-between p-4 transition-all ${showSafeZones ? 'bg-green-50' : 'bg-transparent'}`}
+            >
+              <div className="flex items-center gap-3">
+                <Shield className={`w-5 h-5 ${showSafeZones ? 'text-green-600' : 'text-gray-900'}`} />
+                <div className="text-left">
+                  <span className={`text-[11px] font-bold block ${showSafeZones ? 'text-green-700' : 'text-gray-900'}`}>Safe Zone Margin</span>
+                  <span className="text-[9px] text-gray-900 font-medium">Dynamic text bleed protection</span>
+                </div>
               </div>
-            </div>
-            <div className={`w-10 h-5 rounded-full relative transition-colors ${showSafeZones ? 'bg-green-500' : 'bg-gray-200'}`}>
-              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${showSafeZones ? 'left-6' : 'left-1'}`} />
-            </div>
-          </button>
+              <div className={`w-10 h-5 rounded-full relative transition-colors ${showSafeZones ? 'bg-green-500' : 'bg-gray-200'}`}>
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${showSafeZones ? 'left-6' : 'left-1'}`} />
+              </div>
+            </button>
+            {showSafeZones && (
+              <div className="p-4 pt-0 bg-green-50">
+                <div className="flex items-center justify-between mt-2">
+                  <label className="text-[10px] font-bold text-green-800 flex-1">Margin Size (px)</label>
+                  <input
+                    type="number"
+                    value={config.safeMargin ?? 25}
+                    onChange={(e) => setConfig({ safeMargin: parseInt(e.target.value) || 0 })}
+                    className="w-16 p-1.5 border border-green-200 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>
@@ -360,7 +375,7 @@ export const applyVariableStyles = (obj: any, members: any[]) => {
   // If no variable colors set, wipe any existing styles and exit cleanly
   if (!obj.variableColors || Object.keys(obj.variableColors).length === 0) {
     obj.set('styles', {});
-    obj.set('charSpacing', 0); // Reset spacing
+    obj.set('charSpacing', 0);
     obj.dirty = true;
     return;
   }
@@ -372,27 +387,26 @@ export const applyVariableStyles = (obj: any, members: any[]) => {
     return;
   }
 
-
-
-  // Force native kerning (spacing = 0)
   obj.set('charSpacing', 0);
 
   const { previewMemberId } = useDesignerStore.getState();
   const targetMember = previewMemberId ? members.find(m => m.id === previewMemberId) || members[0] : members[0];
   if (!targetMember) return;
 
-  // Build a character-position map by walking through the template
-  // and tracking where each variable's value lands in the FINAL rendered string
-  const charStyles: Record<number, { fill: string }> = {};
-  let charPos = 0;
+  // Base fill of the object — literal chars (spaces between vars) will use this
+  // so they get an explicit style entry just like variable chars.
+  // This is CRITICAL: when some chars have a styles entry and others don't,
+  // Fabric switches measurement paths mid-string for certain fonts (Audiowide, Acme, etc.),
+  // causing overlap or extra spacing. Giving every char an explicit entry keeps
+  // measurement consistent across the whole text run.
+  const baseFill = obj.fill || '#000000';
 
-  // Split template into segments: either a variable {{key}} or literal text
+  // Build a flat colour array: one entry per resolved character
+  const charColors: string[] = [];
   const segments = rawTemplate.split(/({{[^}]+}})/g);
 
-  let lastColor: string | null = null;
   for (const segment of segments) {
     if (!segment) continue;
-
     const varMatch = segment.match(/^{{([^}]+)}}$/);
     if (varMatch) {
       const varKey = varMatch[1].trim();
@@ -401,63 +415,52 @@ export const applyVariableStyles = (obj: any, members: any[]) => {
         (targetMember.customFields && targetMember.customFields[varKey]) ??
         ''
       );
-      const varColor = obj.variableColors[varKey];
-      if (varColor) lastColor = varColor;
-
-      if (varColor && varValue.length > 0) {
-        const styleInstance = { fill: varColor };
-        for (let i = 0; i < varValue.length; i++) {
-          charStyles[charPos + i] = styleInstance;
-        }
+      const varColor = obj.variableColors[varKey] || baseFill;
+      for (let i = 0; i < varValue.length; i++) {
+        charColors.push(varColor);
       }
-      charPos += varValue.length;
     } else {
-      // literal text segment (e.g. the space between first and last name)
-      // We use a SEPARATE style instance for the space to prevent "kerning bias".
-      // If we merge the space into the word's chunk, fonts like Acme/Allerta will
-      // kern the space differently based on the last letter (e.g. 'm ' vs 'a ').
-      // Isolating it as its own chunk makes the gap consistent.
-      if (lastColor) {
-        const spaceStyle = { fill: lastColor, _isSpace: true }; 
-        for (let i = 0; i < segment.length; i++) {
-          charStyles[charPos + i] = spaceStyle;
-        }
+      // Literal segment (space, punctuation, etc.) — use base fill explicitly
+      for (let i = 0; i < segment.length; i++) {
+        charColors.push(baseFill);
       }
-      charPos += segment.length;
     }
   }
 
-  // Build newStyles in the format Fabric expects: { lineIndex: { charIndex: styleObj } }
-  const newStyles: any = { 0: charStyles };
+  // Map flat array → Fabric's per-line style format { lineIndex: { charIndex: { fill } } }
+  const resolvedText = obj.text || '';
+  const lines = resolvedText.split('\n');
+  const newStyles: any = {};
+  let charIdx = 0;
 
-  // Apply using Fabric's proper setter - this invalidates internal caches correctly
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const line = lines[lineIdx];
+    const lineStyles: Record<number, { fill: string }> = {};
+
+    for (let col = 0; col < line.length; col++) {
+      const color = charColors[charIdx] ?? baseFill;
+      lineStyles[col] = { fill: color };
+      charIdx++;
+    }
+    // Skip the implicit '\n' between lines
+    if (lineIdx < lines.length - 1) charIdx++;
+
+    newStyles[lineIdx] = lineStyles;
+  }
+
   obj.set('styles', newStyles);
 
-  // Explicitly force layout recalculation
-  if (obj.initDimensions) {
-    obj.initDimensions();
-  }
-
+  if (obj.initDimensions) obj.initDimensions();
   obj.dirty = true;
 
-  // CRITICAL FIX FOR "Alfa Slab One" AND HEAVY FONTS:
-  // Sometimes the browser's Canvas 2D engine hasn't physically swapped the custom font in yet,
-  // causing Fabric to permanently cache thin "fallback font" widths, which causes thick letters to overlap!
-  // We force a complete cache wipe and re-measure 150ms later when the browser is guaranteed to be ready.
+  // Force a full cache wipe after a short delay to handle slow-loading fonts
+  // that may have been measured with fallback metrics on first render.
   setTimeout(() => {
-    if (obj._charWidthsCache) {
-      obj._charWidthsCache = {};
-    }
-    if (obj._clearCache) {
-      obj._clearCache();
-    }
-    if (obj.initDimensions) {
-      obj.initDimensions();
-    }
+    if (obj._charWidthsCache) obj._charWidthsCache = {};
+    if (obj._clearCache) obj._clearCache();
+    if (obj.initDimensions) obj.initDimensions();
     obj.dirty = true;
-    if (obj.canvas) {
-      obj.canvas.renderAll();
-    }
+    if (obj.canvas) obj.canvas.renderAll();
   }, 150);
 };
 
@@ -787,7 +790,7 @@ export const CustomizePanel = () => {
           fontFamily: (selectedObject as any).fontFamily || 'Inter',
           fill: selectedObject.fill || '#000000',
           opacity: selectedObject.opacity || 1,
-          angle: selectedObject.angle || 0,
+          angle: Math.round(selectedObject.angle || 0),
           width: Math.round((selectedObject.width || 0) * (selectedObject.scaleX || 1)),
           height: Math.round((selectedObject.height || 0) * (selectedObject.scaleY || 1)),
           left: Math.round(selectedObject.left || 0),
@@ -800,6 +803,7 @@ export const CustomizePanel = () => {
           securityFormat: (selectedObject as any).securityFormat || 'code128',
           securityType: (selectedObject as any).securityType || 'URL',
           textAlign: (selectedObject as any).textAlign || 'left',
+          safeMargin: (selectedObject as any).safeMargin ?? 25,
           fontWeight: (selectedObject as any).fontWeight || 'normal',
           fontStyle: (selectedObject as any).fontStyle || 'normal',
           underline: (selectedObject as any).underline || false,
@@ -912,6 +916,7 @@ export const CustomizePanel = () => {
     (selectedObject as any).placeholder === '{{datamatrix}}';
 
   const isShape = ['rect', 'circle', 'triangle', 'line', 'polygon', 'path', 'ellipse'].includes(selectedObject.type || '');
+  const isText = selectedObject.type === 'i-text' || selectedObject.type === 'textbox';
   const isImage = (selectedObject.type === 'image' || (selectedObject as any).variableType === 'image') && !isSecurity;
   const isBarcode = (selectedObject as any).placeholder === '{{barcode}}';
   const isQRCode = (selectedObject as any).placeholder === '{{qr_code}}';
@@ -1503,22 +1508,24 @@ export const CustomizePanel = () => {
 
               return (
                 <>
-                  {['First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Gender'].some(showField) && (
+                  {['First Name', 'Last Name', 'Nickname', 'DOB', 'Gender', 'Blood Group'].some(showField) && (
                     <optgroup label="Personal Info">
                       {showField('First Name') && <option value="{{firstName}}">First Name</option>}
                       {showField('Last Name') && <option value="{{lastName}}">Last Name</option>}
                       {showField('Nickname') && <option value="{{nickname}}">Nickname</option>}
-                      {showField('Date of Birth') && <option value="{{dob}}">Date of Birth</option>}
+                      {showField('DOB') && <option value="{{dob}}">Date of Birth</option>}
                       {showField('Gender') && <option value="{{gender}}">Gender</option>}
+                      {showField('Blood Group') && <option value="{{bloodGroup}}">Blood Group</option>}
                     </optgroup>
                   )}
-                  {['Title', 'ID number', 'Employee ID', 'Department', 'Hire Date'].some(showField) && (
+                  {['Title', 'ID Number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
                     <optgroup label="Employment Info">
                       {showField('Title') && <option value="{{title}}">Job Title</option>}
-                      {showField('ID number') && <option value="{{idNumber}}">ID Number</option>}
+                      {showField('ID Number') && <option value="{{idNumber}}">ID Number</option>}
                       {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
                       {showField('Department') && <option value="{{department}}">Department</option>}
                       {showField('Hire Date') && <option value="{{hireDate}}">Hire Date</option>}
+                      {showField('Role') && <option value="{{role}}">Role</option>}
                     </optgroup>
                   )}
                   {['Email', 'Phone 1', 'Phone 2', 'Fax', 'Website'].some(showField) && (
@@ -1540,20 +1547,36 @@ export const CustomizePanel = () => {
                       {showField('Country') && <option value="{{country}}">Country</option>}
                     </optgroup>
                   )}
-                  {['Issue Date', 'Expiration Date', 'Grade Level', 'Security Level'].some(showField) && (
+                  {['Issue Date', 'Expiration Date', 'Grade Level', 'Security Level', 'RFID No'].some(showField) && (
                     <optgroup label="Card Details">
                       {showField('Issue Date') && <option value="{{issueDate}}">Issue Date</option>}
                       {showField('Expiration Date') && <option value="{{expirationDate}}">Expiration Date</option>}
                       {showField('Grade Level') && <option value="{{gradeLevel}}">Grade Level</option>}
                       {showField('Security Level') && <option value="{{securityLevel}}">Security Level</option>}
+                      {showField('RFID No') && <option value="{{rfidNo}}">RFID No</option>}
                     </optgroup>
                   )}
-                  {['Height', 'Weight', 'Eye color', 'Hair color'].some(showField) && (
+                  {['Height', 'Weight', 'Eye Color', 'Hair Color'].some(showField) && (
                     <optgroup label="Physical Attributes">
                       {showField('Height') && <option value="{{height}}">Height</option>}
                       {showField('Weight') && <option value="{{weight}}">Weight</option>}
-                      {showField('Eye color') && <option value="{{eyeColor}}">Eye Color</option>}
-                      {showField('Hair color') && <option value="{{hairColor}}">Hair Color</option>}
+                      {showField('Eye Color') && <option value="{{eyeColor}}">Eye Color</option>}
+                      {showField('Hair Color') && <option value="{{hairColor}}">Hair Color</option>}
+                    </optgroup>
+                  )}
+                  {['Parent Name', 'Parent Phone', 'Emergency Contact', 'Emergency Phone'].some(showField) && (
+                    <optgroup label="Emergency & Family">
+                      {showField('Parent Name') && <option value="{{parentName}}">Parent Name</option>}
+                      {showField('Parent Phone') && <option value="{{parentPhone}}">Parent Phone</option>}
+                      {showField('Emergency Contact') && <option value="{{emergencyContact}}">Emergency Contact</option>}
+                      {showField('Emergency Phone') && <option value="{{emergencyPhone}}">Emergency Phone</option>}
+                    </optgroup>
+                  )}
+                  {['Bus Route', 'Hostel Name', 'Room No'].some(showField) && (
+                    <optgroup label="Transport & Accommodation">
+                      {showField('Bus Route') && <option value="{{busRoute}}">Bus Route</option>}
+                      {showField('Hostel Name') && <option value="{{hostelName}}">Hostel Name</option>}
+                      {showField('Room No') && <option value="{{roomNo}}">Room No</option>}
                     </optgroup>
                   )}
 
@@ -1675,22 +1698,24 @@ export const CustomizePanel = () => {
 
                 return (
                   <>
-                    {['First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Gender'].some(showField) && (
+                    {['First Name', 'Last Name', 'Nickname', 'DOB', 'Gender', 'Blood Group'].some(showField) && (
                       <optgroup label="Personal Info">
                         {showField('First Name') && <option value="{{firstName}}">First Name</option>}
                         {showField('Last Name') && <option value="{{lastName}}">Last Name</option>}
                         {showField('Nickname') && <option value="{{nickname}}">Nickname</option>}
-                        {showField('Date of Birth') && <option value="{{dob}}">Date of Birth</option>}
+                        {showField('DOB') && <option value="{{dob}}">Date of Birth</option>}
                         {showField('Gender') && <option value="{{gender}}">Gender</option>}
+                        {showField('Blood Group') && <option value="{{bloodGroup}}">Blood Group</option>}
                       </optgroup>
                     )}
-                    {['Title', 'ID number', 'Employee ID', 'Department', 'Hire Date'].some(showField) && (
+                    {['Title', 'ID Number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
                       <optgroup label="Employment Info">
                         {showField('Title') && <option value="{{title}}">Job Title</option>}
-                        {showField('ID number') && <option value="{{idNumber}}">ID Number</option>}
+                        {showField('ID Number') && <option value="{{idNumber}}">ID Number</option>}
                         {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
                         {showField('Department') && <option value="{{department}}">Department</option>}
                         {showField('Hire Date') && <option value="{{hireDate}}">Hire Date</option>}
+                        {showField('Role') && <option value="{{role}}">Role</option>}
                       </optgroup>
                     )}
                     {['Email', 'Phone 1', 'Phone 2', 'Fax', 'Website'].some(showField) && (
@@ -1712,20 +1737,36 @@ export const CustomizePanel = () => {
                         {showField('Country') && <option value="{{country}}">Country</option>}
                       </optgroup>
                     )}
-                    {['Issue Date', 'Expiration Date', 'Grade Level', 'Security Level'].some(showField) && (
+                    {['Issue Date', 'Expiration Date', 'Grade Level', 'Security Level', 'RFID No'].some(showField) && (
                       <optgroup label="Card Details">
                         {showField('Issue Date') && <option value="{{issueDate}}">Issue Date</option>}
                         {showField('Expiration Date') && <option value="{{expirationDate}}">Expiration Date</option>}
                         {showField('Grade Level') && <option value="{{gradeLevel}}">Grade Level</option>}
                         {showField('Security Level') && <option value="{{securityLevel}}">Security Level</option>}
+                        {showField('RFID No') && <option value="{{rfidNo}}">RFID No</option>}
                       </optgroup>
                     )}
-                    {['Height', 'Weight', 'Eye color', 'Hair color'].some(showField) && (
+                    {['Height', 'Weight', 'Eye Color', 'Hair Color'].some(showField) && (
                       <optgroup label="Physical Attributes">
                         {showField('Height') && <option value="{{height}}">Height</option>}
                         {showField('Weight') && <option value="{{weight}}">Weight</option>}
-                        {showField('Eye color') && <option value="{{eyeColor}}">Eye Color</option>}
-                        {showField('Hair color') && <option value="{{hairColor}}">Hair Color</option>}
+                        {showField('Eye Color') && <option value="{{eyeColor}}">Eye Color</option>}
+                        {showField('Hair Color') && <option value="{{hairColor}}">Hair Color</option>}
+                      </optgroup>
+                    )}
+                    {['Parent Name', 'Parent Phone', 'Emergency Contact', 'Emergency Phone'].some(showField) && (
+                      <optgroup label="Emergency & Family">
+                        {showField('Parent Name') && <option value="{{parentName}}">Parent Name</option>}
+                        {showField('Parent Phone') && <option value="{{parentPhone}}">Parent Phone</option>}
+                        {showField('Emergency Contact') && <option value="{{emergencyContact}}">Emergency Contact</option>}
+                        {showField('Emergency Phone') && <option value="{{emergencyPhone}}">Emergency Phone</option>}
+                      </optgroup>
+                    )}
+                    {['Bus Route', 'Hostel Name', 'Room No'].some(showField) && (
+                      <optgroup label="Transport & Accommodation">
+                        {showField('Bus Route') && <option value="{{busRoute}}">Bus Route</option>}
+                        {showField('Hostel Name') && <option value="{{hostelName}}">Hostel Name</option>}
+                        {showField('Room No') && <option value="{{roomNo}}">Room No</option>}
                       </optgroup>
                     )}
 
@@ -1852,6 +1893,21 @@ export const CustomizePanel = () => {
           </div>
         </div>
       </section>
+
+      {isText && (
+        <section>
+          <label className="text-xs font-bold text-gray-900 block mb-2">Safe Margin (px)</label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="number"
+              value={props.safeMargin ?? 25}
+              onChange={(e) => updateSelected('safeMargin', parseInt(e.target.value) || 0)}
+              className="w-full p-2 border border-gray-200 rounded-lg text-xs outline-none"
+            />
+          </div>
+          <p className="text-[10px] text-gray-500 mt-1">Prevents long names from crossing this margin.</p>
+        </section>
+      )}
 
       <section>
         <div className="grid grid-cols-2 gap-4">

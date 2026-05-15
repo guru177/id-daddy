@@ -112,31 +112,35 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
   const isClipped = selectedObject.isClipped;
   const canClip = canvas && canvas.getObjects().indexOf(selectedObject) > 0;
 
-  // Alignment helpers (relative to canvas center)
+  // Alignment helpers (relative to canvas center, safe-margin aware)
   const alignObject = (alignType: string) => {
     if (!canvas || !selectedObject) return;
     const cw = canvas.width!;
     const ch = canvas.height!;
     const obj = selectedObject;
 
+    // Respect the safe margin if the guide is enabled
+    const { config: cfg, showSafeZones } = useDesignerStore.getState();
+    const margin = showSafeZones ? (cfg.safeMargin ?? 25) : 0;
+
     switch (alignType) {
       case 'left':
-        obj.set({ left: 0, originX: 'left' });
+        obj.set({ left: margin, originX: 'left' });
         break;
       case 'center-h':
         obj.set({ left: cw / 2, originX: 'center' });
         break;
       case 'right':
-        obj.set({ left: cw, originX: 'right' });
+        obj.set({ left: cw - margin, originX: 'right' });
         break;
       case 'top':
-        obj.set({ top: 0, originY: 'top' });
+        obj.set({ top: margin, originY: 'top' });
         break;
       case 'center-v':
         obj.set({ top: ch / 2, originY: 'center' });
         break;
       case 'bottom':
-        obj.set({ top: ch, originY: 'bottom' });
+        obj.set({ top: ch - margin, originY: 'bottom' });
         break;
     }
 
