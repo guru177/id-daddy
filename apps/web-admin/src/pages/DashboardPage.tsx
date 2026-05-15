@@ -18,13 +18,11 @@ const planLabel: Record<string, string> = {
 export function DashboardPage() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
   const [settings, setSettings] = useState<any>(null);
-  const [revenueStats, setRevenueStats] = useState<any>(null);
   const [expiring, setExpiring] = useState<WorkspaceRow[]>([]);
 
   useEffect(() => {
     void api<{ data: WorkspaceRow[]; total: number }>("/workspaces").then((r) => setWorkspaces(r.data));
     void api("/workspaces/settings").then(setSettings);
-    void api("/workspaces/revenue").then(setRevenueStats);
     void api<WorkspaceRow[]>("/workspaces/expiring").then(setExpiring);
   }, []);
 
@@ -32,12 +30,8 @@ export function DashboardPage() {
     const totalRecords = workspaces.reduce((acc, w) => acc + (w._count?.records ?? 0), 0);
     const totalUsers   = workspaces.reduce((acc, w) => acc + (w._count?.users ?? 0), 0);
     const freeClients  = workspaces.filter((w) => w.plan === "FREE_TRIAL").length;
-    const currency     = settings?.CURRENCY || "INR";
-    const revenue      = revenueStats?.[currency] || 0;
-    return { totalRecords, totalUsers, freeClients, revenue, currency };
-  }, [workspaces, settings, revenueStats]);
-
-  const currencySymbol = metrics.currency === "INR" ? "₹" : metrics.currency;
+    return { totalRecords, totalUsers, freeClients };
+  }, [workspaces, settings]);
 
   return (
     <div className="space-y-6">
@@ -51,7 +45,6 @@ export function DashboardPage() {
 
       {/* Metrics */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Total Revenue"     value={`${currencySymbol}${metrics.revenue.toLocaleString()}`} icon={CreditCard} />
         <Metric label="Total Users"       value={metrics.totalUsers}   icon={Users} />
         <Metric label="Total Records"     value={metrics.totalRecords} icon={FileText} />
         <Metric label="Free Trial Clients" value={metrics.freeClients} icon={Building2} />
