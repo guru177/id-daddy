@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search, ChevronLeft, ChevronRight, Sparkles, RotateCcw } from 'lucide-react';
+import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search, ChevronLeft, ChevronRight, Sparkles, RotateCcw, Folder, FolderPlus, FolderOpen, MoreVertical, Pencil, Trash2, ArrowLeft, Users } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useDesignerStore } from './store';
 import { useAuthStore } from '../store';
@@ -73,7 +73,7 @@ const FormField = ({ label, placeholder, required = false, value, onChange, orig
 };
 
 export const DataUpload = () => {
-  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig, isProcessingBulkBG, setIsProcessingBulkBG, bgProgress, setBgProgress, selectedMembers, setSelectedMembers } = useDesignerStore();
+  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig, isProcessingBulkBG, setIsProcessingBulkBG, bgProgress, setBgProgress, selectedMembers, setSelectedMembers, folders, createFolder, renameFolder, deleteFolder, moveMemberToFolder } = useDesignerStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -86,6 +86,17 @@ export const DataUpload = () => {
   const bulkImageInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSavingMember, setIsSavingMember] = useState(false);
+
+  // File-manager view state
+  const [view, setView] = useState<'folders' | 'members'>('folders'); // 'folders' = landing, 'members' = inside folder
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null); // null = All Members
+  const [newFolderName, setNewFolderName] = useState('');
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
+  const [renamingFolderName, setRenamingFolderName] = useState('');
+  const [movingMemberId, setMovingMemberId] = useState<string | null>(null);
+  const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
+  const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
 
   const [imageViewerMemberId, setImageViewerMemberId] = useState<string | null>(null);
 
@@ -107,18 +118,26 @@ export const DataUpload = () => {
     return fullName.includes(query) || idNum.includes(query) || empId.includes(query) || dept.includes(query);
   });
 
-  // Reset pagination when search or page size changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, itemsPerPage]);
+  const folderFilteredMembers = members.filter(m => {
+    const matchesSearch = !searchQuery || (() => {
+      const q = searchQuery.toLowerCase();
+      return ` `.toLowerCase().includes(q)
+        || (m.idNumber||'').toLowerCase().includes(q)
+        || (m.employeeId||'').toLowerCase().includes(q)
+        || (m.department||'').toLowerCase().includes(q);
+    })();
+    const matchesFolder = selectedFolderId === null ? true : (m.folderId ?? null) === selectedFolderId;
+    return matchesSearch && matchesFolder;
+  });
 
-  const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, itemsPerPage, selectedFolderId, view]);
+  const totalPages = Math.ceil(folderFilteredMembers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedMembers = filteredMembers.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedMembers = folderFilteredMembers.slice(startIndex, startIndex + itemsPerPage);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      const allIds = new Set(filteredMembers.map(m => m.id));
+      const allIds = new Set(folderFilteredMembers.map(m => m.id));
       setSelectedMembers(allIds);
     } else {
       setSelectedMembers(new Set());
@@ -580,7 +599,7 @@ export const DataUpload = () => {
       if (editingMemberId) {
         await updateMember(editingMemberId, { ...formData, customFields: customFieldsRecord } as any);
       } else {
-        await addMember({ ...formData, customFields: customFieldsRecord } as any);
+        await addMember({ ...formData, customFields: customFieldsRecord, folderId: selectedFolderId ?? undefined } as any);
       }
 
       setFormData(initialFormState);
@@ -620,10 +639,311 @@ export const DataUpload = () => {
   return (
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden text-gray-900">
 
+      {/* ══════════════════════════════════════════════════════
+           FOLDER GRID VIEW  (landing screen)
+          ══════════════════════════════════════════════════════ */}
+      {view === 'folders' && (
+        <div className="flex flex-col h-full">
+          {/* Folder view header */}
+          <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-6 shrink-0">
+            <div>
+              <h1 className="text-xl font-black text-gray-900">Data Upload</h1>
+              <p className="text-xs text-gray-400 mt-0.5 font-medium">Select a folder to view or add members</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* New folder button — green gradient */}
+              <button
+                onClick={() => setIsCreatingFolder(true)}
+                className="h-9 flex items-center gap-2 px-5 rounded-xl bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm shadow-green-900/20"
+              >
+                <FolderPlus size={14} /> New Folder
+              </button>
+            </div>
+          </div>
+
+          {/* ── Create Folder Modal ── */}
+          {isCreatingFolder && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { setIsCreatingFolder(false); setNewFolderName(''); }}>
+              <div
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in zoom-in-95 fade-in duration-200"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Modal header */}
+                <div className="bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] px-6 py-5 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                    <FolderPlus size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-white">Create New Folder</h2>
+                    <p className="text-[11px] text-green-200 font-medium mt-0.5">Organise your members into folders</p>
+                  </div>
+                </div>
+
+                {/* Modal body */}
+                <div className="px-6 py-6">
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-2">Folder Name</label>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={newFolderName}
+                    onChange={e => setNewFolderName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && newFolderName.trim()) { createFolder(newFolderName.trim()); setNewFolderName(''); setIsCreatingFolder(false); }
+                      if (e.key === 'Escape') { setIsCreatingFolder(false); setNewFolderName(''); }
+                    }}
+                    placeholder="e.g. Grade 10 — Section A"
+                    className="w-full h-11 px-4 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#1a5d1a] focus:ring-4 focus:ring-green-500/10 transition-all bg-gray-50 font-medium"
+                  />
+                </div>
+
+                {/* Modal footer */}
+                <div className="px-6 pb-6 flex gap-3">
+                  <button
+                    onClick={() => { setIsCreatingFolder(false); setNewFolderName(''); }}
+                    className="flex-1 h-10 rounded-xl border-2 border-gray-200 text-gray-600 text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all"
+                  >
+                    Discard
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (newFolderName.trim()) {
+                        createFolder(newFolderName.trim());
+                        setNewFolderName('');
+                        setIsCreatingFolder(false);
+                      }
+                    }}
+                    disabled={!newFolderName.trim()}
+                    className="flex-1 h-10 rounded-xl bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                  >
+                    <FolderPlus size={13} /> Create Folder
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Folder grid */}
+          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+
+              {/* All Members card */}
+              <button
+                onClick={() => { setSelectedFolderId(null); setView('members'); }}
+                className="group flex flex-col items-center justify-center gap-3 bg-white rounded-2xl border-2 border-gray-100 hover:border-[#1a5d1a] hover:shadow-lg hover:shadow-green-900/5 transition-all p-6 aspect-square hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                  <Users size={28} className="text-[#1a5d1a]" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-black text-gray-900 truncate w-full">All Members</p>
+                  <p className="text-[11px] text-gray-400 font-bold mt-0.5">{members.length} records</p>
+                </div>
+              </button>
+
+              {/* User folders */}
+              {folders.map(folder => {
+                const count = members.filter(m => m.folderId === folder.id).length;
+                const isRenaming = renamingFolderId === folder.id;
+                return (
+                  <div key={folder.id} className="relative group">
+                    {isRenaming ? (
+                      <div className="flex flex-col items-center justify-center gap-3 bg-white rounded-2xl border-2 border-blue-400 p-6 aspect-square">
+                        <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center">
+                          <Folder size={28} className="text-blue-500" />
+                        </div>
+                        <input
+                          autoFocus
+                          type="text"
+                          value={renamingFolderName}
+                          onChange={e => setRenamingFolderName(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && renamingFolderName.trim()) { renameFolder(folder.id, renamingFolderName.trim()); setRenamingFolderId(null); }
+                            if (e.key === 'Escape') setRenamingFolderId(null);
+                          }}
+                          onBlur={() => { if (renamingFolderName.trim()) renameFolder(folder.id, renamingFolderName.trim()); setRenamingFolderId(null); }}
+                          className="w-full text-center text-xs border border-blue-400 rounded-lg px-2 py-1 focus:outline-none"
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setSelectedFolderId(folder.id); setView('members'); }}
+                        className="w-full group flex flex-col items-center justify-center gap-3 bg-white rounded-2xl border-2 border-gray-100 hover:border-[#1a5d1a] hover:shadow-lg hover:shadow-green-900/5 transition-all p-6 aspect-square hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                          <Folder size={28} className="text-amber-500" />
+                        </div>
+                        <div className="text-center w-full">
+                          <p className="text-sm font-black text-gray-900 truncate w-full">{folder.name}</p>
+                          <p className="text-[11px] text-gray-400 font-bold mt-0.5">{count} records</p>
+                        </div>
+                      </button>
+                    )}
+
+                    {/* Folder context actions (hover) */}
+                    {!isRenaming && (
+                      <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={e => { e.stopPropagation(); setRenamingFolderId(folder.id); setRenamingFolderName(folder.name); }}
+                          className="w-8 h-8 rounded-xl bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                          title="Rename"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); setDeletingFolderId(folder.id); }}
+                          className="w-8 h-8 rounded-xl bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-all"
+                          title="Delete folder"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {/* Empty state */}
+            {folders.length === 0 && members.length === 0 && (
+              <div className="mt-12 flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center">
+                  <FolderOpen size={36} className="text-gray-300" />
+                </div>
+                <div>
+                  <p className="font-black text-gray-700 text-lg">No data yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Click "All Members" to add your first record, or create a folder to organise.</p>
+                </div>
+              </div>
+            )}
+          {/* -- Delete Folder Confirmation Modal -- */}
+          {deletingFolderId && (() => {
+            const folder = folders.find(f => f.id === deletingFolderId);
+            const count = members.filter(m => m.folderId === deletingFolderId).length;
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDeletingFolderId(null)}>
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in zoom-in-95 fade-in duration-200" onClick={e => e.stopPropagation()}>
+                  <div className="bg-gradient-to-br from-red-600 to-red-500 px-6 py-5 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                      <Trash2 size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-black text-white">Delete Folder</h2>
+                      <p className="text-[11px] text-red-200 font-medium mt-0.5">This action cannot be undone</p>
+                    </div>
+                  </div>
+                  <div className="px-6 py-6 space-y-3">
+                    <p className="text-sm font-bold text-gray-900">
+                      You are about to delete <span className="text-red-600">&ldquo;{folder?.name}&rdquo;</span>.
+                    </p>
+                    <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 space-y-1.5">
+                      <p className="text-[11px] font-black text-red-700 uppercase tracking-widest">? What will happen:</p>
+                      <ul className="text-xs text-red-600 font-medium space-y-1 list-disc list-inside">
+                        <li>The folder will be permanently removed.</li>
+                        {count > 0 && <li>The <strong>{count} member{count > 1 ? "s" : ""}</strong> inside will be moved to <strong>All Members</strong>.</li>}
+                        <li>This action <strong>cannot be undone</strong>.</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="px-6 pb-6 flex gap-3">
+                    <button onClick={() => setDeletingFolderId(null)} className="flex-1 h-10 rounded-xl border-2 border-gray-200 text-gray-600 text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
+                      Cancel
+                    </button>
+                    <button onClick={() => { deleteFolder(deletingFolderId); setDeletingFolderId(null); }} className="flex-1 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-500 text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                      <Trash2 size={13} /> Accept &amp; Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+           MEMBER LIST VIEW  (inside a folder)
+          ══════════════════════════════════════════════════════ */}
+      {view === 'members' && (
+      <>
+
+      {/* -- Delete Member Confirmation Modal -- */}
+      {deletingMemberId && (() => {
+        const member = members.find(m => m.id === deletingMemberId);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDeletingMemberId(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in zoom-in-95 fade-in duration-200" onClick={e => e.stopPropagation()}>
+              <div className="bg-gradient-to-br from-red-600 to-red-500 px-6 py-5 flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                  <Trash2 size={20} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-white">Delete Member</h2>
+                  <p className="text-[11px] text-red-200 font-medium mt-0.5">This action cannot be undone</p>
+                </div>
+              </div>
+              <div className="px-6 py-6 space-y-3">
+                <p className="text-sm font-bold text-gray-900">
+                  You are about to delete <span className="text-red-600">&ldquo;{member?.firstName} {member?.lastName}&rdquo;</span>.
+                </p>
+                <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 space-y-1.5">
+                  <p className="text-[11px] font-black text-red-700 uppercase tracking-widest">? What will happen:</p>
+                  <ul className="text-xs text-red-600 font-medium space-y-1 list-disc list-inside">
+                    <li>This member's record will be permanently removed.</li>
+                    <li>This action <strong>cannot be undone</strong>.</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="px-6 pb-6 flex gap-3">
+                <button onClick={() => setDeletingMemberId(null)} className="flex-1 h-10 rounded-xl border-2 border-gray-200 text-gray-600 text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
+                  Cancel
+                </button>
+                <button onClick={async () => {
+                  try {
+                    await deleteMember(deletingMemberId);
+                    setDeletingMemberId(null);
+                  } catch (error) {
+                    setDeletingMemberId(null);
+                    showModal({ title: 'Delete Failed', message: `The member was not deleted. ${getErrorMessage(error)}`, type: 'error' });
+                  }
+                }} className="flex-1 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-500 text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm shadow-red-900/20">
+                  <Trash2 size={13} /> Accept &amp; Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+      {/* Move to folder modal */}
+      {movingMemberId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setMovingMemberId(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-72 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <h3 className="font-black text-gray-900 mb-4 text-sm">Move to Folder</h3>
+            <div className="flex flex-col gap-1">
+              <button onClick={async () => { await moveMemberToFolder(movingMemberId, null); setMovingMemberId(null); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50">
+                <Users size={16} className="text-gray-400" /> All Members (root)
+              </button>
+              {folders.map(f => (
+                <button key={f.id} onClick={async () => { await moveMemberToFolder(movingMemberId, f.id); setMovingMemberId(null); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-700">
+                  <Folder size={16} className="text-gray-400" /> {f.name}
+                </button>
+              ))}
+              {folders.length === 0 && <p className="text-xs text-gray-400 py-2 text-center">No folders yet.</p>}
+            </div>
+            <button onClick={() => setMovingMemberId(null)} className="mt-4 w-full text-xs font-bold text-gray-400 hover:text-gray-600">Cancel</button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between gap-8 shrink-0 z-10  overflow-hidden">
         <div className="flex items-center gap-6 min-w-0">
-          <h1 className="text-xl font-black text-gray-900 shrink-0">Members ({members.length})</h1>
+          {/* Back button */}
+          <button onClick={() => { setView('folders'); setSelectedMembers(new Set()); }} className="flex items-center gap-1.5 text-gray-400 hover:text-[#1a5d1a] transition-colors shrink-0">
+            <ArrowLeft size={18} />
+          </button>
+          <h1 className="text-xl font-black text-gray-900 shrink-0">
+            {selectedFolderId === null ? `All Members` : (folders.find(f => f.id === selectedFolderId)?.name ?? 'Folder')}
+            <span className="ml-2 text-sm font-bold text-gray-400">({folderFilteredMembers.length})</span>
+          </h1>
           <div className="relative w-48 xl:w-80">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-900" />
             <input
@@ -1157,7 +1477,7 @@ export const DataUpload = () => {
                     <input
                       type="checkbox"
                       className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      checked={selectedMembers.size === filteredMembers.length && filteredMembers.length > 0}
+                      checked={selectedMembers.size === folderFilteredMembers.length && folderFilteredMembers.length > 0}
                       onChange={handleSelectAll}
                     />
                   </th>
@@ -1222,6 +1542,12 @@ export const DataUpload = () => {
                     <td className="px-6 py-3">{member.department || '-'}</td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => setMovingMemberId(member.id)}
+                          className="text-green-600 hover:text-green-800 font-bold text-xs flex items-center gap-1"
+                        >
+                          <Folder size={11} /> Move
+                        </button>
                         <button
                           onClick={() => {
                             setEditingMemberId(member.id);
@@ -1718,6 +2044,8 @@ export const DataUpload = () => {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

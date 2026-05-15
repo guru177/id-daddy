@@ -55,6 +55,7 @@ model Workspace {
   users        User[]
   templates    Template[]
   records      Record[]
+  folders      Folder[]
   exports      Export[]
   subscription Subscription?
   usageLogs    UsageLog[]
@@ -96,11 +97,27 @@ model Template {
   @@map("templates")
 }
 
+
+model Folder {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId String    @map("workspace_id") @db.Uuid
+  name        String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  records     Record[]
+
+  @@index([workspaceId])
+  @@map("folders")
+}
+
 model Record {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   workspaceId String    @map("workspace_id") @db.Uuid
   data        Json       @db.JsonB
   imageUrl    String?   @map("image_url")
+  folderId    String?   @map("folder_id") @db.Uuid
+  folder      Folder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

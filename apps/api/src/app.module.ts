@@ -16,6 +16,7 @@ import { UsersModule } from "./users/users.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { AIModule } from "./ai/ai.module";
 import { ReleasesModule } from "./releases/releases.module";
+import { FoldersModule } from "./folders/folders.module";
 
 @Module({
   imports: [
@@ -47,7 +48,8 @@ import { ReleasesModule } from "./releases/releases.module";
     ExportsModule,
     BillingModule,
     AIModule,
-    ReleasesModule
+    ReleasesModule,
+    FoldersModule
   ],
   controllers: [HealthController]
 })

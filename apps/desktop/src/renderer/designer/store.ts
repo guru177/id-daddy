@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { fabric } from 'fabric';
 import { VdpResult } from './VdpEngine';
-import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api';
+import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates, createTemplate, updateTemplate, deleteTemplate, fetchFolders, createFolderApi, renameFolderApi, deleteFolderApi } from '../api';
 import { useAuthStore } from '../store';
 import { updateProfile } from '../api';
 
@@ -34,8 +34,15 @@ export interface SavedDesign {
   isGlobal?: boolean;
 }
 
+export interface Folder {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Member {
   id: string;
+  folderId?: string;
   firstName: string;
   lastName: string;
   nickname: string;
@@ -87,6 +94,11 @@ export interface Member {
 
 
 interface DesignerState {
+  folders: Folder[];
+  createFolder: (name: string) => void;
+  renameFolder: (id: string, name: string) => void;
+  deleteFolder: (id: string) => void;
+  moveMemberToFolder: (memberId: string, folderId: string | null) => Promise<void>;
   canvas: fabric.Canvas | null;
   side: 'front' | 'back';
   frontData: any;
@@ -205,6 +217,53 @@ interface DesignerState {
 }
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
+  folders: [],
+
+  createFolder: async (name: string) => {
+    try {
+      const newFolder = await createFolderApi(name.trim());
+      set((state) => ({ folders: [newFolder as any, ...state.folders] }));
+    } catch (e) {
+      console.error("Failed to create folder", e);
+    }
+  },
+  renameFolder: async (id, name) => {
+    try {
+      await renameFolderApi(id, name.trim());
+      set((state) => ({ folders: state.folders.map(f => f.id === id ? { ...f, name: name.trim() } : f) }));
+    } catch (e) {
+      console.error("Failed to rename folder", e);
+    }
+  },
+  deleteFolder: async (id) => {
+    try {
+      await deleteFolderApi(id);
+      set((state) => {
+        const updatedFolders = state.folders.filter(f => f.id !== id);
+        // Members on the backend don't cascade delete on SetNull automatically, so we update the local state to match the DB
+        const updatedMembers = state.members.map(m => m.folderId === id ? { ...m, folderId: undefined } : m);
+        return { folders: updatedFolders, members: updatedMembers };
+      });
+    } catch (e) {
+      console.error("Failed to delete folder", e);
+    }
+  },
+  moveMemberToFolder: async (memberId, folderId) => {
+    const member = get().members.find(m => m.id === memberId);
+    if (!member) return;
+    const updated = { ...member, folderId: folderId ?? undefined };
+    try {
+      await updateRecord(memberId, updated);
+      set((state) => {
+        const updatedMembers = state.members.map(m => m.id === memberId ? updated : m);
+        localStorage.setItem('saved_id_members', JSON.stringify(updatedMembers));
+        return { members: updatedMembers };
+      });
+    } catch (e) {
+      console.error('Failed to move member to folder', e);
+      throw e;
+    }
+  },
   canvas: null,
   side: 'front',
   frontData: null,

@@ -120,3 +120,27 @@ export async function analyzeImageForDesign(file: File) {
     body
   });
 }
+
+export function fetchFolders() {
+  return api<{ id: string; name: string; createdAt: string }[]>("/folders");
+}
+
+export function createFolderApi(name: string) {
+  return api<{ id: string; name: string; createdAt: string }>("/folders", {
+    method: "POST",
+    body: JSON.stringify({ name })
+  });
+}
+
+export function renameFolderApi(id: string, name: string) {
+  return api<{ count: number }>(`/folders/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ name })
+  });
+}
+
+export function deleteFolderApi(id: string) {
+  return api<{ count: number }>(`/folders/${id}`, {
+    method: "DELETE"
+  });
+}
