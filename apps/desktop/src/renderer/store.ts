@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { AuthUser } from "@id-daddy/shared";
+import { useDesignerStore } from "./designer/store";
 
 export type DesktopPage = "dashboard" | "designer" | "upload" | "generate" | "profile";
 
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem("saved_id_members");
         localStorage.removeItem("saved_id_designs");
+        useDesignerStore.setState({ members: [], savedDesigns: [], folders: [] });
         set({ accessToken: null, refreshToken: null, user: null, page: "dashboard", isBlocked: false });
       }
     }),
