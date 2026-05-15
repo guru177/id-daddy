@@ -100,7 +100,7 @@ export const ImageLibraryModal = () => {
   const currentImages = activeFolder === 'My Images' ? uploadedImages : stockImages;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-10 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-10 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -246,7 +246,7 @@ export const AddImageDialog = ({ isOpen, onClose }: { isOpen: boolean, onClose: 
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
       <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" multiple className="hidden" />
       <div className="bg-white rounded-2xl  overflow-hidden w-[500px] border border-white/50 animate-in zoom-in-95 duration-200">
         <div className="bg-green-600 px-6 py-3 flex items-center justify-between">
