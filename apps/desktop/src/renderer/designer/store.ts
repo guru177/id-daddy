@@ -1139,7 +1139,9 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         activeTemplateId: designId,
         previewResults: [],
         frontThumbnail: fThumb,
-        backThumbnail: bThumb
+        backThumbnail: bThumb,
+        history: [JSON.stringify(currentData)],
+        redoStack: []
       });
       localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
 
