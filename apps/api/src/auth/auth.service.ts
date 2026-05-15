@@ -45,37 +45,51 @@ export class AuthService {
       }
     }
 
-    // If Super Admin has no workspace, create/assign one for testing/template purposes
-    if (user.role === "SUPER_ADMIN" && !user.workspaceId) {
-      const platformWorkspace = await this.prisma.runAsPlatform(async (tx) => {
-        let ws = await tx.workspace.findFirst({ 
-          where: { 
-            name: "Platform Admin System",
-            users: { some: { role: "SUPER_ADMIN" } }
-          } 
-        });
-        if (!ws) {
-          ws = await tx.workspace.create({
-            data: {
+    // If Super Admin has no workspace, OR is in a client's workspace, fix it by re-assigning them
+    if (user.role === "SUPER_ADMIN") {
+      let needsReassignment = !user.workspaceId;
+
+      if (user.workspaceId) {
+        const wsUsersCount = await this.prisma.runAsPlatform((tx) => 
+          tx.user.count({ where: { workspaceId: user.workspaceId, role: { not: "SUPER_ADMIN" } } })
+        );
+        if (wsUsersCount > 0) {
+          needsReassignment = true;
+        }
+      }
+
+      if (needsReassignment) {
+        const platformWorkspace = await this.prisma.runAsPlatform(async (tx) => {
+          let ws = await tx.workspace.findFirst({ 
+            where: { 
               name: "Platform Admin System",
-              plan: "LIFETIME" as any,
-              status: "ACTIVE",
-              subscription: {
-                create: {
-                  plan: "LIFETIME" as any,
-                  startDate: new Date()
+              users: { some: { role: "SUPER_ADMIN" } }
+            } 
+          });
+          if (!ws) {
+            ws = await tx.workspace.create({
+              data: {
+                name: "Platform Admin System",
+                plan: "LIFETIME" as any,
+                status: "ACTIVE",
+                subscription: {
+                  create: {
+                    plan: "LIFETIME" as any,
+                    startDate: new Date()
+                  }
                 }
               }
-            }
+            });
+          }
+          await tx.user.update({
+            where: { id: user.id },
+            data: { workspaceId: ws.id }
           });
-        }
-        await tx.user.update({
-          where: { id: user.id },
-          data: { workspaceId: ws.id }
+          return ws;
         });
-        return ws;
-      });
-      user.workspaceId = platformWorkspace.id;
+        user.workspaceId = platformWorkspace.id;
+        user.workspace = platformWorkspace as any;
+      }
     }
 
     return this.issueTokens({
