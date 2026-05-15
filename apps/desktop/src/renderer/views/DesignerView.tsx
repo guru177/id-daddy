@@ -8,6 +8,7 @@ import LayersPanel from '../designer/LayersPanel';
 import { ContextMenu } from '../designer/ContextMenu';
 import { getPreviewText, applyVariableStyles, generateSecurityImageURL } from '../designer/Panels';
 import { Ruler } from '../designer/Rulers';
+import { useAuthStore } from '../store';
 import {
   Undo2,
   Redo2,
@@ -27,6 +28,7 @@ import {
   Star,
   Search,
   ChevronDown,
+  ChevronLeft,
   Check,
   ZoomIn,
   ZoomOut,
@@ -454,19 +456,51 @@ export function DesignerView() {
     >
 
       { }
-      <header className="h-[73px] bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex items-center justify-center gap-10 px-4 shrink-0 z-20">
-        {navItems.map(item => (
+      <header className="h-[73px] bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex items-center justify-between px-8 shrink-0 z-20 relative">
+        <div className="flex-1 flex items-center justify-start">
           <button
-            key={item}
-            onClick={() => setActiveTab(item)}
-            className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] ${activeTab === item
-              ? 'border-[#1a5d1a] text-[#1a5d1a]'
-              : 'border-transparent text-[#2c3e50]/60 hover:text-[#1a5d1a]'
-              }`}
+            onClick={() => interceptAction(() => setActiveTab('Get Started'))}
+            className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
           >
-            {item}
+            <ChevronLeft size={16} strokeWidth={3} /> BACK
           </button>
-        ))}
+        </div>
+        
+        <div className="flex items-center justify-center gap-10 absolute left-1/2 -translate-x-1/2 h-full">
+          {navItems.map(item => (
+            <button
+              key={item}
+              onClick={() => {
+                if (item === 'Get Started' || item === 'My Designs') {
+                  interceptAction(() => setActiveTab(item));
+                } else {
+                  setActiveTab(item);
+                }
+              }}
+              className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] ${activeTab === item
+                ? 'border-[#1a5d1a] text-[#1a5d1a]'
+                : 'border-transparent text-[#2c3e50]/60 hover:text-[#1a5d1a]'
+                }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 flex items-center justify-end gap-3">
+          <button
+            onClick={() => interceptAction(() => useAuthStore.getState().setPage('upload'))}
+            className="text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
+          >
+            View Members
+          </button>
+          <button
+            onClick={() => interceptAction(() => useAuthStore.getState().setPage('generate'))}
+            className="text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
+          >
+            All Previews
+          </button>
+        </div>
       </header>
 
       { }
@@ -534,22 +568,21 @@ export function DesignerView() {
           </div>
           <button
             onClick={handleSave}
-            disabled={savedIndicator === 'saving'}
-            className={`flex items-center gap-2 px-6 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${savedIndicator === 'saved'
-              ? 'bg-green-50 text-green-600 border border-green-200'
-              : 'bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-200'
-              }`}
-          >
-            {savedIndicator === 'saved' ? (
-              <><CheckCircle size={14} /> Saved!</>
-            ) : savedIndicator === 'saving' ? (
-              <><Save size={14} className="animate-bounce" /> Saving...</>
-            ) : (
-              <><Save size={14} /> Save</>
-            )}
-          </button>
-        </div>
-
+              disabled={savedIndicator === 'saving'}
+              className={`flex items-center gap-2 px-6 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${savedIndicator === 'saved'
+                ? 'bg-green-50 text-green-600 border border-green-200'
+                : 'bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-200'
+                }`}
+            >
+              {savedIndicator === 'saved' ? (
+                <><CheckCircle size={14} /> Saved!</>
+              ) : savedIndicator === 'saving' ? (
+                <><Save size={14} className="animate-bounce" /> Saving...</>
+              ) : (
+                <><Save size={14} /> Save</>
+              )}
+            </button>
+          </div>
         {/* Main Editor Row */}
         <div className="flex flex-1 min-h-0 w-full overflow-hidden">
           {/* Left Toolbar */}
