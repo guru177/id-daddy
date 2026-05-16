@@ -13,6 +13,7 @@ interface Template {
     thumbnailBack?: string;
     config?: {
       orientation: "horizontal" | "vertical";
+      backsidePrinting?: string;
     };
   };
 }
