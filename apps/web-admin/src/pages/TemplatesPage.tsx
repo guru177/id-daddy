@@ -15,6 +15,9 @@ interface Template {
       orientation: "horizontal" | "vertical";
       backsidePrinting?: string;
     };
+    back?: {
+      objects?: any[];
+    };
   };
 }
 
@@ -130,7 +133,10 @@ export function TemplatesPage() {
             return (
             <div key={template.id} className="group bg-white rounded-[2rem] border border-stone-200 overflow-hidden hover:shadow-2xl hover:shadow-stone-200/50 hover:border-teal-500/30 transition-all flex flex-col">
               {/* Preview Area – dual front/back split */}
-              <div className={`relative w-full ${isHorizontal ? 'aspect-[86/108]' : 'aspect-[108/86]'} bg-stone-50 overflow-hidden group-hover:bg-stone-100/50 transition-colors duration-500`}>
+              <div 
+                className="relative w-full bg-stone-50 overflow-hidden group-hover:bg-stone-100/50 transition-colors duration-500"
+                style={{ aspectRatio: isHorizontal ? '86/108' : '108/86' }}
+              >
                 <div className={`w-full h-full flex ${isHorizontal ? 'flex-col' : 'flex-row'}`}>
                   {/* Front half */}
                   <div className="flex-1 relative border-r border-stone-100 overflow-hidden group-hover:scale-105 transition-transform duration-700">
@@ -148,12 +154,14 @@ export function TemplatesPage() {
 
                   {/* Back half */}
                   <div className="flex-1 relative overflow-hidden border-l border-stone-100 first:border-0 group-hover:scale-105 transition-transform duration-700 delay-75">
-                    {template.design.config?.backsidePrinting !== 'none' && template.design.thumbnailBack ? (
-                      <img src={template.design.thumbnailBack} className="w-full h-full object-contain" alt="Back" />
-                    ) : (
+                    {template.design.config?.backsidePrinting === 'none' || 
+                     !template.design.thumbnailBack || 
+                     (template.design.back?.objects && template.design.back.objects.length === 0) ? (
                       <div className="w-full h-full bg-white flex items-center justify-center">
                         <span className="text-gray-300 font-black uppercase tracking-[0.15em] text-xs">Blank</span>
                       </div>
+                    ) : (
+                      <img src={template.design.thumbnailBack} className="w-full h-full object-contain" alt="Back" />
                     )}
                     <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
                       Back
