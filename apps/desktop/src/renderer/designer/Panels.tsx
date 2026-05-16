@@ -952,10 +952,20 @@ export const CustomizePanel = () => {
 
 
       if (dataUrl) {
-        // If it's already an image, just update the source to prevent re-selection and state reset
         if (selectedObject.type === 'image') {
           const img = selectedObject as fabric.Image;
+          const targetW = (img.width || 1) * (img.scaleX || 1);
+          const targetH = (img.height || 1) * (img.scaleY || 1);
+
           img.setSrc(dataUrl, () => {
+            img.set({
+              cropX: 0,
+              cropY: 0,
+              width: img.width,
+              height: img.height,
+              scaleX: targetW / (img.width || 1),
+              scaleY: targetH / (img.height || 1)
+            });
             // @ts-ignore
             img.securityData = currentProps.securityData;
             // @ts-ignore

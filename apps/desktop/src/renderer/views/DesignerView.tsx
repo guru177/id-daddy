@@ -126,7 +126,20 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
           if (ph === '{{barcode}}' || ph === '{{qr_code}}' || ph === '{{pdf417}}' || ph === '{{datamatrix}}') {
             const dataUrl = await generateSecurityImageURL(obj, targetMember);
             if (dataUrl) {
+              const targetW = (obj.width || 1) * (obj.scaleX || 1);
+              const targetH = (obj.height || 1) * (obj.scaleY || 1);
+
               obj.setSrc(dataUrl, () => {
+                // For security elements, we STRETCH to fill the bounding box exactly (no crop)
+                // so that no data is lost.
+                obj.set({
+                  cropX: 0,
+                  cropY: 0,
+                  width: obj.width,
+                  height: obj.height,
+                  scaleX: targetW / (obj.width || 1),
+                  scaleY: targetH / (obj.height || 1)
+                });
                 canvas.renderAll();
               }, { crossOrigin: 'anonymous' });
             }
@@ -142,7 +155,35 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
             }
 
             if (url) {
+              const targetW = (obj.width || 1) * (obj.scaleX || 1);
+              const targetH = (obj.height || 1) * (obj.scaleY || 1);
+
               obj.setSrc(url, () => {
+                const imgW = obj.width || 1;
+                const imgH = obj.height || 1;
+                const targetRatio = targetW / targetH;
+                const imgRatio = imgW / imgH;
+
+                let newCropX = 0, newCropY = 0, newCropW = imgW, newCropH = imgH;
+
+                if (imgRatio > targetRatio) {
+                  newCropH = imgH;
+                  newCropW = imgH * targetRatio;
+                  newCropX = (imgW - newCropW) / 2;
+                } else {
+                  newCropW = imgW;
+                  newCropH = imgW / targetRatio;
+                  newCropY = (imgH - newCropH) / 2;
+                }
+
+                obj.set({
+                  cropX: newCropX,
+                  cropY: newCropY,
+                  width: newCropW,
+                  height: newCropH,
+                  scaleX: targetW / newCropW,
+                  scaleY: targetH / newCropH
+                });
                 canvas.renderAll();
               }, { crossOrigin: 'anonymous' });
             } else {

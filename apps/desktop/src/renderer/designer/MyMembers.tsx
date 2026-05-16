@@ -88,7 +88,9 @@ export const MyMembers = () => {
     const { member } = selectedHighRes;
     const nameStr = `${member.firstName}_${member.lastName}`.replace(/\s+/g, '_');
     downloadImage(highResImages.front, `${nameStr}_Front_1200PPI.png`);
-    downloadImage(highResImages.back, `${nameStr}_Back_1200PPI.png`);
+    if (highResImages.back) {
+      downloadImage(highResImages.back, `${nameStr}_Back_1200PPI.png`);
+    }
   };
 
   const downloadHighResPDF = () => {
@@ -109,8 +111,10 @@ export const MyMembers = () => {
     
     doc.addImage(highResImages.front, 'PNG', 0, 0, cardWidth, cardHeight);
     
-    doc.addPage();
-    doc.addImage(highResImages.back, 'PNG', 0, 0, cardWidth, cardHeight);
+    if (highResImages.back) {
+      doc.addPage();
+      doc.addImage(highResImages.back, 'PNG', 0, 0, cardWidth, cardHeight);
+    }
     
     doc.save(`${nameStr}_ID_Card_1200PPI.pdf`);
   };
@@ -203,8 +207,10 @@ export const MyMembers = () => {
       });
       
       doc.addImage(res.front, 'PNG', 0, 0, cardWidth, cardHeight);
-      doc.addPage();
-      doc.addImage(res.back, 'PNG', 0, 0, cardWidth, cardHeight);
+      if (res.back) {
+        doc.addPage();
+        doc.addImage(res.back, 'PNG', 0, 0, cardWidth, cardHeight);
+      }
       
       const pdfBlob = doc.output('blob');
       const nameStr = `${member.firstName || 'User'}_${member.lastName || i}`.replace(/\s+/g, '_');
@@ -249,7 +255,9 @@ export const MyMembers = () => {
       
       if (folder) {
         folder.file(`${nameStr}_Front.png`, res.front.split(',')[1], { base64: true });
-        folder.file(`${nameStr}_Back.png`, res.back.split(',')[1], { base64: true });
+        if (res.back) {
+          folder.file(`${nameStr}_Back.png`, res.back.split(',')[1], { base64: true });
+        }
       }
     }
 
@@ -473,7 +481,13 @@ export const MyMembers = () => {
                     </div>
                     
                     <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-100 bg-stone-50">
-                      <img src={preview.back} alt="Back Preview" className="w-full h-auto max-h-[300px] object-contain mx-auto" />
+                      {preview.back ? (
+                        <img src={preview.back} alt="Back Preview" className="w-full h-auto max-h-[300px] object-contain mx-auto" />
+                      ) : (
+                        <div className="w-full h-[250px] bg-white flex items-center justify-center">
+                          <span className="text-gray-300 font-bold uppercase tracking-widest text-xs">Blank</span>
+                        </div>
+                      )}
                       <div className="absolute top-2 left-2 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Back</div>
                     </div>
                   </div>
@@ -591,7 +605,13 @@ export const MyMembers = () => {
                   <div className="flex flex-col gap-4 h-full min-h-0 flex-1 justify-center items-center w-full">
                     <span className="text-sm font-black text-gray-900 uppercase tracking-widest text-center shrink-0">Back Side</span>
                     <div className="relative min-h-0 flex shrink w-full h-full justify-center items-center">
-                      <img src={highResImages.back} alt="Ultra HD Back" className="max-w-full max-h-full object-contain rounded-[24px]  border-4 border-white bg-white" />
+                      {highResImages.back ? (
+                        <img src={highResImages.back} alt="Ultra HD Back" className="max-w-full max-h-full object-contain rounded-[24px]  border-4 border-white bg-white" />
+                      ) : (
+                        <div className="w-full max-w-[400px] aspect-[54/86] bg-white border-4 border-white rounded-[24px] shadow-sm flex items-center justify-center">
+                          <span className="text-gray-300 font-bold uppercase tracking-widest text-lg">Blank</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

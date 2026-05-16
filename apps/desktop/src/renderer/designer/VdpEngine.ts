@@ -101,7 +101,7 @@ export async function generatePreviews(
 
         const [front, back] = await Promise.all([
           renderSide(design.front, false),
-          renderSide(design.back, true)
+          design.config.backsidePrinting !== 'none' ? renderSide(design.back, true) : Promise.resolve('')
         ]);
 
         const result = {
@@ -174,7 +174,7 @@ export async function generateSingleHighRes(design: any, member: Member, multipl
 
   const [front, back] = await Promise.all([
     renderSide(design.front, false),
-    renderSide(design.back, true)
+    design.config.backsidePrinting !== 'none' ? renderSide(design.back, true) : Promise.resolve('')
   ]);
 
   return { front, back };
@@ -346,14 +346,35 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member,
 
             fabric.Image.fromURL(imageUrl, (img) => {
               if (img) {
-                const targetW = (obj.width || 0) * (obj.scaleX || 1);
-                const targetH = (obj.height || 0) * (obj.scaleY || 1);
+                const targetW = (obj.width || 1) * (obj.scaleX || 1);
+                const targetH = (obj.height || 1) * (obj.scaleY || 1);
+
+                const imgW = img.width || 1;
+                const imgH = img.height || 1;
+                const targetRatio = targetW / targetH;
+                const imgRatio = imgW / imgH;
+
+                let newCropX = 0, newCropY = 0, newCropW = imgW, newCropH = imgH;
+
+                if (imgRatio > targetRatio) {
+                  newCropH = imgH;
+                  newCropW = imgH * targetRatio;
+                  newCropX = (imgW - newCropW) / 2;
+                } else {
+                  newCropW = imgW;
+                  newCropH = imgW / targetRatio;
+                  newCropY = (imgH - newCropH) / 2;
+                }
 
                 img.set({
                   left: obj.left,
                   top: obj.top,
-                  scaleX: targetW / (img.width || 1),
-                  scaleY: targetH / (img.height || 1),
+                  cropX: newCropX,
+                  cropY: newCropY,
+                  width: newCropW,
+                  height: newCropH,
+                  scaleX: targetW / newCropW,
+                  scaleY: targetH / newCropH,
                   angle: obj.angle,
                   originX: obj.originX,
                   originY: obj.originY,
