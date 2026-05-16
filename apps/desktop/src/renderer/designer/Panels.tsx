@@ -82,8 +82,8 @@ const GOOGLE_FONTS = Array.from(new Set([
   "Anek Devanagari", "Anek Tamil", "Anek Telugu", "Anek Malayalam", "Anek Bengali", "Anek Gujarati", "Anek Kannada", "Anek Odia", "Anek Gurmukhi"
 ])).sort();
 
-const loadGoogleFont = async (fontName: string) => {
-  if (!fontName || ['Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Trebuchet MS', 'Impact'].includes(fontName)) return Promise.resolve();
+const preloadFont = (fontName: string) => {
+  if (!fontName || ['Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Trebuchet MS', 'Impact'].includes(fontName)) return;
   const linkId = `font-${fontName.replace(/\s+/g, '-')}`;
   if (!document.getElementById(linkId)) {
     const link = document.createElement('link');
@@ -92,12 +92,17 @@ const loadGoogleFont = async (fontName: string) => {
     link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800&display=swap`;
     document.head.appendChild(link);
   }
+};
+
+const loadGoogleFont = async (fontName: string) => {
+  preloadFont(fontName);
+  if (!fontName || ['Arial', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Trebuchet MS', 'Impact'].includes(fontName)) return Promise.resolve();
 
   try {
     await document.fonts.load(`16px "${fontName}"`);
     await document.fonts.ready;
     // Add a small delay to ensure the browser's font parsing and Canvas 2D context catch up
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 50));
   } catch (err) {
     console.warn('Font loading API failed or timed out:', err);
   }
@@ -106,6 +111,7 @@ const loadGoogleFont = async (fontName: string) => {
 const FontSelect = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
+  const [loadingFont, setLoadingFont] = React.useState<string | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const filteredFonts = React.useMemo(() => {
@@ -128,7 +134,10 @@ const FontSelect = ({ value, onChange }: { value: string, onChange: (val: string
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-2 py-1 border border-gray-200 rounded-lg text-xs outline-none bg-white text-left flex justify-between items-center h-[34px] hover:bg-gray-50 transition-colors"
       >
-        <span className="truncate" style={{ fontFamily: value }}>{value || 'Select Font'}</span>
+        <span className="truncate flex items-center gap-2" style={{ fontFamily: value }}>
+          {value || 'Select Font'}
+          {loadingFont && <div className="w-3 h-3 border-2 border-green-500 border-t-transparent rounded-full animate-spin shrink-0" />}
+        </span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50 shrink-0 ml-1"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
 
@@ -148,22 +157,36 @@ const FontSelect = ({ value, onChange }: { value: string, onChange: (val: string
             {filteredFonts.map(font => (
               <button
                 key={font}
+                onMouseEnter={() => preloadFont(font)}
                 onClick={async () => {
                   setIsOpen(false);
                   setSearch('');
 
-                  // Wait for font to fully load before telling the canvas to update!
-                  await loadGoogleFont(font);
+                  // Optimistic UI Update: apply font immediately
                   onChange(font);
+                  setLoadingFont(font);
 
-                  // Re-apply variable styles after font change (different fonts have different char widths)
                   const { selectedObject, members } = useDesignerStore.getState();
                   if (selectedObject && members) {
                     applyVariableStyles(selectedObject, members);
                     if ((selectedObject as any).canvas) (selectedObject as any).canvas.renderAll();
                   }
+
+                  // Background loading
+                  await loadGoogleFont(font);
+                  
+                  // Now font is loaded, force recalculation
+                  if (selectedObject) {
+                    if ((selectedObject as any).initDimensions) (selectedObject as any).initDimensions();
+                    if ((selectedObject as any)._clearCache) (selectedObject as any)._clearCache();
+                    applyVariableStyles(selectedObject, members);
+                    selectedObject.dirty = true;
+                    if ((selectedObject as any).canvas) (selectedObject as any).canvas.renderAll();
+                  }
+                  
+                  setLoadingFont(null);
                 }}
-                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-green-50 transition-colors ${value === font ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-900'}`}
+                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-green-50 transition-colors flex items-center justify-between ${value === font ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-900'}`}
                 style={{ fontFamily: font }}
               >
                 {font}
@@ -195,18 +218,18 @@ export const CardOptionsPanel = () => {
         <label className="text-[11px] font-bold text-gray-900 uppercase tracking-wider block mb-3">Orientation</label>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => updateOrientation('horizontal')}
-            className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'horizontal' ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
-          >
-            <div className={`w-12 h-8 border-2 rounded-md mb-2 transition-colors ${config.orientation === 'horizontal' ? 'border-green-600' : 'border-gray-300'}`} />
-            <span className={`text-[11px] font-bold ${config.orientation === 'horizontal' ? 'text-green-700' : 'text-gray-900'}`}>Horizontal</span>
-          </button>
-          <button
             onClick={() => updateOrientation('vertical')}
             className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'vertical' ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
           >
             <div className={`w-8 h-12 border-2 rounded-md mb-2 transition-colors ${config.orientation === 'vertical' ? 'border-green-600' : 'border-gray-300'}`} />
             <span className={`text-[11px] font-bold ${config.orientation === 'vertical' ? 'text-green-700' : 'text-gray-900'}`}>Vertical</span>
+          </button>
+          <button
+            onClick={() => updateOrientation('horizontal')}
+            className={`flex flex-col items-center p-4 border rounded-2xl transition-all ${config.orientation === 'horizontal' ? 'border-green-500 bg-green-50  ring-1 ring-green-500' : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'}`}
+          >
+            <div className={`w-12 h-8 border-2 rounded-md mb-2 transition-colors ${config.orientation === 'horizontal' ? 'border-green-600' : 'border-gray-300'}`} />
+            <span className={`text-[11px] font-bold ${config.orientation === 'horizontal' ? 'text-green-700' : 'text-gray-900'}`}>Horizontal</span>
           </button>
         </div>
       </section>
@@ -480,20 +503,19 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
     }
 
     const textObj = new fabric.IText(displayValue, {
-      fontSize: 16,
+      fontSize: 50,
       fontFamily: 'Inter',
       fill: '#000000',
     });
 
-    if (canvas.width && canvas.height) {
-      textObj.initDimensions();
-      textObj.set({
-        left: (canvas.width - (textObj.width || 0)) / 2,
-        top: (canvas.height - (textObj.height || 0)) / 2
-      });
-    } else {
-      textObj.set({ left: 50, top: 50 });
-    }
+    textObj.initDimensions();
+    const { config } = useDesignerStore.getState();
+    const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+    const cardH = config.orientation === 'horizontal' ? 638 : 1013;
+    textObj.set({
+      left: (cardW - (textObj.width || 0)) / 2,
+      top: (cardH - (textObj.height || 0)) / 2
+    });
     // @ts-ignore
     textObj.isVariable = isVariable;
     if (isVariable) {
@@ -503,6 +525,8 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
 
     canvas.add(textObj);
     canvas.setActiveObject(textObj);
+    canvas.renderAll();
+    useDesignerStore.getState().saveState();
     setPanel('customize');
   };
 
@@ -607,30 +631,32 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
               </div>
               <label className="text-xs font-bold text-gray-900 uppercase tracking-wider">Standard Variables</label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={() => addText('{{firstName}} {{lastName}}', true)}
-                className="flex flex-col items-center justify-center p-5 border border-purple-100 bg-purple-50/30 rounded-3xl hover:border-purple-400  hover:scale-[1.02] transition-all group  active:scale-95 col-span-2"
+                className="flex items-center gap-3 p-3 border border-purple-100 bg-purple-50/30 rounded-2xl hover:border-purple-400 transition-all group active:scale-[0.98]"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mb-2 group-hover:bg-purple-100 transition-colors ">
-                  <Type size={18} className="text-purple-400 group-hover:text-purple-600" />
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors">
+                  <Type size={16} className="text-purple-400 group-hover:text-purple-600" />
                 </div>
-                <span className="text-[11px] font-black text-purple-700 text-center leading-tight">
-                  Full Name (First + Last)
-                </span>
-                <span className="text-[9px] text-purple-400 font-bold mt-1 uppercase tracking-tighter">Prevents Overlapping</span>
+                <div className="flex flex-col items-start flex-1 min-w-0">
+                  <span className="text-[11px] font-black text-purple-700 text-left leading-tight truncate w-full">
+                    Full Name (First + Last)
+                  </span>
+                  <span className="text-[9px] text-purple-400 font-bold uppercase tracking-tighter">Prevents Overlapping</span>
+                </div>
               </button>
 
               {activeStandardFields.filter(f => fieldToKeyMap[f]).map(field => (
                 <button
                   key={field}
                   onClick={() => addText(`{{${fieldToKeyMap[field]}}}`, true)}
-                  className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400  hover:scale-[1.02] transition-all group  active:scale-95"
+                  className="flex items-center gap-3 p-3 border border-gray-100 bg-white rounded-2xl hover:border-green-400 transition-all group active:scale-[0.98]"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
-                    <Type size={18} className="text-gray-900 group-hover:text-green-600" />
+                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-green-50 transition-colors">
+                    <Type size={16} className="text-gray-900 group-hover:text-green-600" />
                   </div>
-                  <span className="text-[11px] font-black text-gray-900 text-center leading-tight">
+                  <span className="text-[11px] font-black text-gray-900 text-left leading-tight truncate flex-1">
                     {getDynamicLabel(field)}
                   </span>
                 </button>
@@ -647,17 +673,17 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
               </div>
               <label className="text-xs font-bold text-gray-900 uppercase tracking-wider">Custom Variables</label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-2">
               {activeCustomFields.filter(f => !formConfig?.customImageFields?.includes(f)).map(field => (
                 <button
                   key={field}
                   onClick={() => addText(`{{${field}}}`, true)}
-                  className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400  hover:scale-[1.02] transition-all group  active:scale-95"
+                  className="flex items-center gap-3 p-3 border border-gray-100 bg-white rounded-2xl hover:border-green-400 transition-all group active:scale-[0.98]"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
-                    <Type size={18} className="text-gray-900 group-hover:text-green-600" />
+                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-green-50 transition-colors">
+                    <Type size={16} className="text-gray-900 group-hover:text-green-600" />
                   </div>
-                  <span className="text-[11px] font-black text-gray-900 text-center leading-tight">
+                  <span className="text-[11px] font-black text-gray-900 text-left leading-tight truncate flex-1">
                     {field}
                   </span>
                 </button>
@@ -2095,9 +2121,12 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
     });
     elements.push(labelText);
 
+    const { config } = useDesignerStore.getState();
+    const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+    const cardH = config.orientation === 'horizontal' ? 638 : 1013;
     const group = new fabric.Group(elements, {
-      left: canvas.width ? (canvas.width - size) / 2 : 100,
-      top: canvas.height ? (canvas.height - size) / 2 : 100,
+      left: (cardW - size) / 2,
+      top: (cardH - size) / 2,
     });
 
     // @ts-ignore
@@ -2107,6 +2136,8 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
 
     canvas.add(group);
     canvas.setActiveObject(group);
+    canvas.renderAll();
+    useDesignerStore.getState().saveState();
     if (setActivePanel) setActivePanel('customize');
   };
 
@@ -2128,9 +2159,12 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
 
       const imgW = (img.width || 0) * (img.scaleX || 1);
       const imgH = (img.height || 0) * (img.scaleY || 1);
+      const { config } = useDesignerStore.getState();
+      const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+      const cardH = config.orientation === 'horizontal' ? 638 : 1013;
       img.set({
-        left: canvas.width ? (canvas.width - imgW) / 2 : 50 + offset,
-        top: canvas.height ? (canvas.height - imgH) / 2 : 50 + offset,
+        left: (cardW - imgW) / 2,
+        top: (cardH - imgH) / 2,
       });
       // @ts-ignore
       img.placeholder = ph;
@@ -2147,6 +2181,8 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
 
       canvas.add(img);
       canvas.setActiveObject(img);
+      canvas.renderAll();
+      useDesignerStore.getState().saveState();
       if (setActivePanel) setActivePanel('customize');
     }, { crossOrigin: 'anonymous' });
     return;
@@ -2163,9 +2199,12 @@ export const ShapesPanel = () => {
     if (!canvas) return;
 
     let shape: fabric.Object;
+    const { config } = useDesignerStore.getState();
+    const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+    const cardH = config.orientation === 'horizontal' ? 638 : 1013;
     const common = {
-      left: canvas.width ? (canvas.width - 100) / 2 : 100,
-      top: canvas.height ? (canvas.height - 100) / 2 : 100,
+      left: (cardW - 100) / 2,
+      top: (cardH - 100) / 2,
       fill: '#000000',
       stroke: '#000000',
       strokeWidth: 0,
@@ -2289,19 +2328,37 @@ export const ShapesPanel = () => {
 };
 
 export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void }) => {
-  const { canvas, setIsImageLibraryOpen } = useDesignerStore();
+  const { canvas, setIsImageLibraryOpen, formConfig } = useDesignerStore();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
 
-
-
+  const activeStandardImageFields = formConfig?.enabledFields || ['Signature', 'Division Logo', 'Fingerprint'];
+  
   const imageVariables = [
-    { label: 'Headshot', ph: '{{photo}}', icon: <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"><Type size={16} /></div> },
-    { label: 'Signature', ph: '{{signature}}', icon: <SlidersHorizontal size={18} /> },
-    { label: 'QR Code', ph: '{{qr_code}}', icon: <Shapes size={18} /> },
-    { label: 'Barcode', ph: '{{barcode}}', icon: <CreditCard size={18} /> },
-    { label: 'Company Logo', ph: '{{logo}}', icon: <ImageIcon size={18} /> },
-    { label: 'Fingerprint', ph: '{{fingerprint}}', icon: <ShieldCheck size={18} /> },
+    { label: 'Headshot', ph: '{{photo}}', icon: <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"><ImageIcon size={14} /></div> }
   ];
+
+  if (activeStandardImageFields.includes('Signature')) {
+    imageVariables.push({ label: 'Signature', ph: '{{signature}}', icon: <SlidersHorizontal size={18} /> });
+  }
+
+  imageVariables.push({ label: 'QR Code', ph: '{{qr_code}}', icon: <Shapes size={18} /> });
+  imageVariables.push({ label: 'Barcode', ph: '{{barcode}}', icon: <CreditCard size={18} /> });
+
+  if (activeStandardImageFields.includes('Division Logo')) {
+    imageVariables.push({ label: 'Company Logo', ph: '{{logo}}', icon: <ImageIcon size={18} /> });
+  }
+
+  if (activeStandardImageFields.includes('Fingerprint')) {
+    imageVariables.push({ label: 'Fingerprint', ph: '{{fingerprint}}', icon: <ShieldCheck size={18} /> });
+  }
+
+  if (formConfig?.customImageFields) {
+    formConfig.customImageFields.forEach(cf => {
+      if (formConfig.enabledFields.includes(cf)) {
+        imageVariables.push({ label: cf, ph: `{{${cf}}}`, icon: <ImageIcon size={18} /> });
+      }
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -2338,19 +2395,19 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
           <label className="text-xs font-bold text-gray-900 uppercase tracking-wider">Variable Images</label>
           <span className="w-4 h-4 rounded-full bg-gray-100 text-[10px] flex items-center justify-center text-gray-900 cursor-help">?</span>
         </div>
-        <div className="grid grid-cols-2 gap-3 pb-10">
+        <div className="flex flex-col gap-2 pb-10">
           {imageVariables.map(item => (
             <button
               key={item.ph}
               onClick={() => addImageToCanvas(item.ph, item.label, canvas, setPanel)}
-              className="flex flex-col items-center justify-center p-5 border border-gray-100 bg-white rounded-3xl hover:border-green-400  hover:scale-[1.02] transition-all group  active:scale-95"
+              className="flex items-center gap-3 p-3 border border-gray-100 bg-white rounded-2xl hover:border-green-400 transition-all group active:scale-[0.98]"
             >
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-green-50 transition-colors">
-                <div className="text-gray-900 group-hover:text-green-600 scale-125">
+              <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-green-50 transition-colors">
+                <div className="text-gray-900 group-hover:text-green-600">
                   {item.icon}
                 </div>
               </div>
-              <span className="text-[11px] font-black text-gray-900 text-center leading-tight">{item.label}</span>
+              <span className="text-[11px] font-black text-gray-900 text-left leading-tight truncate flex-1">{item.label}</span>
             </button>
           ))}
         </div>
@@ -2366,17 +2423,24 @@ export const SecurityPanel = () => {
     if (!canvas) return;
     const displayValue = isVariable ? getPreviewText(text, members) : text;
     const textObj = new fabric.IText(displayValue, {
-      left: 100,
-      top: 100,
       fontSize: 20,
       fontFamily: 'Inter',
       fill: '#000000',
+    });
+    textObj.initDimensions();
+    const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+    const cardH = config.orientation === 'horizontal' ? 638 : 1013;
+    textObj.set({
+      left: (cardW - (textObj.width || 0)) / 2,
+      top: (cardH - (textObj.height || 0)) / 2
     });
     // @ts-ignore
     textObj.isVariable = isVariable;
     if (isVariable) (textObj as any).placeholder = text;
     canvas.add(textObj);
     canvas.setActiveObject(textObj);
+    canvas.renderAll();
+    useDesignerStore.getState().saveState();
     setActivePanel('customize');
   };
 
@@ -2479,51 +2543,6 @@ export const SecurityPanel = () => {
         )}
       </section>
 
-      <section>
-        <label className="text-[11px] font-bold text-gray-900 block mb-2 uppercase tracking-wider">Smart Fields:</label>
-        <select 
-          onChange={(e) => {
-            if (e.target.value === 'Select a Smart field...') return;
-            addText(e.target.value, true);
-            e.target.value = 'Select a Smart field...';
-          }}
-          className="w-full p-3 border border-gray-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-green-500 bg-white appearance-none"
-        >
-          <option>Select a Smart field...</option>
-          {(() => {
-            const { formConfig } = useDesignerStore.getState();
-            const enabled = formConfig?.enabledFields;
-            const showField = (label: string) => !enabled || enabled.includes(label);
-            
-            return (
-              <>
-                <optgroup label="Quick Add">
-                  {showField('First Name') && <option value="{{firstName}}">First Name</option>}
-                  {showField('Last Name') && <option value="{{lastName}}">Last Name</option>}
-                  {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
-                  {showField('Department') && <option value="{{department}}">Department</option>}
-                </optgroup>
-                <optgroup label="Specialized Identity">
-                  <option value="{{bloodGroup}}">Blood Group</option>
-                  <option value="{{rfidNo}}">RFID No</option>
-                  <option value="{{parentName}}">Parent Name</option>
-                  <option value="{{emergencyContact}}">Emergency Contact</option>
-                  <option value="{{busRoute}}">Bus Route</option>
-                  <option value="{{hostelName}}">Hostel Name</option>
-                  <option value="{{role}}">Role</option>
-                </optgroup>
-                {formConfig?.customFields && formConfig.customFields.length > 0 && (
-                  <optgroup label="Custom Fields">
-                    {formConfig.customFields.map(f => (
-                      <option key={f} value={`{{${f}}}`}>{f}</option>
-                    ))}
-                  </optgroup>
-                )}
-              </>
-            );
-          })()}
-        </select>
-      </section>
     </div>
   );
 };

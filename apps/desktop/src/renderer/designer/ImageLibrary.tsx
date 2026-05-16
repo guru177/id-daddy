@@ -59,6 +59,13 @@ export const ImageLibraryModal = () => {
         canvas.setActiveObject(img);
       } else {
         img.scaleToWidth(150);
+        const { config } = useDesignerStore.getState();
+        const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+        const cardH = config.orientation === 'horizontal' ? 638 : 1013;
+        img.set({
+          left: (cardW - img.getScaledWidth()) / 2,
+          top: (cardH - img.getScaledHeight()) / 2
+        });
         canvas.add(img);
         canvas.setActiveObject(img);
       }
@@ -66,6 +73,7 @@ export const ImageLibraryModal = () => {
       canvas.renderAll();
       setIsImageLibraryOpen(false);
       setLibraryMode('add'); // Reset
+      useDesignerStore.getState().setActivePanel('customize');
     }, { crossOrigin: 'anonymous' });
   };
 
@@ -234,8 +242,16 @@ export const AddImageDialog = ({ isOpen, onClose }: { isOpen: boolean, onClose: 
           if (index === 0) {
             fabric.Image.fromURL(data, (img) => {
               img.scaleToWidth(150);
+              const { config } = useDesignerStore.getState();
+              const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+              const cardH = config.orientation === 'horizontal' ? 638 : 1013;
+              img.set({
+                left: (cardW - img.getScaledWidth()) / 2,
+                top: (cardH - img.getScaledHeight()) / 2
+              });
               canvas?.add(img);
               canvas?.setActiveObject(img);
+              useDesignerStore.getState().setActivePanel('customize');
               onClose();
             });
           }

@@ -68,6 +68,16 @@
       "forceCodeSigning": false,
       "artifactName": "ID-Daddy-${version}-Setup.${ext}"
     },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "license": "resources/license.txt",
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true
+    },
     "npmRebuild": false,
     "publish": [
       {

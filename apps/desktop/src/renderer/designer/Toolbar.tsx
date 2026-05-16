@@ -12,7 +12,7 @@ import {
   Maximize2,
   Keyboard
 } from 'lucide-react';
-import { CardOptionsPanel, TextPanel, CustomizePanel, ImagesPanel, SecurityPanel, ShapesPanel } from './Panels';
+import { CardOptionsPanel, TextPanel, ImagesPanel, SecurityPanel, ShapesPanel } from './Panels';
 import { useDesignerStore } from './store';
 
 // Keyboard shortcuts reference overlay
@@ -118,7 +118,6 @@ const Toolbar = () => {
     { id: 'images', label: 'Images', icon: ImageIcon },
     { id: 'security', label: 'Security', icon: ShieldCheck },
     { id: 'shapes', label: 'Shapes', icon: Shapes },
-    { id: 'customize', label: 'Customize', icon: SlidersHorizontal },
   ];
 
   const renderPanel = () => {
@@ -128,8 +127,7 @@ const Toolbar = () => {
       case 'images': return <ImagesPanel setPanel={setActivePanel} />;
       case 'security': return <SecurityPanel />;
       case 'shapes': return <ShapesPanel />;
-      case 'customize': return <CustomizePanel />;
-      default: return <div className="text-center text-gray-400 mt-10 italic text-sm">Panel coming soon...</div>;
+      default: return null;
     }
   };
 
@@ -195,8 +193,8 @@ const Toolbar = () => {
         </div>
 
         {/* Expanded Panel */}
-        {activePanel && (
-          <div className="w-[320px] border-r border-gray-200 flex flex-col z-10 animate-in slide-in-from-left duration-200">
+        {activePanel && activePanel !== 'customize' && activePanel !== 'layers' && (
+          <div className="w-[320px] border-r border-gray-200 flex flex-col z-10 animate-in slide-in-from-left duration-200 bg-white">
             <div className="h-14 flex items-center justify-between px-6 border-b border-gray-100">
               <h2 className="text-sm font-bold text-gray-900">
                 {menuItems.find(m => m.id === activePanel)?.label}

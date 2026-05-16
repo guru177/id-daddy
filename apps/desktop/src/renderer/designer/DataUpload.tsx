@@ -183,10 +183,9 @@ export const DataUpload = () => {
     const config = formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] };
 
     const row: any = {};
-    row['First Name'] = 'John';
 
     STANDARD_FIELDS.forEach(f => {
-      if (f !== 'First Name' && config.enabledFields.includes(f)) {
+      if (config.enabledFields.includes(f)) {
         row[getLabel(f, organizationType)] = '';
       }
     });
@@ -197,7 +196,7 @@ export const DataUpload = () => {
       }
     });
 
-    row['Profile Image'] = 'john_doe.jpg';
+    row['Profile Image'] = '';
 
     STANDARD_IMAGE_FIELDS.forEach(f => {
       if (config.enabledImageFields?.includes(f)) {
@@ -220,8 +219,12 @@ export const DataUpload = () => {
   const handleExportExcel = () => {
     if (members.length === 0) return;
 
+    const config = formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] };
+
     const exportData = members.map(m => {
-      const row: any = {
+      const row: any = {};
+      
+      const standardMap: Record<string, any> = {
         'First Name': m.firstName,
         'Last Name': m.lastName,
         'Nickname': m.nickname,
@@ -251,16 +254,55 @@ export const DataUpload = () => {
         'Gender': m.gender,
         'Eye Color': m.eyeColor,
         'Hair Color': m.hairColor,
-        'Profile Image': m.profileImage?.startsWith('data:image') ? '[Image Attached]' : m.profileImage,
-        'Signature': m.signature?.startsWith('data:image') ? '[Image Attached]' : m.signature,
+        'Blood Group': m.bloodGroup,
+        'Parent Name': m.parentName,
+        'Parent Phone': m.parentPhone,
+        'Emergency Contact': m.emergencyContact,
+        'Emergency Phone': m.emergencyPhone,
+        'RFID No': m.rfidNo,
+        'Bus Route': m.busRoute,
+        'Hostel Name': m.hostelName,
+        'Room No': m.roomNo,
+        'Role': m.role,
       };
 
-      if (m.customFields) {
-        Object.keys(m.customFields).forEach(key => {
-          const val = m.customFields![key];
-          row[key] = val?.startsWith('data:image') ? '[Image Attached]' : val;
-        });
-      }
+      row['First Name'] = m.firstName;
+
+      STANDARD_FIELDS.forEach(f => {
+        if (f !== 'First Name' && config.enabledFields.includes(f)) {
+          row[getLabel(f, organizationType)] = standardMap[f];
+        }
+      });
+
+      config.customFields.forEach(cf => {
+        if (config.enabledFields.includes(cf)) {
+          const val = m.customFields?.[cf];
+          row[cf] = val?.startsWith('data:image') ? '[Image Attached]' : val;
+        }
+      });
+
+      row['Profile Image'] = m.profileImage?.startsWith('data:image') ? '[Image Attached]' : m.profileImage;
+
+      const imageMap: Record<string, any> = {
+        'Signature': m.signature,
+        'Fingerprint': m.fingerprint,
+        'Division Logo': m.divisionLogo,
+      };
+
+      STANDARD_IMAGE_FIELDS.forEach(f => {
+        if (config.enabledImageFields?.includes(f)) {
+          const val = imageMap[f];
+          row[f] = val?.startsWith('data:image') ? '[Image Attached]' : val;
+        }
+      });
+
+      config.customImageFields?.forEach(cf => {
+        if (config.enabledImageFields?.includes(cf)) {
+          const val = m.customFields?.[cf];
+          row[cf] = val?.startsWith('data:image') ? '[Image Attached]' : val;
+        }
+      });
+
       return row;
     });
 
@@ -396,7 +438,7 @@ export const DataUpload = () => {
               ['profileImage', 'signature', 'fingerprint', 'divisionLogo'].forEach(imgField => {
                 if (cleanNewMember[imgField] === '[Image Attached]') cleanNewMember[imgField] = '';
               });
-              await addMember({ ...cleanNewMember, customImage: '' });
+              await addMember({ ...cleanNewMember, customImage: '', folderId: selectedFolderId ?? undefined });
               importedCount++;
             }
           }

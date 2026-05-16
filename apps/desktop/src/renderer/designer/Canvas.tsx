@@ -20,7 +20,7 @@ const Canvas = () => {
     fabric.Object.prototype.cornerSize = 10;
     fabric.Object.prototype.cornerStyle = 'circle';
     fabric.Object.prototype.borderColor = '#3b82f6';
-    fabric.Object.prototype.borderDashArray = [3, 3];
+    (fabric.Object.prototype as any).borderDashArray = null; // solid selection border
     fabric.Object.prototype.padding = 10;
 
     // Custom Rotation Controls on corners
@@ -56,19 +56,40 @@ const Canvas = () => {
     fabric.Object.prototype.controls.bl_rotate = new fabric.Control({ x: -0.5, y: 0.5, offsetY: 25, ...rotationConfig });
     fabric.Object.prototype.controls.mtr.visible = false;
 
+    const PADDING = 300;
     const fabricCanvas = new fabric.Canvas(canvasRef.current, {
-      width,
-      height,
-      backgroundColor: bgColor,
+      width: width + PADDING * 2,
+      height: height + PADDING * 2,
       preserveObjectStacking: true,
+      controlsAboveOverlay: true,
     });
+
+    fabricCanvas.setViewportTransform([1, 0, 0, 1, PADDING, PADDING]);
+    
+    const wrapperEl = (fabricCanvas as any).wrapperEl as HTMLElement | undefined;
+    if (wrapperEl) {
+      wrapperEl.style.position = 'absolute';
+      wrapperEl.style.left = `-${PADDING}px`;
+      wrapperEl.style.top = `-${PADDING}px`;
+    }
+
+    const originalToDataURL = fabricCanvas.toDataURL.bind(fabricCanvas);
+    fabricCanvas.toDataURL = (options: any) => {
+       return originalToDataURL({
+          left: PADDING,
+          top: PADDING,
+          width: width,
+          height: height,
+          ...(options || {})
+       });
+    };
 
     setCanvas(fabricCanvas);
 
-    // Ref to track smart guide lines so we can remove them easily
-    const guideLines: fabric.Line[] = [];
+    // Tracks all transient overlay objects (snap guides + distance indicators)
+    const guideLines: fabric.Object[] = [];
 
-    // Helper to clear smart guides
+    // Helper to clear all transient overlays
     const clearSmartGuides = () => {
       guideLines.forEach(line => fabricCanvas.remove(line));
       guideLines.length = 0;
@@ -93,10 +114,68 @@ const Canvas = () => {
       guideLines.push(line);
     };
 
+    // Photoshop/Figma-style distance indicator:
+    // draws a dimension line (with tick marks + px label) between two points.
+    const drawDistanceLine = (x1: number, y1: number, x2: number, y2: number) => {
+      const isHoriz = Math.abs(y2 - y1) < 0.5;
+      const dist = Math.round(Math.abs(isHoriz ? x2 - x1 : y2 - y1));
+      if (dist < 2) return;
+
+      const COLOR = '#e11d48';
+      const TICK = 5;
+      const addObj = (o: fabric.Object) => { fabricCanvas.add(o); guideLines.push(o); };
+
+      // Main gap line
+      addObj(new fabric.Line([x1, y1, x2, y2], {
+        stroke: COLOR, strokeWidth: 1.5, selectable: false, evented: false,
+        // @ts-ignore
+        name: 'smart-guide'
+      }));
+      // Start tick
+      addObj(new fabric.Line(
+        isHoriz ? [x1, y1 - TICK, x1, y1 + TICK] : [x1 - TICK, y1, x1 + TICK, y1],
+        { stroke: COLOR, strokeWidth: 1.5, selectable: false, evented: false, name: 'smart-guide' as any }
+      ));
+      // End tick
+      addObj(new fabric.Line(
+        isHoriz ? [x2, y2 - TICK, x2, y2 + TICK] : [x2 - TICK, y2, x2 + TICK, y2],
+        { stroke: COLOR, strokeWidth: 1.5, selectable: false, evented: false, name: 'smart-guide' as any }
+      ));
+      // Distance label
+      const label = new fabric.Text(`${dist}px`, {
+        left: (x1 + x2) / 2,
+        top:  (y1 + y2) / 2,
+        fontSize: 9,
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fill: '#ffffff',
+        backgroundColor: COLOR,
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false,
+        padding: 3,
+        // @ts-ignore
+        name: 'smart-guide',
+      });
+      addObj(label);
+    };
+
     // Helper to apply current config to canvas
     const applyConfigToCanvas = (fabricCanvas: fabric.Canvas) => {
+      // Set background color on the fabric canvas itself so thumbnails/exports are correct
       const bgColor = side === 'front' ? config.backgroundColorFront : config.backgroundColorBack;
       fabricCanvas.setBackgroundColor(bgColor, fabricCanvas.renderAll.bind(fabricCanvas));
+
+      const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
+
+      // Clip objects strictly to the card dimensions so they don't leak into the padded area
+      fabricCanvas.clipPath = new fabric.Rect({
+        left: 0,
+        top: 0,
+        width: width,
+        height: height,
+        absolutePositioned: true
+      });
 
       // Remove previous overlays
       fabricCanvas.getObjects().forEach(obj => {
@@ -104,8 +183,6 @@ const Canvas = () => {
           fabricCanvas.remove(obj);
         }
       });
-
-      const [width, height] = config.orientation === 'horizontal' ? [1013, 638] : [638, 1013];
 
       // Safe Zone Indicator (3mm margin roughly 35px at this resolution)
       const { showSafeZones, config: currentConfig } = useDesignerStore.getState();
@@ -162,12 +239,18 @@ const Canvas = () => {
         // not just e.selected[0] which only returns one of the newly selected objects.
         const active = fabricCanvas.getActiveObject();
         setSelectedObject(active || null);
-        if (active) setActivePanel('customize');
+        const state = useDesignerStore.getState();
+        if (active && state.activeRightPanel !== 'layers') {
+          state.setActiveRightPanel('customize');
+        }
       });
       fabricCanvas.on('selection:updated', (e) => {
         const active = fabricCanvas.getActiveObject();
         setSelectedObject(active || null);
-        if (active) setActivePanel('customize');
+        const state = useDesignerStore.getState();
+        if (active && state.activeRightPanel !== 'layers') {
+          state.setActiveRightPanel('customize');
+        }
       });
       fabricCanvas.on('selection:cleared', () => {
         setSelectedObject(null);
@@ -181,6 +264,11 @@ const Canvas = () => {
       // object:modified → saveState() feedback loop
       fabricCanvas.on('layers:refresh' as any, () => {});
 
+      // Re-apply non-serialized overlays (safe zone, slot punch) after undo/redo
+      fabricCanvas.on('overlays:reapply' as any, () => {
+        applyConfigToCanvas(fabricCanvas);
+      });
+
       // Only save history for real user objects — NOT system overlays or smart guides.
       // Smart guide lines are added/removed on every mouse-move tick during a drag;
       // without this guard each guide draw/clear would create a separate undo entry.
@@ -192,6 +280,16 @@ const Canvas = () => {
       fabricCanvas.on('object:added', (e: any) => {
         if (isSystemObject(e.target)) return;
         saveState();
+
+        // Auto-enable backside printing when content is first added to the back canvas.
+        // This prevents the design from showing as BLANK in previews/downloads even
+        // when the user has clearly edited the back side.
+        if (side === 'back') {
+          const { config: currentConfig, setConfig } = useDesignerStore.getState();
+          if (currentConfig.backsidePrinting === 'none') {
+            setConfig({ backsidePrinting: 'color' });
+          }
+        }
       });
       fabricCanvas.on('object:removed', (e: any) => {
         if (isSystemObject(e.target)) return;
@@ -214,16 +312,22 @@ const Canvas = () => {
 
         clearSmartGuides();
         const snapThreshold = 5;
-        const centerSnapThreshold = 12; // Stronger, smoother magnetic pull to the center
-        const canvasWidth = fabricCanvas.width!;
-        const canvasHeight = fabricCanvas.height!;
+        const centerSnapThreshold = 12;
 
-        const centerX = canvasWidth / 2;
-        const centerY = canvasHeight / 2;
+        // Card dimensions in world coordinates (0,0 is top-left of card due to viewport transform)
+        const { config: currentConfig } = useDesignerStore.getState();
+        const cardW = currentConfig.orientation === 'horizontal' ? 1013 : 638;
+        const cardH = currentConfig.orientation === 'horizontal' ? 638 : 1013;
+        const centerX = cardW / 2;
+        const centerY = cardH / 2;
 
-        const objRect = obj.getBoundingRect();
-        const objCenterX = objRect.left + objRect.width / 2;
-        const objCenterY = objRect.top + objRect.height / 2;
+        // getCenterPoint() returns world coords — no offset adjustment needed
+        const cp = obj.getCenterPoint();
+        const objCenterX = cp.x;
+        const objCenterY = cp.y;
+
+        // getBoundingRect(true) returns world-space bounding box
+        const wr = obj.getBoundingRect(true);
 
         let snappedV = false;
         let snappedH = false;
@@ -231,51 +335,189 @@ const Canvas = () => {
         const isCenterV = Math.abs(objCenterX - centerX) < centerSnapThreshold;
         const isCenterH = Math.abs(objCenterY - centerY) < centerSnapThreshold;
 
-        // 1. PERFECT CENTER PRIORITY (Smooth Magnetic Snap)
+        // 1. CENTER SNAP — move so visual center lands exactly on card center
         if (isCenterV) {
-          obj.set('left', obj.left! + (centerX - objCenterX));
+          obj.set('left', (obj.left ?? 0) + (centerX - objCenterX));
           snappedV = true;
         }
         if (isCenterH) {
-          obj.set('top', obj.top! + (centerY - objCenterY));
+          obj.set('top', (obj.top ?? 0) + (centerY - objCenterY));
           snappedH = true;
         }
 
         if (isCenterV && isCenterH) {
-          // Double cross line at exactly the same time
           drawGuideLine('v', centerX, '#ef4444', true);
           drawGuideLine('h', centerY, '#ef4444', true);
         } else {
-          // Slide along single axis
           if (isCenterV) drawGuideLine('v', centerX, '#3b82f6', false);
           if (isCenterH) drawGuideLine('h', centerY, '#3b82f6', false);
         }
 
         obj.setCoords();
 
-        // 2. OTHER SMART GUIDES (Only if not already snapped to center)
-        const vPoints = new Set<number>([0, canvasWidth]);
-        const hPoints = new Set<number>([0, canvasHeight]);
+        // 2. OBJECT & EDGE SNAP ─────────────────────────────────────────────
+        // Collect edge points and CENTER points separately so we can give
+        // centers a stronger magnetic pull (like Figma / Photoshop).
+        const OBJ_CENTER_THRESHOLD = 8; // px — stronger pull for center alignment
+        const EDGE_THRESHOLD       = 5; // px — standard edge snap
+
+        // Card edges
+        const vEdgePoints   = new Set<number>([0, cardW]);
+        const hEdgePoints   = new Set<number>([0, cardH]);
+        // Other objects: centers get a dedicated set, edges go to edge sets
+        const vCenterPoints = new Set<number>();
+        const hCenterPoints = new Set<number>();
+        // Also store each object so we can draw a connecting guide line
+        const objBoundsMap  = new Map<number, { minY: number; maxY: number }>(); // vPoint → span
+        const objBoundsMapH = new Map<number, { minX: number; maxX: number }>(); // hPoint → span
 
         fabricCanvas.getObjects().forEach(other => {
-          if (other === obj || (other as any).name === 'smart-guide' || (other as any).name === 'slot-punch-overlay') return;
-          const rect = other.getBoundingRect();
-          vPoints.add(rect.left); vPoints.add(rect.left + rect.width / 2); vPoints.add(rect.left + rect.width);
-          hPoints.add(rect.top); hPoints.add(rect.top + rect.height / 2); hPoints.add(rect.top + rect.height);
+          if (other === obj || (other as any).name === 'smart-guide' || (other as any).name === 'slot-punch-overlay' || (other as any).name === 'safe-zone-overlay') return;
+          const r = other.getBoundingRect(true);
+          const rL = r.left, rR = r.left + r.width, rT = r.top, rB = r.top + r.height;
+          const rCX = rL + r.width  / 2;
+          const rCY = rT + r.height / 2;
+
+          // Edges
+          vEdgePoints.add(rL); vEdgePoints.add(rR);
+          hEdgePoints.add(rT); hEdgePoints.add(rB);
+          // Centers — track min/max for guide line span
+          vCenterPoints.add(rCX);
+          objBoundsMap.set(rCX, { minY: Math.min(rT, wr.top), maxY: Math.max(rB, wr.top + wr.height) });
+          hCenterPoints.add(rCY);
+          objBoundsMapH.set(rCY, { minX: Math.min(rL, wr.left), maxX: Math.max(rR, wr.left + wr.width) });
         });
 
         const { guidelines } = useDesignerStore.getState();
-        guidelines.vertical.forEach(p => vPoints.add(p));
-        guidelines.horizontal.forEach(p => hPoints.add(p));
+        guidelines.vertical.forEach(p   => vEdgePoints.add(p));
+        guidelines.horizontal.forEach(p => hEdgePoints.add(p));
 
-        const objVPoints = [objRect.left, objCenterX, objRect.left + objRect.width];
-        const objHPoints = [objRect.top, objCenterY, objRect.top + objRect.height];
+        const objVPoints = [wr.left, objCenterX, wr.left + wr.width];
+        const objHPoints = [wr.top,  objCenterY, wr.top  + wr.height];
 
+        // 2a. Object CENTER snap (orange, strong pull)
         if (!snappedV) {
-          for (const p of Array.from(vPoints)) {
+          for (const p of Array.from(vCenterPoints)) {
+            if (Math.abs(objCenterX - p) < OBJ_CENTER_THRESHOLD) {
+              obj.set('left', (obj.left ?? 0) + (p - objCenterX));
+              // Draw orange center guide spanning both objects
+              const span = objBoundsMap.get(p)!;
+              const line = new fabric.Line([p, span.minY, p, span.maxY], {
+                stroke: '#f97316', strokeWidth: 1.5, selectable: false, evented: false,
+                strokeDashArray: [], // @ts-ignore
+                name: 'smart-guide'
+              });
+              fabricCanvas.add(line); guideLines.push(line);
+              snappedV = true;
+              break;
+            }
+          }
+        }
+
+        if (!snappedH) {
+          for (const p of Array.from(hCenterPoints)) {
+            if (Math.abs(objCenterY - p) < OBJ_CENTER_THRESHOLD) {
+              obj.set('top', (obj.top ?? 0) + (p - objCenterY));
+              const span = objBoundsMapH.get(p)!;
+              const line = new fabric.Line([span.minX, p, span.maxX, p], {
+                stroke: '#f97316', strokeWidth: 1.5, selectable: false, evented: false,
+                strokeDashArray: [], // @ts-ignore
+                name: 'smart-guide'
+              });
+              fabricCanvas.add(line); guideLines.push(line);
+              snappedH = true;
+              break;
+            }
+          }
+        }
+
+        // 2b. Distribution Snap (Equidistance / Magnetic Pause)
+        // Find existing gaps between peers and snap the dragged object to match them
+        const DIST_SNAP_THRESHOLD = 6;
+        const validOthers = fabricCanvas.getObjects().filter(o => o !== obj && !['smart-guide', 'slot-punch-overlay', 'safe-zone-overlay'].includes((o as any).name));
+
+        if (!snappedH) { // Top/Bottom snapping (Vertical gaps)
+          const vPeers = validOthers.filter(o => {
+            const r = o.getBoundingRect(true);
+            return Math.min(wr.left + wr.width, r.left + r.width) - Math.max(wr.left, r.left) > 0;
+          });
+          if (vPeers.length >= 2) {
+            const vGaps = new Set<number>();
+            for (let i = 0; i < vPeers.length; i++) {
+              for (let j = 0; j < vPeers.length; j++) {
+                if (i === j) continue;
+                const r1 = vPeers[i].getBoundingRect(true);
+                const r2 = vPeers[j].getBoundingRect(true);
+                if (r1.top + r1.height <= r2.top) {
+                  vGaps.add(Math.round(r2.top - (r1.top + r1.height)));
+                }
+              }
+            }
+            for (const peer of vPeers) {
+              const pr = peer.getBoundingRect(true);
+              for (const gap of vGaps) {
+                // Try to snap obj below peer
+                const targetTopBelow = pr.top + pr.height + gap;
+                if (Math.abs(wr.top - targetTopBelow) < DIST_SNAP_THRESHOLD) {
+                  obj.set('top', (obj.top ?? 0) + (targetTopBelow - wr.top));
+                  snappedH = true; break;
+                }
+                // Try to snap obj above peer
+                const targetTopAbove = pr.top - gap - wr.height;
+                if (Math.abs(wr.top - targetTopAbove) < DIST_SNAP_THRESHOLD) {
+                  obj.set('top', (obj.top ?? 0) + (targetTopAbove - wr.top));
+                  snappedH = true; break;
+                }
+              }
+              if (snappedH) break;
+            }
+          }
+        }
+
+        if (!snappedV) { // Left/Right snapping (Horizontal gaps)
+          const hPeers = validOthers.filter(o => {
+            const r = o.getBoundingRect(true);
+            return Math.min(wr.top + wr.height, r.top + r.height) - Math.max(wr.top, r.top) > 0;
+          });
+          if (hPeers.length >= 2) {
+            const hGaps = new Set<number>();
+            for (let i = 0; i < hPeers.length; i++) {
+              for (let j = 0; j < hPeers.length; j++) {
+                if (i === j) continue;
+                const r1 = hPeers[i].getBoundingRect(true);
+                const r2 = hPeers[j].getBoundingRect(true);
+                if (r1.left + r1.width <= r2.left) {
+                  hGaps.add(Math.round(r2.left - (r1.left + r1.width)));
+                }
+              }
+            }
+            for (const peer of hPeers) {
+              const pr = peer.getBoundingRect(true);
+              for (const gap of hGaps) {
+                // Try to snap obj right of peer
+                const targetLeftRight = pr.left + pr.width + gap;
+                if (Math.abs(wr.left - targetLeftRight) < DIST_SNAP_THRESHOLD) {
+                  obj.set('left', (obj.left ?? 0) + (targetLeftRight - wr.left));
+                  snappedV = true; break;
+                }
+                // Try to snap obj left of peer
+                const targetLeftLeft = pr.left - gap - wr.width;
+                if (Math.abs(wr.left - targetLeftLeft) < DIST_SNAP_THRESHOLD) {
+                  obj.set('left', (obj.left ?? 0) + (targetLeftLeft - wr.left));
+                  snappedV = true; break;
+                }
+              }
+              if (snappedV) break;
+            }
+          }
+        }
+
+        // 2c. Edge snap (blue, standard pull)
+        if (!snappedV) {
+          for (const p of Array.from(vEdgePoints)) {
             for (const objP of objVPoints) {
-              if (Math.abs(objP - p) < snapThreshold) {
-                obj.set('left', obj.left! + (p - objP));
+              if (Math.abs(objP - p) < EDGE_THRESHOLD) {
+                obj.set('left', (obj.left ?? 0) + (p - objP));
                 drawGuideLine('v', p, '#3b82f6', false);
                 snappedV = true;
                 break;
@@ -286,10 +528,10 @@ const Canvas = () => {
         }
 
         if (!snappedH) {
-          for (const p of Array.from(hPoints)) {
+          for (const p of Array.from(hEdgePoints)) {
             for (const objP of objHPoints) {
-              if (Math.abs(objP - p) < snapThreshold) {
-                obj.set('top', obj.top! + (p - objP));
+              if (Math.abs(objP - p) < EDGE_THRESHOLD) {
+                obj.set('top', (obj.top ?? 0) + (p - objP));
                 drawGuideLine('h', p, '#3b82f6', false);
                 snappedH = true;
                 break;
@@ -299,8 +541,48 @@ const Canvas = () => {
           }
         }
 
+
         if (snappedV || snappedH) obj.setCoords();
+
+        // ── DISTANCE INDICATORS (Photoshop / Figma style) ───────────────────
+        // After snapping, measure the gap from the dragged object to every
+        // adjacent element and draw a red dimension line with a px label.
+        const objWr = obj.getBoundingRect(true);
+        const oL = objWr.left, oR = objWr.left + objWr.width;
+        const oT = objWr.top,  oB = objWr.top  + objWr.height;
+
+        fabricCanvas.getObjects().forEach(other => {
+          if (other === obj) return;
+          const n = (other as any).name;
+          if (n === 'smart-guide' || n === 'slot-punch-overlay' || n === 'safe-zone-overlay') return;
+
+          const r   = other.getBoundingRect(true);
+          const rL  = r.left, rR = r.left + r.width;
+          const rT  = r.top,  rB = r.top  + r.height;
+
+          const objCX = oL + objWr.width / 2;
+          const objCY = oT + objWr.height / 2;
+          const rCX = rL + r.width / 2;
+          const rCY = rT + r.height / 2;
+
+          // Only show vertical gap if they share a horizontal center
+          if (Math.abs(objCX - rCX) < 8) { // 8px center threshold
+            // Average center to draw the line perfectly straight
+            const lineX = (objCX + rCX) / 2;
+            if (rB <= oT) drawDistanceLine(lineX, rB, lineX, oT); // other above
+            else if (rT >= oB) drawDistanceLine(lineX, oB, lineX, rT); // other below
+          }
+
+          // Only show horizontal gap if they share a vertical center
+          if (Math.abs(objCY - rCY) < 8) {
+            const lineY = (objCY + rCY) / 2;
+            if (rR <= oL) drawDistanceLine(rR, lineY, oL, lineY); // other left
+            else if (rL >= oR) drawDistanceLine(oR, lineY, rL, lineY); // other right
+          }
+        });
+        // ────────────────────────────────────────────────────────────────────
       });
+
     };
 
     // Load existing data if available
@@ -408,15 +690,22 @@ const Canvas = () => {
         if (e.shiftKey) useDesignerStore.getState().redo();
         else useDesignerStore.getState().undo();
       }
+      // Ctrl+Y — standard redo shortcut
+      if (cmd && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        useDesignerStore.getState().redo();
+      }
 
-      // 6. Zoom
+      // 6. Zoom — read live zoom from store (closure value is stale between re-renders)
       if (cmd && (e.key === '=' || e.key === '+')) {
         e.preventDefault();
-        setZoom(zoom + 0.1);
+        const currentZoom = useDesignerStore.getState().zoom;
+        setZoom(currentZoom + 0.1);
       }
       if (cmd && e.key === '-') {
         e.preventDefault();
-        setZoom(zoom - 0.1);
+        const currentZoom = useDesignerStore.getState().zoom;
+        setZoom(currentZoom - 0.1);
       }
       if (cmd && e.key === '0') {
         e.preventDefault();
@@ -502,10 +791,10 @@ const Canvas = () => {
 
   // EFFECT 2: Update existing canvas when config (colors, punch) changes
   useEffect(() => {
-    const { canvas, side, config } = useDesignerStore.getState();
+    const { canvas, side, config, showSafeZones } = useDesignerStore.getState();
     if (!canvas) return;
-
-    // Update Background Color
+    
+    // Restore background color on canvas so exports/thumbnails render correctly
     const bgColor = side === 'front' ? config.backgroundColorFront : config.backgroundColorBack;
     canvas.setBackgroundColor(bgColor, canvas.renderAll.bind(canvas));
 
@@ -575,10 +864,19 @@ const Canvas = () => {
         transformOrigin: 'top left',
         width: config.orientation === 'horizontal' ? '1013px' : '638px',
         height: config.orientation === 'horizontal' ? '638px' : '1013px',
-        backgroundColor: '#fff',
-        boxShadow: '0 0 40px rgba(0,0,0,0.1)',
-        position: 'relative'
+        backgroundColor: side === 'front' ? config.backgroundColorFront : config.backgroundColorBack,
+        position: 'relative',
+        overflow: 'visible'
       }}>
+        {/* Card-sized shadow layer — sits behind the canvas so it is NOT drawn
+            inside the 60 px padded zone and doesn't create faint edge lines */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          boxShadow: '0 0 40px rgba(0,0,0,0.12)',
+          zIndex: -1,
+          pointerEvents: 'none'
+        }} />
         <canvas ref={canvasRef} />
         {showGrid && (
           <div 
@@ -600,3 +898,4 @@ const Canvas = () => {
 };
 
 export default Canvas;
+

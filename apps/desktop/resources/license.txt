@@ -1,0 +1,21 @@
+END USER LICENSE AGREEMENT (EULA) FOR ID DADDY
+
+IMPORTANT—READ CAREFULLY: This End User License Agreement ("Agreement") is a legal agreement between you (either an individual or a single entity) and ID Daddy for the software product identified above, which includes computer software and may include associated media, printed materials, and "online" or electronic documentation ("SOFTWARE PRODUCT"). By installing, copying, or otherwise using the SOFTWARE PRODUCT, you agree to be bound by the terms of this Agreement.
+
+1. GRANT OF LICENSE.
+This Agreement grants you the right to install and use the SOFTWARE PRODUCT on your devices for the purpose of creating and managing ID cards.
+
+2. DESCRIPTION OF OTHER RIGHTS AND LIMITATIONS.
+- You may not reverse engineer, decompile, or disassemble the SOFTWARE PRODUCT.
+- The SOFTWARE PRODUCT is licensed, not sold.
+
+3. TERMINATION.
+Without prejudice to any other rights, ID Daddy may terminate this Agreement if you fail to comply with the terms and conditions of this Agreement. In such event, you must destroy all copies of the SOFTWARE PRODUCT.
+
+4. COPYRIGHT.
+All title and copyrights in and to the SOFTWARE PRODUCT and any copies thereof are owned by ID Daddy. All title and intellectual property rights in and to the content which may be accessed through use of the SOFTWARE PRODUCT is the property of the respective content owner and may be protected by applicable copyright or other intellectual property laws and treaties.
+
+5. MISCELLANEOUS.
+If you acquired this product in the United States, this EULA is governed by the laws of the State of Delaware.
+
+By clicking "I agree", you accept these terms and conditions.

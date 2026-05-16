@@ -112,8 +112,21 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
   // @ts-ignore
   const isClipped = obj.isClipped;
 
+  useEffect(() => {
+    if (isSelected) {
+      // Use a slight delay to allow rendering/transitions to settle
+      setTimeout(() => {
+        document.getElementById(`layer-item-${obj.id}`)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }, 50);
+    }
+  }, [isSelected, obj.id]);
+
   return (
     <div 
+      id={`layer-item-${obj.id}`}
       ref={setNodeRef}
       style={style}
       {...attributes}
@@ -197,9 +210,10 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
 
 interface LayersPanelProps {
   onContextMenu?: (x: number, y: number) => void;
+  hideHeader?: boolean;
 }
 
-const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
+const LayersPanel = ({ onContextMenu, hideHeader }: LayersPanelProps) => {
   const { 
     canvas, 
     selectedObject, 
@@ -396,15 +410,17 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
   };
 
   return (
-    <div className="w-64 bg-white border-l border-gray-200 flex flex-col h-full  z-10">
+    <div className="w-full flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="h-12 px-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-        <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[2px] flex items-center gap-2">
-          <Layers size={14} className="text-gray-900" />
-          Layers
-        </h3>
-        <span className="text-[10px] font-bold text-gray-300">{layers.length} Total</span>
-      </div>
+      {!hideHeader && (
+        <div className="h-12 px-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
+          <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[2px] flex items-center gap-2">
+            <Layers size={14} className="text-gray-900" />
+            Layers
+          </h3>
+          <span className="text-[10px] font-bold text-gray-300">{layers.length} Total</span>
+        </div>
+      )}
 
       {/* Layer List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">

@@ -111,6 +111,8 @@ interface DesignerState {
   customVariables: string[];
   activePanel: string | null;
   setActivePanel: (panel: string | null) => void;
+  activeRightPanel: 'customize' | 'layers';
+  setActiveRightPanel: (panel: 'customize' | 'layers') => void;
 
   setCanvas: (canvas: fabric.Canvas) => void;
   setSide: (side: 'front' | 'back') => void;
@@ -166,6 +168,7 @@ interface DesignerState {
   savedDesigns: SavedDesign[];
   members: Member[];
   loadMembersFromDb: () => Promise<void>;
+  loadFoldersFromDb: () => Promise<void>;
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
   updateMember: (id: string, member: Partial<Member>) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
@@ -279,7 +282,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   history: [],
   redoStack: [],
   config: {
-    orientation: 'horizontal',
+    orientation: 'vertical',
     type: '30 Mil PVC',
     backsidePrinting: 'none',
     slotPunch: 'none',
@@ -297,6 +300,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   customVariables: [],
   activePanel: 'card-options',
   setActivePanel: (panel: string | null) => set({ activePanel: panel }),
+  activeRightPanel: 'customize',
+  setActiveRightPanel: (panel: 'customize' | 'layers') => set({ activeRightPanel: panel }),
   showGrid: false,
   setShowGrid: (show: boolean) => set({ showGrid: show }),
 
@@ -415,6 +420,16 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       }
     } catch (e) {
       console.error("Failed to fetch records from DB", e);
+    }
+  },
+  loadFoldersFromDb: async () => {
+    try {
+      const folders = await fetchFolders();
+      if (folders) {
+        set({ folders });
+      }
+    } catch (e) {
+      console.error("Failed to fetch folders from DB", e);
     }
   },
   loadTemplatesFromDb: async () => {
@@ -552,6 +567,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       if (get().side === 'front') updates.frontData = prevState;
       else updates.backData = prevState;
       set(updates);
+      canvas.fire('overlays:reapply' as any);
     });
   },
 
@@ -570,6 +586,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       if (get().side === 'front') updates.frontData = nextState;
       else updates.backData = nextState;
       set(updates);
+      canvas.fire('overlays:reapply' as any);
     });
   },
 
@@ -583,6 +600,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     canvas.loadFromJSON(initialState, () => {
       canvas.renderAll();
       set({ history: [initialState], redoStack: [] });
+      canvas.fire('overlays:reapply' as any);
     });
   },
 
@@ -694,16 +712,21 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
 
   centerObject: () => {
-    const { canvas, selectedObject, saveState } = get();
+    const { canvas, selectedObject, config, saveState } = get();
     if (!canvas || !selectedObject) return;
 
-    // Set origins to center so it stays centered when text changes
+    // Use actual card dimensions — canvas.centerObject() internally uses
+    // canvas.width/height which includes the 300px selection-handle padding.
+    const cardW = config.orientation === 'horizontal' ? 1013 : 638;
+    const cardH = config.orientation === 'horizontal' ? 638 : 1013;
+
     selectedObject.set({
       originX: 'center',
-      originY: 'center'
+      originY: 'center',
+      left: cardW / 2,
+      top: cardH / 2,
     });
 
-    canvas.centerObject(selectedObject);
     selectedObject.setCoords();
     canvas.renderAll();
     saveState();

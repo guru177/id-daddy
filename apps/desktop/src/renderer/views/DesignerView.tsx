@@ -6,7 +6,7 @@ import { useDesignerStore } from '../designer/store';
 import { ImageLibraryModal } from '../designer/ImageLibrary';
 import LayersPanel from '../designer/LayersPanel';
 import { ContextMenu } from '../designer/ContextMenu';
-import { getPreviewText, applyVariableStyles, generateSecurityImageURL } from '../designer/Panels';
+import { getPreviewText, applyVariableStyles, generateSecurityImageURL, CustomizePanel } from '../designer/Panels';
 import { Ruler } from '../designer/Rulers';
 import { useAuthStore } from '../store';
 import {
@@ -302,7 +302,11 @@ export function DesignerView() {
     removeGuideline,
     zoom,
     setZoom,
-    resetZoom
+    resetZoom,
+    activePanel,
+    setActivePanel,
+    activeRightPanel,
+    setActiveRightPanel
   } = useDesignerStore();
 
   // Sync templates from DB whenever the designer view opens
@@ -832,8 +836,36 @@ export function DesignerView() {
             </div>
           </div>
 
-          {/* Right Sidebar: Layers */}
-          <LayersPanel onContextMenu={(x, y) => setContextMenu({ x, y })} />
+          {/* Right Sidebar: Tabs for Customize / Layers */}
+          <div className="w-[320px] bg-white border-l border-gray-200 flex flex-col z-10 shrink-0">
+            {/* Tabs Header */}
+            <div className="flex items-center h-12 border-b border-gray-100 shrink-0 bg-gray-50/50">
+              <button 
+                onClick={() => setActiveRightPanel('customize')}
+                className={`flex-1 flex items-center justify-center gap-2 h-full text-[11px] font-black uppercase tracking-[1px] transition-colors border-b-[3px] ${activeRightPanel === 'customize' ? 'border-green-500 text-green-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}
+              >
+                Customize
+              </button>
+              <button 
+                onClick={() => setActiveRightPanel('layers')} 
+                className={`flex-1 flex items-center justify-center gap-2 h-full text-[11px] font-black uppercase tracking-[1px] transition-colors border-b-[3px] ${activeRightPanel === 'layers' ? 'border-green-500 text-green-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}
+              >
+                Layers
+              </button>
+            </div>
+            
+            {/* Tab Content */}
+            <div className="flex-1 overflow-hidden relative">
+              <div className={`absolute inset-0 flex flex-col transition-opacity duration-200 ${activeRightPanel === 'customize' ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none -z-10'}`}>
+                 <div className="flex-1 overflow-y-auto p-6 pb-24 custom-scrollbar">
+                   <CustomizePanel />
+                 </div>
+              </div>
+              <div className={`absolute inset-0 flex flex-col transition-opacity duration-200 ${activeRightPanel === 'layers' ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none -z-10'}`}>
+                 <LayersPanel onContextMenu={(x, y) => setContextMenu({ x, y })} hideHeader={true} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

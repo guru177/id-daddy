@@ -112,15 +112,17 @@ export const ContextMenu = ({ x, y, onClose }: ContextMenuProps) => {
   const isClipped = selectedObject.isClipped;
   const canClip = canvas && canvas.getObjects().indexOf(selectedObject) > 0;
 
-  // Alignment helpers (relative to canvas center, safe-margin aware)
+  // Alignment helpers (relative to card dimensions, safe-margin aware)
   const alignObject = (alignType: string) => {
     if (!canvas || !selectedObject) return;
-    const cw = canvas.width!;
-    const ch = canvas.height!;
+    // Use actual card dimensions from config — NOT canvas.width/height
+    // which includes the 60px selection-handle padding added to the canvas.
+    const { config: cfg, showSafeZones } = useDesignerStore.getState();
+    const cw = cfg.orientation === 'horizontal' ? 1013 : 638;
+    const ch = cfg.orientation === 'horizontal' ? 638 : 1013;
     const obj = selectedObject;
 
     // Respect the safe margin if the guide is enabled
-    const { config: cfg, showSafeZones } = useDesignerStore.getState();
     const margin = showSafeZones ? (cfg.safeMargin ?? 25) : 0;
 
     switch (alignType) {

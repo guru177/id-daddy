@@ -37,6 +37,10 @@ export function DashboardView() {
     (state) => state.loadTemplatesFromDb
   );
 
+  const loadFoldersFromDb = useDesignerStore(
+    (state) => state.loadFoldersFromDb
+  );
+
   const syncLocalData = useDesignerStore(
     (state) => state.syncLocalData
   );
@@ -48,12 +52,15 @@ export function DashboardView() {
   useEffect(() => {
     void loadMembersFromDb().then(() => {
       void loadTemplatesFromDb().then(() => {
-        void syncLocalData();
+        void loadFoldersFromDb().then(() => {
+          void syncLocalData();
+        });
       });
     });
   }, [
     loadMembersFromDb,
     loadTemplatesFromDb,
+    loadFoldersFromDb,
     syncLocalData,
   ]);
 
