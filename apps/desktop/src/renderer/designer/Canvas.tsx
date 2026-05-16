@@ -158,12 +158,16 @@ const Canvas = () => {
 
     const setupEvents = () => {
       fabricCanvas.on('selection:created', (e) => {
-        setSelectedObject(e.selected?.[0] || null);
-        if (e.selected?.[0]) setActivePanel('customize');
+        // Use getActiveObject() to capture the full ActiveSelection for multi-select,
+        // not just e.selected[0] which only returns one of the newly selected objects.
+        const active = fabricCanvas.getActiveObject();
+        setSelectedObject(active || null);
+        if (active) setActivePanel('customize');
       });
       fabricCanvas.on('selection:updated', (e) => {
-        setSelectedObject(e.selected?.[0] || null);
-        if (e.selected?.[0]) setActivePanel('customize');
+        const active = fabricCanvas.getActiveObject();
+        setSelectedObject(active || null);
+        if (active) setActivePanel('customize');
       });
       fabricCanvas.on('selection:cleared', () => {
         setSelectedObject(null);

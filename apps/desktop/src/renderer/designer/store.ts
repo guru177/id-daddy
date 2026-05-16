@@ -909,7 +909,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     saveState();
     set({ isHistoryPaused: true });
 
-    // 5. Replace originals with the new image
+    // 5. Record the lowest canvas index among the objects being merged —
+    //    this is where the merged image should live to stay in the same z-order.
+    //    Use the allObjects snapshot captured before any removal.
+    const mergedIndices = objectsToMerge.map(o => allObjects.indexOf(o)).filter(i => i !== -1);
+    const insertIndex = Math.min(...mergedIndices);
+
+    // 6. Replace originals with the new image
     canvas.discardActiveObject();
     objectsToMerge.forEach(obj => canvas.remove(obj));
 
@@ -924,7 +930,10 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         (img as any).id = Math.random().toString(36).substr(2, 9);
         (img as any).customName = 'Merged Layer';
 
-        canvas.add(img);
+        // insertAt keeps the merged layer at the same z-position as the lowest
+        // selected object, rather than jumping it to the top of the stack.
+        const clampedIndex = Math.min(insertIndex, canvas.getObjects().length);
+        canvas.insertAt(img, clampedIndex, false);
         canvas.setActiveObject(img);
 
         set({ isHistoryPaused: false });

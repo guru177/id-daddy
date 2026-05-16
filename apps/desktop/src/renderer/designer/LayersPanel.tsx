@@ -219,6 +219,8 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
     redo
   } = useDesignerStore();
   const [layers, setLayers] = useState<any[]>([]);
+  // Tracks the last non-shift-clicked layer index for range selection
+  const pivotIndexRef = useRef<number>(-1);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -243,23 +245,35 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
       // Layers list is shown in reverse order (Topmost layer at index 0)
       setLayers([...objects].reverse());
     };
+
+    // Sync the canvas active object → store so checkIfSelected always reflects
+    // multi-selections made via Shift+click on the canvas (not just the layers panel).
+    const syncSelection = () => {
+      setSelectedObject(canvas.getActiveObject() || null);
+      updateLayers();
+    };
+
+    const clearSelection = () => {
+      setSelectedObject(null);
+      updateLayers();
+    };
     
     updateLayers();
     canvas.on('object:added', updateLayers);
     canvas.on('object:removed', updateLayers);
     // Listen to our custom refresh event (not object:modified) to avoid feedback loop
     canvas.on('layers:refresh' as any, updateLayers);
-    canvas.on('selection:created', updateLayers);
-    canvas.on('selection:cleared', updateLayers);
-    canvas.on('selection:updated', updateLayers);
+    canvas.on('selection:created', syncSelection);
+    canvas.on('selection:cleared', clearSelection);
+    canvas.on('selection:updated', syncSelection);
 
     return () => {
       canvas.off('object:added', updateLayers);
       canvas.off('object:removed', updateLayers);
       canvas.off('layers:refresh' as any, updateLayers);
-      canvas.off('selection:created', updateLayers);
-      canvas.off('selection:cleared', updateLayers);
-      canvas.off('selection:updated', updateLayers);
+      canvas.off('selection:created', syncSelection);
+      canvas.off('selection:cleared', clearSelection);
+      canvas.off('selection:updated', syncSelection);
     };
   }, [canvas]);
 
@@ -314,19 +328,34 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
 
   const selectLayer = (e: React.MouseEvent, obj: any) => {
     if (!canvas) return;
-    
-    const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
-    
-    if (isMultiSelect) {
+
+    const clickedIndex = layers.indexOf(obj);
+
+    if (e.shiftKey && pivotIndexRef.current !== -1) {
+      // --- RANGE selection: select everything between pivot and clicked ---
+      const start = Math.min(pivotIndexRef.current, clickedIndex);
+      const end   = Math.max(pivotIndexRef.current, clickedIndex);
+      const rangeObjs = layers
+        .slice(start, end + 1)
+        .filter((o: any) => o.selectable !== false);
+
+      canvas.discardActiveObject();
+      if (rangeObjs.length > 1) {
+        const sel = new fabric.ActiveSelection(rangeObjs, { canvas });
+        canvas.setActiveObject(sel);
+      } else if (rangeObjs.length === 1) {
+        canvas.setActiveObject(rangeObjs[0]);
+      }
+      // pivot stays at the original anchor — don't update it
+    } else if (e.ctrlKey || e.metaKey) {
+      // --- TOGGLE individual layer (Ctrl/Cmd+click) ---
       const activeObjects = canvas.getActiveObjects();
-      let newSelection: fabric.Object[] = [];
-      
+      let newSelection: fabric.Object[];
       if (activeObjects.includes(obj)) {
         newSelection = activeObjects.filter(o => o !== obj);
       } else {
         newSelection = [...activeObjects, obj];
       }
-      
       canvas.discardActiveObject();
       if (newSelection.length > 1) {
         const sel = new fabric.ActiveSelection(newSelection, { canvas });
@@ -334,10 +363,14 @@ const LayersPanel = ({ onContextMenu }: LayersPanelProps) => {
       } else if (newSelection.length === 1) {
         canvas.setActiveObject(newSelection[0]);
       }
+      // Update pivot to this object for future range selects
+      pivotIndexRef.current = clickedIndex;
     } else {
+      // --- Normal single click ---
       canvas.setActiveObject(obj);
+      pivotIndexRef.current = clickedIndex;
     }
-    
+
     canvas.renderAll();
     setSelectedObject(canvas.getActiveObject());
   };
