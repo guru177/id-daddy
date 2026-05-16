@@ -289,8 +289,11 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member,
     }
 
     // 2. Image Optimization: Use cache for repeated images (logos, etc)
+    // IMPORTANT: only process image objects — text objects also carry a `placeholder`
+    // property but they are handled above; applying image logic to them overwrites the
+    // text with a grey SVG silhouette.
     const placeholder = (obj as any).placeholder;
-    if (placeholder) {
+    if (placeholder && obj.type === 'image') {
       if (placeholder === '{{barcode}}' || placeholder === '{{qr_code}}' || placeholder === '{{pdf417}}' || placeholder === '{{datamatrix}}') {
         const dataUrl = await generateSecurityImageURL(obj, member);
         if (dataUrl) {

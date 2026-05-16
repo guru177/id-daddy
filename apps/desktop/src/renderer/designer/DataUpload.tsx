@@ -545,17 +545,54 @@ export const DataUpload = () => {
   };
 
   useEffect(() => {
-    if (isModalOpen && !editingMemberId) {
-      const activeCustomFields = formConfig?.customFields?.filter(cf => formConfig.enabledFields.includes(cf)) || [];
-      const activeCustomImageFields = formConfig?.customImageFields?.filter(cf => formConfig.enabledImageFields?.includes(cf)) || [];
+    if (!isModalOpen) return;
 
+    // Only truly user-added custom fields — never standard fields or standard image fields
+    const allStandardLabels = new Set([
+      ...STANDARD_FIELDS,
+      ...STANDARD_IMAGE_FIELDS,
+      // also cover alternate casings/spacing that might be stored
+      'First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Title', 'ID number',
+      'Employee ID', 'Department', 'Hire Date', 'Issue Date', 'Expiration Date',
+      'Phone 1', 'Phone 2', 'Fax', 'Email', 'Website', 'Country', 'Postal Code',
+      'State', 'City', 'Street 1', 'Street 2', 'Grade Level', 'Security Level',
+      'Height', 'Weight', 'Gender', 'Eye color', 'Hair color', 'Blood Group',
+      'Parent Name', 'Parent Phone', 'Emergency Contact', 'Emergency Phone',
+      'RFID No', 'Bus Route', 'Hostel Name', 'Room No', 'Role',
+      'Signature', 'Fingerprint', 'Division Logo',
+    ]);
+
+    const activeCustomFields = (formConfig?.customFields || [])
+      .filter(cf => formConfig!.enabledFields.includes(cf) && !allStandardLabels.has(cf));
+
+    const activeCustomImageFields = (formConfig?.customImageFields || [])
+      .filter(cf => (formConfig?.enabledImageFields || []).includes(cf) && !allStandardLabels.has(cf));
+
+    if (editingMemberId) {
+      // EDIT mode: pre-fill custom field values from the member being edited
+      const member = members.find(m => m.id === editingMemberId);
+      const memberCustomFields = member?.customFields || {};
+
+      const combined = [
+        ...activeCustomFields.map(cf => ({
+          label: cf,
+          value: String(memberCustomFields[cf] ?? '')
+        })),
+        ...activeCustomImageFields.map(cf => ({
+          label: cf,
+          value: String(memberCustomFields[cf] ?? '')
+        }))
+      ];
+      setCustomFieldsList(combined);
+    } else {
+      // ADD mode: start with empty values
       const combined = [
         ...activeCustomFields.map(cf => ({ label: cf, value: '' })),
         ...activeCustomImageFields.map(cf => ({ label: cf, value: '' }))
       ];
       setCustomFieldsList(combined);
     }
-  }, [isModalOpen, formConfig, editingMemberId]);
+  }, [isModalOpen, formConfig, editingMemberId, members]);
 
   const handleChange = (field: keyof typeof initialFormState, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -1730,123 +1767,104 @@ export const DataUpload = () => {
                   </div>
                 </div>
 
-                {/* Right Column: Form Fields */}
-                <div className="flex-1 space-y-8">
-                  {/* General Info */}
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                    <FormField label="First Name" required placeholder="Enter First Name..." value={formData.firstName} onChange={(v) => handleChange('firstName', v)} />
-                    <FormField label="Last Name" placeholder="Enter Last Name..." value={formData.lastName} onChange={(v) => handleChange('lastName', v)} />
-                    <FormField label="Nickname" placeholder="Enter Nickname..." value={formData.nickname} onChange={(v) => handleChange('nickname', v)} />
-                    <FormField label="Date of Birth" placeholder="Enter Date of Birth..." value={formData.dob} onChange={(v) => handleChange('dob', v)} />
-                    <FormField originalLabel="Title" label={getLabel("Title")} placeholder={`Enter ${getLabel("Title")}...`} value={formData.title} onChange={(v) => handleChange('title', v)} />
-                    <FormField label="ID number" placeholder="Enter ID number..." value={formData.idNumber} onChange={(v) => handleChange('idNumber', v)} />
-                  </div>
+                {/* Right Column: Dynamic fields from Variable Checklist */}
+                 <div className="flex-1 space-y-6">
+                   {/* Standard fields — only ticked ones in checklist */}
+                   {(() => {
+                     const FIELD_MAP: Record<string, { key: keyof typeof initialFormState; ph: string }> = {
+                       'First Name':         { key: 'firstName',        ph: 'Enter First Name...' },
+                       'Last Name':          { key: 'lastName',         ph: 'Enter Last Name...' },
+                       'Nickname':           { key: 'nickname',         ph: 'Enter Nickname...' },
+                       'Date of Birth':      { key: 'dob',              ph: 'e.g. 1990-01-01' },
+                       'Title':              { key: 'title',            ph: 'Enter Title...' },
+                       'ID number':          { key: 'idNumber',         ph: 'Enter ID number...' },
+                       'Employee ID':        { key: 'employeeId',       ph: 'Enter Employee ID...' },
+                       'Department':         { key: 'department',       ph: 'Enter Department...' },
+                       'Hire Date':          { key: 'hireDate',         ph: 'Enter Hire Date...' },
+                       'Issue Date':         { key: 'issueDate',        ph: 'Enter Issue Date...' },
+                       'Expiration Date':    { key: 'expirationDate',   ph: 'Enter Expiration Date...' },
+                       'Phone 1':            { key: 'phone1',           ph: 'Enter Phone 1...' },
+                       'Phone 2':            { key: 'phone2',           ph: 'Enter Phone 2...' },
+                       'Fax':                { key: 'fax',              ph: 'Enter Fax...' },
+                       'Email':              { key: 'email',            ph: 'Enter Email...' },
+                       'Website':            { key: 'website',          ph: 'Enter Website...' },
+                       'Country':            { key: 'country',          ph: 'Enter Country...' },
+                       'Postal Code':        { key: 'postalCode',       ph: 'Enter Postal Code...' },
+                       'State':              { key: 'state',            ph: 'Enter State...' },
+                       'City':               { key: 'city',             ph: 'Enter City...' },
+                       'Street 1':           { key: 'street1',          ph: 'Enter Street 1...' },
+                       'Street 2':           { key: 'street2',          ph: 'Enter Street 2...' },
+                       'Grade Level':        { key: 'gradeLevel',       ph: 'Enter Grade Level...' },
+                       'Security Level':     { key: 'securityLevel',    ph: 'Enter Security Level...' },
+                       'Height':             { key: 'height',           ph: 'Enter Height...' },
+                       'Weight':             { key: 'weight',           ph: 'Enter Weight...' },
+                       'Gender':             { key: 'gender',           ph: 'Enter Gender...' },
+                       'Eye color':          { key: 'eyeColor',         ph: 'Enter Eye color...' },
+                       'Hair color':         { key: 'hairColor',        ph: 'Enter Hair color...' },
+                       'Blood Group':        { key: 'bloodGroup',       ph: 'e.g. O+, AB-' },
+                       'Parent Name':        { key: 'parentName',       ph: 'Enter Parent Name...' },
+                       'Parent Phone':       { key: 'parentPhone',      ph: 'Enter Parent Phone...' },
+                       'Emergency Contact':  { key: 'emergencyContact', ph: 'Emergency Contact Name...' },
+                       'Emergency Phone':    { key: 'emergencyPhone',   ph: 'Emergency Phone Number...' },
+                       'RFID No':            { key: 'rfidNo',           ph: 'Enter RFID Tag ID...' },
+                       'Bus Route':          { key: 'busRoute',         ph: 'Enter Bus Route/No...' },
+                       'Hostel Name':        { key: 'hostelName',       ph: 'Enter Hostel Name...' },
+                       'Room No':            { key: 'roomNo',           ph: 'Enter Room Number...' },
+                       'Role':               { key: 'role',             ph: 'Enter Role...' },
+                     };
+                     const enabledStandard = ['First Name', ...STANDARD_FIELDS.filter(f =>
+                       f !== 'First Name' && (formConfig?.enabledFields || []).includes(f)
+                     )].filter(f => FIELD_MAP[f]);
+                     return (
+                       <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                         {enabledStandard.map(label => {
+                           const mapping = FIELD_MAP[label];
+                           const displayLabel = getLabel(label);
+                           return (
+                             <div key={label} className="flex flex-col gap-1.5">
+                               <label className="text-[10px] font-black text-gray-900 tracking-wide">
+                                 {displayLabel}{label === 'First Name' && <span className="text-red-500 ml-1">*</span>}
+                               </label>
+                               <input
+                                 type="text"
+                                 value={formData[mapping.key] as string}
+                                 onChange={e => handleChange(mapping.key, e.target.value)}
+                                 placeholder={mapping.ph}
+                                 className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
+                               />
+                             </div>
+                           );
+                         })}
+                       </div>
+                     );
+                   })()}
 
-                  {/* Employment Details */}
-                  <Section title={getLabel("Employment Details")}>
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                      <FormField originalLabel="Employee ID" label={getLabel("Employee ID")} placeholder={`Enter ${getLabel("Employee ID")}...`} value={formData.employeeId} onChange={(v) => handleChange('employeeId', v)} />
-                      <FormField originalLabel="Department" label={getLabel("Department")} placeholder={`Enter ${getLabel("Department")}...`} value={formData.department} onChange={(v) => handleChange('department', v)} />
-                      <FormField originalLabel="Hire Date" label={getLabel("Hire Date")} placeholder={`Enter ${getLabel("Hire Date")}...`} value={formData.hireDate} onChange={(v) => handleChange('hireDate', v)} />
-                      <FormField label="Issue Date" placeholder="Enter Issue Date..." value={formData.issueDate} onChange={(v) => handleChange('issueDate', v)} />
-                      <FormField label="Expiration Date" placeholder="Enter Expiration Date..." value={formData.expirationDate} onChange={(v) => handleChange('expirationDate', v)} />
-                    </div>
-                  </Section>
-
-                  {/* Contact Info & Addresses */}
-                  <Section title="Contact Info & Addresses">
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                      <FormField label="Phone 1" placeholder="Enter Phone 1..." value={formData.phone1} onChange={(v) => handleChange('phone1', v)} />
-                      <FormField label="Fax" placeholder="Enter Fax..." value={formData.fax} onChange={(v) => handleChange('fax', v)} />
-                      <FormField label="Email" placeholder="Enter Email..." value={formData.email} onChange={(v) => handleChange('email', v)} />
-                      <FormField label="Website" placeholder="Enter Website..." value={formData.website} onChange={(v) => handleChange('website', v)} />
-                    </div>
-                    <div className="grid grid-cols-4 gap-x-8 gap-y-6 mt-6">
-                      <FormField label="Country" placeholder="Enter Country..." value={formData.country} onChange={(v) => handleChange('country', v)} />
-                      <FormField label="Postal Code" placeholder="Enter Postal Code..." value={formData.postalCode} onChange={(v) => handleChange('postalCode', v)} />
-                      <FormField label="State" placeholder="Enter State..." value={formData.state} onChange={(v) => handleChange('state', v)} />
-                      <FormField label="City" placeholder="Enter City..." value={formData.city} onChange={(v) => handleChange('city', v)} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-6 mt-6">
-                      <FormField label="Street 1" placeholder="Enter Street 1..." value={formData.street1} onChange={(v) => handleChange('street1', v)} />
-                      <FormField label="Street 2" placeholder="Enter Street 2..." value={formData.street2} onChange={(v) => handleChange('street2', v)} />
-                    </div>
-                  </Section>
-
-                  {/* Specialized Identity Fields */}
-                  <Section title="Specialized Identity Fields">
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                      <FormField label="Blood Group" placeholder="e.g. O+, AB-" value={formData.bloodGroup} onChange={(v) => handleChange('bloodGroup', v)} />
-                      <FormField label="RFID No" placeholder="Enter RFID Tag ID..." value={formData.rfidNo} onChange={(v) => handleChange('rfidNo', v)} />
-                      <FormField label="Parent Name" placeholder="Enter Parent Name..." value={formData.parentName} onChange={(v) => handleChange('parentName', v)} />
-                      <FormField label="Parent Phone" placeholder="Enter Parent Phone..." value={formData.parentPhone} onChange={(v) => handleChange('parentPhone', v)} />
-                      <FormField label="Emergency Contact" placeholder="Emergency Contact Name..." value={formData.emergencyContact} onChange={(v) => handleChange('emergencyContact', v)} />
-                      <FormField label="Emergency Phone" placeholder="Emergency Phone Number..." value={formData.emergencyPhone} onChange={(v) => handleChange('emergencyPhone', v)} />
-                      <FormField label="Bus Route" placeholder="Enter Bus Route/No..." value={formData.busRoute} onChange={(v) => handleChange('busRoute', v)} />
-                      <FormField label="Hostel Name" placeholder="Enter Hostel Name..." value={formData.hostelName} onChange={(v) => handleChange('hostelName', v)} />
-                      <FormField label="Room No" placeholder="Enter Room Number..." value={formData.roomNo} onChange={(v) => handleChange('roomNo', v)} />
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-black text-gray-900 tracking-wide">Identity Role</label>
-                        <select
-                          value={formData.role}
-                          onChange={(e) => handleChange('role', e.target.value)}
-                          className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
-                        >
-                          <option value="Student">Student</option>
-                          <option value="Staff">Staff</option>
-                          <option value="Guest">Guest</option>
-                          <option value="Contractor">Contractor</option>
-                        </select>
-                      </div>
-                    </div>
-                  </Section>
-
-                  {/* Additional Information */}
-                  <Section title="Additional Information">
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-6 mb-6">
-                      <FormField label="Grade Level" placeholder="Enter Grade Level..." value={formData.gradeLevel} onChange={(v) => handleChange('gradeLevel', v)} />
-                      <FormField label="Security Level" placeholder="Enter Security Level..." value={formData.securityLevel} onChange={(v) => handleChange('securityLevel', v)} />
-                    </div>
-                    <div className="grid grid-cols-4 gap-x-8 gap-y-6 mb-6">
-                      <FormField label="Height" placeholder="Enter Height..." value={formData.height} onChange={(v) => handleChange('height', v)} />
-                      <FormField label="Weight" placeholder="Enter Weight..." value={formData.weight} onChange={(v) => handleChange('weight', v)} />
-                      <FormField label="Gender" placeholder="Enter Gender..." value={formData.gender} onChange={(v) => handleChange('gender', v)} />
-                      <FormField label="Eye color" placeholder="Enter eye color..." value={formData.eyeColor} onChange={(v) => handleChange('eyeColor', v)} />
-                    </div>
-                    <div className="flex justify-between items-end mb-6">
-                      <div className="w-[calc(25%-1.5rem)]">
-                        <FormField label="Hair color" placeholder="Enter Hair color..." value={formData.hairColor} onChange={(v) => handleChange('hairColor', v)} />
-                      </div>
-                    </div>
-
-                    {/* Required Custom Fields */}
-                    {customFieldsList.filter(f => !formConfig?.customImageFields?.includes(f.label)).length > 0 && (
-                      <div className="mt-8 border-t border-gray-100 pt-6">
-                        <h3 className="text-[11px] font-black text-gray-900 mb-6 group-hover:text-green-600 transition-colors uppercase tracking-wider">Required Custom Fields</h3>
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                          {customFieldsList.map((field, idx) => {
-                            if (formConfig?.customImageFields?.includes(field.label)) return null;
-                            return (
-                              <div key={idx} className="flex flex-col gap-1.5">
-                                <label className="text-[10px] font-black text-gray-900 tracking-wide">{field.label}</label>
-                                <input
-                                  type="text"
-                                  placeholder={`Enter ${field.label}...`}
-                                  className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
-                                  value={field.value}
-                                  onChange={e => {
-                                    const newList = [...customFieldsList];
-                                    newList[idx].value = e.target.value;
-                                    setCustomFieldsList(newList);
-                                  }}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </Section>
+                   {/* User-added custom text fields */}
+                   {customFieldsList.filter(f => !formConfig?.customImageFields?.includes(f.label)).length > 0 && (
+                     <div className="border-t border-gray-100 pt-6">
+                       <h3 className="text-[11px] font-black text-gray-900 mb-6 uppercase tracking-wider">Custom Fields</h3>
+                       <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                         {customFieldsList
+                           .filter(f => !formConfig?.customImageFields?.includes(f.label))
+                           .map((field, idx) => (
+                             <div key={idx} className="flex flex-col gap-1.5">
+                               <label className="text-[10px] font-black text-gray-900 tracking-wide">{field.label}</label>
+                               <input
+                                 type="text"
+                                 placeholder={`Enter ${field.label}...`}
+                                 className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
+                                 value={field.value}
+                                 onChange={e => {
+                                   const newList = [...customFieldsList];
+                                   newList[idx].value = e.target.value;
+                                   setCustomFieldsList(newList);
+                                 }}
+                               />
+                             </div>
+                           ))}
+                       </div>
+                     </div>
+                   )}
 
                   {/* Bottom Image Fields (Signatures, Fingerprints, Custom Images) */}
                   <div className="grid grid-cols-4 gap-6 pt-4 pb-12">
