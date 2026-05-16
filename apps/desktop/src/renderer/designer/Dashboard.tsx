@@ -46,10 +46,12 @@ const DesignCard = ({
 
           {/* Back */}
           <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0 group-hover:scale-105 transition-transform duration-700 delay-75">
-            {design.thumbnailBack ? (
+            {design.config?.backsidePrinting !== 'none' && design.thumbnailBack ? (
               <img src={design.thumbnailBack} alt="Back" className="w-full h-full object-contain" />
             ) : (
-              <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 text-xs font-bold">No Preview</div>
+              <div className="w-full h-full bg-white flex items-center justify-center">
+                <span className="text-gray-300 font-black uppercase tracking-[0.15em] text-xs">Blank</span>
+              </div>
             )}
             <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
               Back

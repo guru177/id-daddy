@@ -519,15 +519,21 @@ export function DesignerView() {
                 className="group relative bg-white rounded-[32px] border border-gray-100 overflow-hidden  transition-all duration-500 flex flex-col"
               >
                 {/* Preview: Dual Side */}
-                <div className="relative aspect-square w-full bg-gray-100 flex items-center justify-center overflow-hidden group-hover:bg-green-50/30 transition-colors duration-500">
+                <div className={`relative w-full ${design.config.orientation === 'horizontal' ? 'aspect-[86/108]' : 'aspect-[108/86]'} bg-stone-50 overflow-hidden group-hover:bg-green-50/20 transition-colors duration-500`}>
                   <div className={`w-full h-full flex ${design.config.orientation === 'horizontal' ? 'flex-col' : 'flex-row'}`}>
-                    <div className="flex-1 relative overflow-hidden border-b border-gray-100 last:border-0">
-                      <img src={design.thumbnailFront} alt="Front" className="w-full h-full object-cover" />
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Front</div>
+                    <div className="flex-1 relative overflow-hidden border-b border-gray-100 last:border-0 group-hover:scale-105 transition-transform duration-700">
+                      <img src={design.thumbnailFront} alt="Front" className="w-full h-full object-contain" />
+                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Front</div>
                     </div>
-                    <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0">
-                      <img src={design.thumbnailBack} alt="Back" className="w-full h-full object-cover" />
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md text-[10px] font-black text-white rounded-lg uppercase tracking-wider">Back</div>
+                    <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0 group-hover:scale-105 transition-transform duration-700 delay-75">
+                      {design.config?.backsidePrinting !== 'none' && design.thumbnailBack ? (
+                        <img src={design.thumbnailBack} alt="Back" className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="w-full h-full bg-white flex items-center justify-center">
+                          <span className="text-gray-300 font-black uppercase tracking-[0.15em] text-xs">Blank</span>
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Back</div>
                     </div>
                   </div>
                   {activeTemplateId === design.id && (

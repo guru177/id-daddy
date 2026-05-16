@@ -129,32 +129,32 @@ export function TemplatesPage() {
             return (
             <div key={template.id} className="group bg-white rounded-[2rem] border border-stone-200 overflow-hidden hover:shadow-2xl hover:shadow-stone-200/50 hover:border-teal-500/30 transition-all flex flex-col">
               {/* Preview Area – dual front/back split */}
-              <div className="aspect-square bg-stone-50 relative overflow-hidden group-hover:bg-stone-100/50 transition-colors">
+              <div className={`relative w-full ${isHorizontal ? 'aspect-[86/108]' : 'aspect-[108/86]'} bg-stone-50 overflow-hidden group-hover:bg-stone-100/50 transition-colors duration-500`}>
                 <div className={`w-full h-full flex ${isHorizontal ? 'flex-col' : 'flex-row'}`}>
                   {/* Front half */}
-                  <div className="flex-1 relative border-r border-stone-100 overflow-hidden">
+                  <div className="flex-1 relative border-r border-stone-100 overflow-hidden group-hover:scale-105 transition-transform duration-700">
                     {template.design.thumbnailFront ? (
-                      <img src={template.design.thumbnailFront} className="w-full h-full object-cover" alt="Front" />
+                      <img src={template.design.thumbnailFront} className="w-full h-full object-contain" alt="Front" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-stone-200">
                         <LayoutTemplate size={40} strokeWidth={1} />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 px-2 py-0.5 bg-black/60 backdrop-blur-md text-[9px] font-black text-white rounded-md uppercase tracking-wider">
+                    <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
                       Front
                     </div>
                   </div>
 
                   {/* Back half */}
-                  <div className="flex-1 relative overflow-hidden border-l border-stone-100 first:border-0">
-                    {template.design.thumbnailBack ? (
-                      <img src={template.design.thumbnailBack} className="w-full h-full object-cover" alt="Back" />
+                  <div className="flex-1 relative overflow-hidden border-l border-stone-100 first:border-0 group-hover:scale-105 transition-transform duration-700 delay-75">
+                    {template.design.config?.backsidePrinting !== 'none' && template.design.thumbnailBack ? (
+                      <img src={template.design.thumbnailBack} className="w-full h-full object-contain" alt="Back" />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-stone-200">
-                        <LayoutTemplate size={40} strokeWidth={1} />
+                      <div className="w-full h-full bg-white flex items-center justify-center">
+                        <span className="text-gray-300 font-black uppercase tracking-[0.15em] text-xs">Blank</span>
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 px-2 py-0.5 bg-black/60 backdrop-blur-md text-[9px] font-black text-white rounded-md uppercase tracking-wider">
+                    <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
                       Back
                     </div>
                   </div>
