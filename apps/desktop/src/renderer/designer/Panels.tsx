@@ -551,7 +551,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
     'First Name': 'firstName',
     'Last Name': 'lastName',
     'Nickname': 'nickname',
-    'DOB': 'dob',
+    'Date of Birth': 'dob',
     'Title': 'title',
     'Employee ID': 'employeeId',
     'Department': 'department',
@@ -697,10 +697,10 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
 };
 
 const formatQRData = (type: string, fields: any, data: string) => {
-  if (!data && type === 'URL') return 'https://idcreator.com';
+  if (!data && type === 'URL') return 'https://raintechsoftware.com/';
   switch (type) {
     case 'URL':
-      if (!data) return 'https://idcreator.com';
+      if (!data) return 'https://raintechsoftware.com/';
       return data.startsWith('http') ? data : `https://${data}`;
     case 'Email':
       return `mailto:${fields.email || ''}?subject=${encodeURIComponent(fields.subject || '')}&body=${encodeURIComponent(fields.body || '')}`;
@@ -731,7 +731,7 @@ export const generateSecurityImageURL = async (obj: any, member: any): Promise<s
     }
 
     if (!data) {
-      if (ph === '{{qr_code}}') data = 'http://idcreator.com';
+      if (ph === '{{qr_code}}') data = 'https://raintechsoftware.com/';
       else data = '1234567890';
     }
 
@@ -754,7 +754,7 @@ export const generateSecurityImageURL = async (obj: any, member: any): Promise<s
         }
       }
       const qrData = formatQRData(obj.securityType, qrFields, data);
-      dataUrl = await QRCode.toDataURL(qrData || 'http://idcreator.com');
+      dataUrl = await QRCode.toDataURL(qrData || 'https://raintechsoftware.com/');
     } else {
       if (format === 'upca') data = data.replace(/\D/g, '').slice(0, 11).padStart(11, '0');
       else if (format === 'ean13') data = data.replace(/\D/g, '').slice(0, 12).padStart(12, '0');
@@ -825,7 +825,7 @@ export const CustomizePanel = () => {
           stroke: selectedObject.stroke || '#000000',
           rx: (selectedObject as any).rx || 0,
           ry: (selectedObject as any).ry || 0,
-          securityData: (selectedObject as any).securityData || ((selectedObject as any).placeholder === '{{qr_code}}' ? 'https://idcreator.com' : '1234567890'),
+          securityData: (selectedObject as any).securityData || ((selectedObject as any).placeholder === '{{qr_code}}' ? 'https://raintechsoftware.com/' : '1234567890'),
           securityFormat: (selectedObject as any).securityFormat || 'code128',
           securityType: (selectedObject as any).securityType || 'URL',
           textAlign: (selectedObject as any).textAlign || 'left',
@@ -1527,7 +1527,7 @@ export const CustomizePanel = () => {
           <select 
             onChange={(e) => {
               if (e.target.value === 'Select a Smart field...') return;
-              const currentData = props.securityData === '1234567890' || props.securityData === 'http://idcreator.com' || props.securityData === 'https://idcreator.com' ? '' : (props.securityData || '');
+              const currentData = props.securityData === '1234567890' || props.securityData === 'https://raintechsoftware.com/' || props.securityData === 'https://raintechsoftware.com/' ? '' : (props.securityData || '');
               handleSecurityPropChange('securityData', currentData + e.target.value);
               e.target.value = 'Select a Smart field...';
             }}
@@ -1544,12 +1544,12 @@ export const CustomizePanel = () => {
 
               return (
                 <>
-                  {['First Name', 'Last Name', 'Nickname', 'DOB', 'Gender', 'Blood Group'].some(showField) && (
+                  {['First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Gender', 'Blood Group'].some(showField) && (
                     <optgroup label="Personal Info">
                       {showField('First Name') && <option value="{{firstName}}">First Name</option>}
                       {showField('Last Name') && <option value="{{lastName}}">Last Name</option>}
                       {showField('Nickname') && <option value="{{nickname}}">Nickname</option>}
-                      {showField('DOB') && <option value="{{dob}}">Date of Birth</option>}
+                      {showField('Date of Birth') && <option value="{{dob}}">Date of Birth</option>}
                       {showField('Gender') && <option value="{{gender}}">Gender</option>}
                       {showField('Blood Group') && <option value="{{bloodGroup}}">Blood Group</option>}
                     </optgroup>
@@ -1734,12 +1734,12 @@ export const CustomizePanel = () => {
 
                 return (
                   <>
-                    {['First Name', 'Last Name', 'Nickname', 'DOB', 'Gender', 'Blood Group'].some(showField) && (
+                    {['First Name', 'Last Name', 'Nickname', 'Date of Birth', 'Gender', 'Blood Group'].some(showField) && (
                       <optgroup label="Personal Info">
                         {showField('First Name') && <option value="{{firstName}}">First Name</option>}
                         {showField('Last Name') && <option value="{{lastName}}">Last Name</option>}
                         {showField('Nickname') && <option value="{{nickname}}">Nickname</option>}
-                        {showField('DOB') && <option value="{{dob}}">Date of Birth</option>}
+                        {showField('Date of Birth') && <option value="{{dob}}">Date of Birth</option>}
                         {showField('Gender') && <option value="{{gender}}">Gender</option>}
                         {showField('Blood Group') && <option value="{{bloodGroup}}">Blood Group</option>}
                       </optgroup>
@@ -2034,7 +2034,7 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
 
   try {
     if (ph === '{{qr_code}}') {
-      dataUrl = await QRCode.toDataURL('http://idcreator.com');
+      dataUrl = await QRCode.toDataURL('https://raintechsoftware.com/');
     } else if (ph === '{{barcode}}' || ph === '{{pdf417}}' || ph === '{{datamatrix}}') {
       const format: string = ph === '{{pdf417}}' ? 'pdf417' : (ph === '{{datamatrix}}' ? 'datamatrix' : 'code128');
 
@@ -2171,7 +2171,7 @@ const addImageToCanvas = async (ph: string, label: string, canvas: fabric.Canvas
       // @ts-ignore
       img.variableType = 'image';
       // @ts-ignore
-      img.securityData = ph === '{{qr_code}}' ? 'http://idcreator.com' : '1234567890';
+      img.securityData = ph === '{{qr_code}}' ? 'https://raintechsoftware.com/' : '1234567890';
       // @ts-ignore
       img.securityFormat = ph === '{{pdf417}}' ? 'pdf417' : (ph === '{{datamatrix}}' ? 'datamatrix' : 'code128');
       // @ts-ignore

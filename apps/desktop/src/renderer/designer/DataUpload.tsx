@@ -73,7 +73,7 @@ const FormField = ({ label, placeholder, required = false, value, onChange, orig
 };
 
 export const DataUpload = () => {
-  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig, isProcessingBulkBG, setIsProcessingBulkBG, bgProgress, setBgProgress, selectedMembers, setSelectedMembers, folders, createFolder, renameFolder, deleteFolder, moveMemberToFolder } = useDesignerStore();
+  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig, isProcessingBulkBG, setIsProcessingBulkBG, bgProgress, setBgProgress, selectedMembers, setSelectedMembers, folders, createFolder, renameFolder, deleteFolder, moveMemberToFolder, loadMembersFromDb, loadFoldersFromDb } = useDesignerStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -129,6 +129,14 @@ export const DataUpload = () => {
     const matchesFolder = selectedFolderId === null ? true : (m.folderId ?? null) === selectedFolderId;
     return matchesSearch && matchesFolder;
   });
+
+  // Sync members and folders from the server on every mount.
+  // This is critical for SUPER_ADMIN who never visits the Dashboard
+  // (the only other place that calls loadMembersFromDb).
+  useEffect(() => {
+    void loadMembersFromDb();
+    void loadFoldersFromDb();
+  }, []);
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, itemsPerPage, selectedFolderId, view]);
   const totalPages = Math.ceil(folderFilteredMembers.length / itemsPerPage);
@@ -1531,11 +1539,23 @@ export const DataUpload = () => {
                 Cancel
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setOrganizationType(tempOrganizationType);
                   setFormConfig(tempConfig);
                   setIsSettingsOpen(false);
-                  showModal({ title: 'Settings Saved', message: 'Profile and Form variables updated successfully.', type: 'info' });
+                  try {
+                    const { updateProfile } = await import('../api');
+                    await updateProfile({
+                      settings: {
+                        organizationType: tempOrganizationType,
+                        formConfig: tempConfig,
+                      }
+                    });
+                    showModal({ title: 'Settings Saved', message: 'Profile and Form variables synced to your account.', type: 'info' });
+                  } catch (e) {
+                    console.error('Failed to persist settings:', e);
+                    showModal({ title: 'Settings Saved Locally', message: 'Saved but could not sync to server — may reset on refresh.', type: 'info' });
+                  }
                 }}
                 className="bg-gray-900 hover:bg-black text-white px-6 py-2 rounded font-bold text-xs transition-colors"
               >

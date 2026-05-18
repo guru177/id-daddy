@@ -314,6 +314,76 @@ export function DesignerView() {
     void loadTemplatesFromDb();
   }, []);
 
+  // Re-apply member preview after side switching.
+  // When the side changes, Canvas reinitializes and calls loadFromJSON which
+  // restores raw placeholder text (e.g. {{firstName}}). This effect waits for
+  // the canvas to settle then re-runs the member substitution so member data
+  // is always visible on both front and back.
+  useEffect(() => {
+    if (!canvas || !previewMemberId) return;
+    const { members: storeMembers } = useDesignerStore.getState();
+    const targetMember = storeMembers.find((m: any) => m.id === previewMemberId) || storeMembers[0];
+    if (!targetMember) return;
+
+    // Give canvas time to finish loadFromJSON before applying preview
+    const timer = setTimeout(async () => {
+      const { getPreviewText: gpt, applyVariableStyles: avs, generateSecurityImageURL: gsiu } = await import('../designer/Panels');
+      canvas.getObjects().forEach(async (obj: any) => {
+        if (!obj.placeholder && !obj.isVariable) return;
+
+        if (obj.type === 'i-text' || obj.type === 'textbox') {
+          const rawText = obj.placeholder || obj.text;
+          const previewText = gpt(rawText, storeMembers);
+          obj.set('text', previewText);
+          avs(obj, storeMembers);
+          canvas.renderAll();
+        } else if (obj.type === 'image' && obj.placeholder) {
+          const ph = obj.placeholder;
+          if (ph === '{{barcode}}' || ph === '{{qr_code}}' || ph === '{{pdf417}}' || ph === '{{datamatrix}}') {
+            const dataUrl = await gsiu(obj, targetMember);
+            if (dataUrl) {
+              const targetW = (obj.width || 1) * (obj.scaleX || 1);
+              const targetH = (obj.height || 1) * (obj.scaleY || 1);
+              obj.setSrc(dataUrl, () => {
+                obj.set({ cropX: 0, cropY: 0, width: obj.width, height: obj.height, scaleX: targetW / (obj.width || 1), scaleY: targetH / (obj.height || 1) });
+                canvas.renderAll();
+              }, { crossOrigin: 'anonymous' });
+            }
+          } else {
+            const key = ph.replace(/[{}]/g, '').trim();
+            let url = '';
+            if (key === 'photo') url = targetMember.profileImage;
+            else if (key === 'signature') url = targetMember.signature;
+            else if (key === 'fingerprint') url = targetMember.fingerprint;
+            else if (key === 'logo') url = targetMember.divisionLogo;
+            else if (targetMember.customFields?.[key]) url = targetMember.customFields[key];
+            if (url) {
+              const targetW = (obj.width || 1) * (obj.scaleX || 1);
+              const targetH = (obj.height || 1) * (obj.scaleY || 1);
+              obj.setSrc(url, () => {
+                const imgW = obj.width || 1;
+                const imgH = obj.height || 1;
+                const targetRatio = targetW / targetH;
+                const imgRatio = imgW / imgH;
+                let newCropX = 0, newCropY = 0, newCropW = imgW, newCropH = imgH;
+                if (imgRatio > targetRatio) {
+                  newCropH = imgH; newCropW = imgH * targetRatio; newCropX = (imgW - newCropW) / 2;
+                } else {
+                  newCropW = imgW; newCropH = imgW / targetRatio; newCropY = (imgH - newCropH) / 2;
+                }
+                obj.set({ cropX: newCropX, cropY: newCropY, width: newCropW, height: newCropH, scaleX: targetW / newCropW, scaleY: targetH / newCropH });
+                canvas.renderAll();
+              }, { crossOrigin: 'anonymous' });
+            }
+          }
+        }
+      });
+      canvas.renderAll();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [side, canvas]);
+
   // Save indicator state
   const [savedIndicator, setSavedIndicator] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -796,7 +866,7 @@ export function DesignerView() {
                         return (
                           <div key={`h-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'horizontal', pos: canvasY, index: i }); }} onDoubleClick={() => removeGuideline('horizontal', i)} className="absolute left-5 right-0 h-2 -mt-1 bg-transparent pointer-events-auto cursor-ns-resize group z-50" style={{ top: y }}>
                             <div className="h-px w-full bg-red-500/60 group-hover:bg-red-600 mt-1" />
-                            <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                            <div className="absolute -top-6 right-4 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move &middot; Dbl-click to delete</div>
                           </div>
                         );
                       })}
@@ -805,7 +875,7 @@ export function DesignerView() {
                         return (
                           <div key={`v-${i}`} onMouseDown={(e) => { e.stopPropagation(); setDraggingGuideline({ type: 'vertical', pos: canvasX, index: i }); }} onDoubleClick={() => removeGuideline('vertical', i)} className="absolute top-5 bottom-0 w-2 -ml-1 bg-transparent pointer-events-auto cursor-ew-resize group z-50" style={{ left: x }}>
                             <div className="w-px h-full bg-red-500/60 group-hover:bg-red-600 ml-1" />
-                            <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dbl-click to delete</div>
+                            <div className="absolute left-3 top-6 hidden group-hover:block bg-red-500 text-white text-[8px] px-2 py-1 rounded  whitespace-nowrap">Drag to move &middot; Dbl-click to delete</div>
                           </div>
                         );
                       })}
