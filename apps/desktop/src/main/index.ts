@@ -68,6 +68,7 @@ function createWindow() {
   mainWindow.once("ready-to-show", () => {
     logStartup("Main window ready to show");
     showMainWindow();
+    mainWindow?.maximize();
   });
 
   mainWindow.webContents.once("did-finish-load", () => {
