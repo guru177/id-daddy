@@ -266,7 +266,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       await updateRecord(memberId, updated);
       set((state) => {
         const updatedMembers = state.members.map(m => m.id === memberId ? updated : m);
-        localStorage.setItem('saved_id_members', JSON.stringify(updatedMembers));
+
         return { members: updatedMembers };
       });
     } catch (e) {
@@ -399,24 +399,14 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   })),
   setCanvas: (canvas: fabric.Canvas) => set({ canvas }),
 
-  members: (() => {
-    const stored = localStorage.getItem('saved_id_members');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (e) {
-        return [];
-      }
-    }
-    return [];
-  })(),
+  members: [],
   loadMembersFromDb: async () => {
     try {
       const result = await fetchRecords();
       if (result && result.data) {
         const dbMembers = result.data.map((r: any) => ({ ...r.data, id: r.id }));
         set({ members: dbMembers });
-        localStorage.setItem('saved_id_members', JSON.stringify(dbMembers));
+
       }
     } catch (e) {
       console.error("Failed to fetch records from DB", e);
@@ -451,7 +441,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
           };
         });
         set({ savedDesigns: dbTemplates });
-        localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
+
       }
     } catch (e) {
       console.error("Failed to fetch templates from DB", e);
@@ -463,7 +453,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const newMember = { ...member, id: result.id };
       set((state) => {
         const updated = [newMember, ...state.members];
-        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+
         return { members: updated, previewResults: [] };
       });
     } catch (e) {
@@ -480,7 +470,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       await updateRecord(id, mergedMember);
       set((state) => {
         const updated = state.members.map(m => m.id === id ? mergedMember : m);
-        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+
         return { members: updated, previewResults: [] };
       });
     } catch (e) {
@@ -493,7 +483,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       await deleteRecord(id);
       set((state) => {
         const updated = state.members.filter(m => m.id !== id);
-        localStorage.setItem('saved_id_members', JSON.stringify(updated));
+
         return { members: updated, previewResults: [] };
       });
     } catch (e) {
@@ -1065,7 +1055,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     if (design.back) runExport(design.back, design.config.backgroundColorBack, false);
   },
 
-  savedDesigns: JSON.parse(localStorage.getItem('saved_id_designs') || '[]'),
+  savedDesigns: [],
 
 
 
@@ -1086,13 +1076,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
           timestamp: r.updatedAt ?? r.createdAt ?? new Date().toISOString()
         }));
         set({ savedDesigns: dbTemplates });
-        localStorage.setItem('saved_id_designs', JSON.stringify(dbTemplates));
+
       }
 
       if (membersRes && membersRes.data) {
         const dbMembers = membersRes.data.map((r: any) => ({ ...r.data, id: r.id }));
         set({ members: dbMembers });
-        localStorage.setItem('saved_id_members', JSON.stringify(dbMembers));
+
       }
     } catch (e) {
       console.error("Failed to sync local data with DB", e);
@@ -1103,8 +1093,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const { canvas, side, frontData, backData, config, savedDesigns, currentDesignId } = get();
     if (!canvas) return;
 
-    // 1. Capture current side thumbnail
-    const currentThumb = canvas.toDataURL({ format: 'png', multiplier: 2.0 });
+    // 1. Capture current side thumbnail (Use jpeg and lower multiplier to avoid 413 Payload Too Large)
+    const currentThumb = canvas.toDataURL({ format: 'jpeg', quality: 0.8, multiplier: 0.5 });
 
     // 2. Generate other side thumbnail to ensure slot punch and background are correct
     const generateOtherThumb = () => {
@@ -1139,7 +1129,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
             punch.bringToFront();
           }
           tempFabric.renderAll();
-          const dataUrl = tempFabric.toDataURL({ format: 'png', multiplier: 2.0 });
+          const dataUrl = tempFabric.toDataURL({ format: 'jpeg', quality: 0.8, multiplier: 0.5 });
           tempFabric.dispose();
           resolve(dataUrl);
         });
@@ -1156,20 +1146,30 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const fThumb = isFront ? currentThumb : otherThumb;
       const bThumb = !isFront ? currentThumb : otherThumb;
 
-      let updatedDesigns: SavedDesign[];
-      let designId: string = currentDesignId || '';
+      const payloadName = currentDesignId ? savedDesigns.find(d => d.id === currentDesignId)?.name || 'Design' : `Design ${savedDesigns.length + 1}`;
+      const payloadDesign = {
+        front: fData,
+        back: bData,
+        config,
+        thumbnailFront: fThumb,
+        thumbnailBack: bThumb
+      };
 
-      if (currentDesignId) {
-        updatedDesigns = savedDesigns.map(d =>
-          d.id === currentDesignId
-            ? { ...d, front: fData, back: bData, config, thumbnailFront: fThumb, thumbnailBack: bThumb, timestamp: new Date().toISOString() }
-            : d
-        );
-      } else {
-        designId = Math.random().toString(36).substr(2, 9);
+      try {
+        let actualId = currentDesignId;
+
+        // Sync to DB FIRST
+        if (currentDesignId) {
+          await updateTemplate(currentDesignId, { name: payloadName, design: payloadDesign });
+        } else {
+          const result = await createTemplate({ name: payloadName, design: payloadDesign });
+          actualId = result.id;
+        }
+
+        // Only update local state if DB sync succeeds
         const newDesign: SavedDesign = {
-          id: designId,
-          name: `Design ${savedDesigns.length + 1}`,
+          id: actualId!,
+          name: payloadName,
           front: fData,
           back: bData,
           config,
@@ -1177,44 +1177,38 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
           thumbnailBack: bThumb,
           timestamp: new Date().toISOString()
         };
-        updatedDesigns = [newDesign, ...savedDesigns];
-      }
 
-      set({
-        savedDesigns: updatedDesigns,
-        currentDesignId: designId,
-        activeTemplateId: designId,
-        previewResults: [],
-        frontThumbnail: fThumb,
-        backThumbnail: bThumb,
-        history: [currentData],
-        redoStack: []
-      });
-      localStorage.setItem('saved_id_designs', JSON.stringify(updatedDesigns));
-
-      get().showModal({
-        title: 'Success',
-        message: currentDesignId ? 'Design updated successfully!' : 'New design saved successfully!',
-        type: 'info'
-      });
-
-      // Sync to DB
-      try {
-        const payload = {
-          name: currentDesignId ? savedDesigns.find(d => d.id === currentDesignId)?.name || 'Design' : `Design ${savedDesigns.length + 1}`,
-          design: updatedDesigns.find(d => d.id === designId)
-        };
+        let updatedDesigns: SavedDesign[];
         if (currentDesignId) {
-          await updateTemplate(designId, payload);
+          updatedDesigns = savedDesigns.map(d => d.id === currentDesignId ? newDesign : d);
         } else {
-          const result = await createTemplate(payload);
-          const actualId = result.id;
-          const mappedDesigns = updatedDesigns.map(d => d.id === designId ? { ...d, id: actualId } : d);
-          set({ savedDesigns: mappedDesigns, currentDesignId: actualId, activeTemplateId: actualId });
-          localStorage.setItem('saved_id_designs', JSON.stringify(mappedDesigns));
+          updatedDesigns = [newDesign, ...savedDesigns];
         }
-      } catch (e) {
+
+        set({
+          savedDesigns: updatedDesigns,
+          currentDesignId: actualId!,
+          activeTemplateId: actualId!,
+          previewResults: [],
+          frontThumbnail: fThumb,
+          backThumbnail: bThumb,
+          history: [currentData],
+          redoStack: []
+        });
+
+
+        get().showModal({
+          title: 'Success',
+          message: currentDesignId ? 'Design updated successfully!' : 'New design saved successfully!',
+          type: 'info'
+        });
+      } catch (e: any) {
         console.error("Failed to sync template to DB", e);
+        get().showModal({
+          title: 'Error Saving Design',
+          message: 'Failed to save the design to the cloud. Please try again. ' + (e.message || ''),
+          type: 'error'
+        });
       }
     };
 
@@ -1223,15 +1217,16 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
   loadDesign: (design) => {
     set((state) => ({
-      frontData: design.front,
-      backData: design.back,
-      frontThumbnail: design.thumbnailFront,
-      backThumbnail: design.thumbnailBack,
-      config: design.config,
+      frontData: design.front || null,
+      backData: design.back || null,
+      frontThumbnail: design.thumbnailFront || '',
+      backThumbnail: design.thumbnailBack || '',
+      config: design.config || { orientation: 'horizontal', type: '30 Mil PVC', backsidePrinting: 'none', slotPunch: 'none', backgroundColorFront: '#ffffff', backgroundColorBack: '#ffffff', frontLamination: 'none', backLamination: 'none', magStripeEnabled: false, magStripeTracks: { track1: '', track2: '', track3: '' } },
       currentDesignId: design.id,
       side: 'front',
       history: [],
       redoStack: [],
+      previewMemberId: null,
       loadTrigger: state.loadTrigger + 1
     }));
   },
@@ -1241,15 +1236,16 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   // a new record instead of overwriting the shared global template.
   loadGlobalTemplateAsCopy: (design) => {
     set((state) => ({
-      frontData: design.front,
-      backData: design.back,
-      frontThumbnail: design.thumbnailFront,
-      backThumbnail: design.thumbnailBack,
-      config: design.config,
+      frontData: design.front || null,
+      backData: design.back || null,
+      frontThumbnail: design.thumbnailFront || '',
+      backThumbnail: design.thumbnailBack || '',
+      config: design.config || { orientation: 'horizontal', type: '30 Mil PVC', backsidePrinting: 'none', slotPunch: 'none', backgroundColorFront: '#ffffff', backgroundColorBack: '#ffffff', frontLamination: 'none', backLamination: 'none', magStripeEnabled: false, magStripeTracks: { track1: '', track2: '', track3: '' } },
       currentDesignId: null,   // ← key: forces a new record on save
       side: 'front',
       history: [],
       redoStack: [],
+      previewMemberId: null,
       loadTrigger: state.loadTrigger + 1
     }));
   },
@@ -1258,7 +1254,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const design = get().savedDesigns.find(d => d.id === id);
     const updated = get().savedDesigns.filter(d => d.id !== id);
     set({ savedDesigns: updated });
-    localStorage.setItem('saved_id_designs', JSON.stringify(updated));
+
     get().showModal({
       title: 'Deleted',
       message: `"${design?.name || 'Design'}" has been removed from your library.`,

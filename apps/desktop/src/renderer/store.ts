@@ -3,6 +3,11 @@ import { persist } from "zustand/middleware";
 import { AuthUser } from "@id-daddy/shared";
 import { useDesignerStore } from "./designer/store";
 
+// One-time purge of legacy localStorage caches that were causing quota errors.
+// The DB is the source of truth; these large blobs are no longer needed locally.
+localStorage.removeItem("saved_id_designs");
+localStorage.removeItem("saved_id_members");
+
 export type DesktopPage = "dashboard" | "designer" | "upload" | "generate" | "profile";
 
 interface AuthState {

@@ -806,6 +806,7 @@ export const CustomizePanel = () => {
   const [props, setProps] = React.useState<any>({});
   const [isProcessingBG, setIsProcessingBG] = React.useState(false);
   const [isApplyingSecurity, setIsApplyingSecurity] = React.useState(false);
+  const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     if (selectedObject) {
@@ -878,7 +879,7 @@ export const CustomizePanel = () => {
     </div>
   );
 
-  const updateSelected = (key: string, val: any) => {
+  const updateSelected = (key: string, val: any, debounceSave = false) => {
     if (!selectedObject || !canvas) return;
 
     if (key === 'text') {
@@ -933,7 +934,15 @@ export const CustomizePanel = () => {
       left: Math.round(selectedObject.left || 0),
       top: Math.round(selectedObject.top || 0)
     });
-    saveState();
+    
+    if (debounceSave) {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        useDesignerStore.getState().saveState();
+      }, 500);
+    } else {
+      saveState();
+    }
   };
 
   const isSecurity = (selectedObject as any).placeholder === '{{barcode}}' ||
@@ -1125,7 +1134,7 @@ export const CustomizePanel = () => {
               <input
                 type="color"
                 value={props.stroke || '#000000'}
-                onChange={(e) => updateSelected('stroke', e.target.value)}
+                onChange={(e) => updateSelected('stroke', e.target.value, true)}
                 className="w-6 h-6 rounded-md border-none bg-transparent cursor-pointer"
               />
               <span className="ml-2 text-[10px] font-mono text-gray-900 uppercase">{props.stroke || '#000000'}</span>
@@ -1138,7 +1147,7 @@ export const CustomizePanel = () => {
               <input
                 type="color"
                 value={props.fill || '#000000'}
-                onChange={(e) => updateSelected('fill', e.target.value)}
+                onChange={(e) => updateSelected('fill', e.target.value, true)}
                 className="w-6 h-6 rounded-md border-none bg-transparent cursor-pointer"
               />
               <span className="ml-2 text-[10px] font-mono text-gray-900 uppercase">{props.fill || '#000000'}</span>
@@ -1294,7 +1303,7 @@ export const CustomizePanel = () => {
               <input
                 type="color"
                 value={props.stroke || '#000000'}
-                onChange={(e) => updateSelected('stroke', e.target.value)}
+                onChange={(e) => updateSelected('stroke', e.target.value, true)}
                 className="w-6 h-6 rounded-md border-none bg-transparent cursor-pointer"
               />
               <div className="flex-1" />
@@ -1535,11 +1544,27 @@ export const CustomizePanel = () => {
           >
             <option value="Select a Smart field...">Select a Smart field...</option>
             {(() => {
-              const { formConfig } = useDesignerStore.getState();
+              const { formConfig, organizationType } = useDesignerStore.getState();
               const enabled = formConfig?.enabledFields;
 
               const showField = (label: string) => {
                 return !enabled || enabled.includes(label);
+              };
+
+              const getLabel = (field: string) => {
+                if (organizationType === 'education') {
+                  if (field === 'Employee ID') return 'Student/Staff ID';
+                  if (field === 'Department') return 'Grade/Class';
+                  if (field === 'Title') return 'Role (Student/Faculty)';
+                  if (field === 'Hire Date') return 'Enrollment Date';
+                  if (field === 'Employment Info') return 'School Details';
+                } else if (organizationType === 'healthcare') {
+                  if (field === 'Employee ID') return 'Staff ID';
+                  if (field === 'Department') return 'Department/Ward';
+                  if (field === 'Title') return 'Role/Specialty';
+                  if (field === 'Employment Info') return 'Staff Details';
+                }
+                return field === 'Title' ? 'Job Title' : field;
               };
 
               return (
@@ -1555,13 +1580,13 @@ export const CustomizePanel = () => {
                     </optgroup>
                   )}
                   {['Title', 'ID Number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
-                    <optgroup label="Employment Info">
-                      {showField('Title') && <option value="{{title}}">Job Title</option>}
-                      {showField('ID Number') && <option value="{{idNumber}}">ID Number</option>}
-                      {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
-                      {showField('Department') && <option value="{{department}}">Department</option>}
-                      {showField('Hire Date') && <option value="{{hireDate}}">Hire Date</option>}
-                      {showField('Role') && <option value="{{role}}">Role</option>}
+                    <optgroup label={getLabel('Employment Info')}>
+                      {showField('Title') && <option value="{{title}}">{getLabel('Title')}</option>}
+                      {showField('ID Number') && <option value="{{idNumber}}">{getLabel('ID Number')}</option>}
+                      {showField('Employee ID') && <option value="{{employeeId}}">{getLabel('Employee ID')}</option>}
+                      {showField('Department') && <option value="{{department}}">{getLabel('Department')}</option>}
+                      {showField('Hire Date') && <option value="{{hireDate}}">{getLabel('Hire Date')}</option>}
+                      {showField('Role') && <option value="{{role}}">{getLabel('Role')}</option>}
                     </optgroup>
                   )}
                   {['Email', 'Phone 1', 'Phone 2', 'Fax', 'Website'].some(showField) && (
@@ -1725,11 +1750,27 @@ export const CustomizePanel = () => {
             >
               <option value="Select a Smart field...">Select a Smart field...</option>
               {(() => {
-                const { formConfig, members } = useDesignerStore.getState();
+                const { formConfig, members, organizationType } = useDesignerStore.getState();
                 const enabled = formConfig?.enabledFields;
 
                 const showField = (label: string) => {
                   return !enabled || enabled.includes(label);
+                };
+
+                const getLabel = (field: string) => {
+                  if (organizationType === 'education') {
+                    if (field === 'Employee ID') return 'Student/Staff ID';
+                    if (field === 'Department') return 'Grade/Class';
+                    if (field === 'Title') return 'Role (Student/Faculty)';
+                    if (field === 'Hire Date') return 'Enrollment Date';
+                    if (field === 'Employment Info') return 'School Details';
+                  } else if (organizationType === 'healthcare') {
+                    if (field === 'Employee ID') return 'Staff ID';
+                    if (field === 'Department') return 'Department/Ward';
+                    if (field === 'Title') return 'Role/Specialty';
+                    if (field === 'Employment Info') return 'Staff Details';
+                  }
+                  return field === 'Title' ? 'Job Title' : field;
                 };
 
                 return (
@@ -1745,13 +1786,13 @@ export const CustomizePanel = () => {
                       </optgroup>
                     )}
                     {['Title', 'ID Number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
-                      <optgroup label="Employment Info">
-                        {showField('Title') && <option value="{{title}}">Job Title</option>}
-                        {showField('ID Number') && <option value="{{idNumber}}">ID Number</option>}
-                        {showField('Employee ID') && <option value="{{employeeId}}">Employee ID</option>}
-                        {showField('Department') && <option value="{{department}}">Department</option>}
-                        {showField('Hire Date') && <option value="{{hireDate}}">Hire Date</option>}
-                        {showField('Role') && <option value="{{role}}">Role</option>}
+                      <optgroup label={getLabel('Employment Info')}>
+                        {showField('Title') && <option value="{{title}}">{getLabel('Title')}</option>}
+                        {showField('ID Number') && <option value="{{idNumber}}">{getLabel('ID Number')}</option>}
+                        {showField('Employee ID') && <option value="{{employeeId}}">{getLabel('Employee ID')}</option>}
+                        {showField('Department') && <option value="{{department}}">{getLabel('Department')}</option>}
+                        {showField('Hire Date') && <option value="{{hireDate}}">{getLabel('Hire Date')}</option>}
+                        {showField('Role') && <option value="{{role}}">{getLabel('Role')}</option>}
                       </optgroup>
                     )}
                     {['Email', 'Phone 1', 'Phone 2', 'Fax', 'Website'].some(showField) && (
@@ -1848,7 +1889,7 @@ export const CustomizePanel = () => {
                             value={colorMap[varKey] || props.fill || '#000000'}
                             onChange={(e) => {
                               const newColors: Record<string, string> = { ...colorMap, [varKey]: e.target.value };
-                              updateSelected('variableColors', newColors);
+                              updateSelected('variableColors', newColors, true);
                             }}
                             className="w-6 h-6 rounded-md border-none cursor-pointer overflow-hidden"
                           />
@@ -1896,7 +1937,7 @@ export const CustomizePanel = () => {
             <input
               type="color"
               value={props.fill}
-              onChange={(e) => updateSelected('fill', e.target.value)}
+              onChange={(e) => updateSelected('fill', e.target.value, true)}
               className="w-10 h-10 rounded-lg border-none cursor-pointer"
             />
             <div className="flex-1 flex border border-gray-200 rounded-lg divide-x divide-gray-200 overflow-hidden">

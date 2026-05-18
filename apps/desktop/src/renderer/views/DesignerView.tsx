@@ -33,34 +33,85 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
-  CheckCircle
+  CheckCircle,
+  Folder
 } from 'lucide-react';
 
 const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }: any) => {
+  const folders = useDesignerStore((state) => state.folders);
   const [isOpen, setIsOpen] = useState(false);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
-  const filteredMembers = members.filter((m: any) =>
+  const folderMembers = selectedFolderId ? members.filter((m: any) => m.folderId === selectedFolderId) : members;
+
+  const filteredMembers = folderMembers.filter((m: any) =>
     `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedMember = previewMemberId ? members.find((m: any) => m.id === previewMemberId) : members[0];
+  const selectedMember = previewMemberId ? members.find((m: any) => m.id === previewMemberId) : null;
+  const selectedFolder = selectedFolderId ? folders.find((f: any) => f.id === selectedFolderId) : null;
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.member-dropdown')) setIsOpen(false);
+      const target = e.target as Element;
+      if (!target.closest('.member-dropdown')) setIsOpen(false);
+      if (!target.closest('.folder-dropdown')) setIsFolderOpen(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleSelect = (id: string) => {
+  // When folder changes, if current preview member is not in the folder, switch to the first member of the folder
+  useEffect(() => {
+    if (selectedFolderId && previewMemberId) {
+      const isMemberInFolder = members.find((m: any) => m.id === previewMemberId && m.folderId === selectedFolderId);
+      if (!isMemberInFolder && folderMembers.length > 0) {
+        handleSelect(folderMembers[0].id);
+      }
+    }
+  }, [selectedFolderId]);
+
+  const handleSelect = (id: string | null) => {
     setPreviewMemberId(id);
     setIsOpen(false);
     setSearch('');
 
     if (!canvas) return;
-    const targetMember = id ? members.find((m: any) => m.id === id) || members[0] : members[0];
+
+    if (!id) {
+      canvas.getObjects().forEach((obj: any) => {
+        if (obj.placeholder || obj.isVariable) {
+          if (obj.type === 'i-text' || obj.type === 'textbox') {
+            if (obj.originalScaleX !== undefined) {
+              obj.set('scaleX', obj.originalScaleX);
+              obj.set('scaleY', obj.originalScaleY);
+            }
+            obj.set('text', obj.placeholder || 'Text');
+            obj.setCoords();
+          } else if (obj.type === 'image' && obj.placeholder && obj.originalSrc) {
+            obj.setSrc(obj.originalSrc, () => {
+              if (obj.originalCropX !== undefined) {
+                obj.set({
+                  cropX: obj.originalCropX,
+                  cropY: obj.originalCropY,
+                  width: obj.originalWidth,
+                  height: obj.originalHeight,
+                  scaleX: obj.originalScaleX,
+                  scaleY: obj.originalScaleY
+                });
+              }
+              canvas.renderAll();
+            }, { crossOrigin: 'anonymous' });
+          }
+        }
+      });
+      canvas.renderAll();
+      return;
+    }
+
+    const targetMember = members.find((m: any) => m.id === id) || members[0];
 
     canvas.getObjects().forEach(async (obj: any) => {
       if (obj.placeholder || obj.isVariable) {
@@ -122,6 +173,15 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
           }
           canvas.renderAll();
         } else if (obj.type === 'image' && obj.placeholder) {
+          if (obj.originalSrc === undefined) {
+            obj.originalSrc = obj.src;
+            obj.originalCropX = obj.cropX;
+            obj.originalCropY = obj.cropY;
+            obj.originalWidth = obj.width;
+            obj.originalHeight = obj.height;
+            obj.originalScaleX = obj.scaleX;
+            obj.originalScaleY = obj.scaleY;
+          }
           const ph = obj.placeholder;
           if (ph === '{{barcode}}' || ph === '{{qr_code}}' || ph === '{{pdf417}}' || ph === '{{datamatrix}}') {
             const dataUrl = await generateSecurityImageURL(obj, targetMember);
@@ -204,61 +264,121 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
   };
 
   return (
-    <div className="relative member-dropdown flex items-center gap-2">
+    <div className="flex items-center gap-2">
       <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider hidden md:block">Preview:</span>
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all  w-48 justify-between"
-      >
-        <div className="flex items-center gap-2 truncate">
-          {selectedMember?.profileImage ? (
-            <img src={selectedMember.profileImage} className="w-5 h-5 rounded-full object-cover shrink-0 border border-gray-200" />
-          ) : (
-            <div className="w-5 h-5 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
-          )}
-          <span className="truncate">{selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : 'Default (First)'}</span>
-        </div>
-        <ChevronDown size={14} className="text-gray-900 flex-shrink-0" />
-      </div>
-
-      {isOpen && (
-        <div className="absolute top-full left-[55px] mt-1 w-64 bg-white border border-gray-100  rounded-xl z-50 overflow-hidden flex flex-col">
-          <div className="p-2 border-b border-gray-100 bg-gray-50/50">
-            <div className="relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-900" />
-              <input
-                type="text"
-                placeholder="Search members..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                autoFocus
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all"
-              />
-            </div>
+      
+      {/* Folder Dropdown */}
+      <div className="relative folder-dropdown flex items-center">
+        <div
+          onClick={() => { setIsFolderOpen(!isFolderOpen); setIsOpen(false); }}
+          className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all w-36 justify-between shadow-sm"
+        >
+          <div className="flex items-center gap-2 truncate">
+            <Folder size={14} className="text-amber-500 shrink-0" />
+            <span className="truncate">{selectedFolder ? selectedFolder.name : 'All Folders'}</span>
           </div>
-          <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
-            {filteredMembers.length > 0 ? filteredMembers.map((m: any) => (
+          <ChevronDown size={14} className="text-gray-900 flex-shrink-0" />
+        </div>
+
+        {isFolderOpen && (
+          <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-100 rounded-xl z-50 overflow-hidden flex flex-col shadow-lg">
+            <div className="max-h-[320px] overflow-y-auto custom-scrollbar py-1">
               <button
-                key={m.id}
-                onClick={() => handleSelect(m.id)}
-                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${(previewMemberId === m.id || (!previewMemberId && m.id === members[0]?.id)) ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-900'}`}
+                onClick={() => { setSelectedFolderId(null); setIsFolderOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${!selectedFolderId ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-900'}`}
               >
                 <div className="flex items-center gap-2 truncate">
-                  {m.profileImage ? (
-                    <img src={m.profileImage} className="w-6 h-6 rounded-full object-cover shrink-0 border border-gray-200" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
-                  )}
-                  <span className="truncate">{m.firstName} {m.lastName}</span>
+                  <Folder size={14} className="text-gray-400 shrink-0" />
+                  <span className="truncate">All Folders</span>
                 </div>
-                {(previewMemberId === m.id || (!previewMemberId && m.id === members[0]?.id)) && <Check size={14} className="text-green-600 flex-shrink-0" />}
+                {!selectedFolderId && <Check size={14} className="text-green-600" />}
               </button>
-            )) : (
-              <div className="p-4 text-center text-xs text-gray-900 italic">No members found</div>
-            )}
+              {folders.map((f: any) => (
+                <button
+                  key={f.id}
+                  onClick={() => { setSelectedFolderId(f.id); setIsFolderOpen(false); }}
+                  className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${selectedFolderId === f.id ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-900'}`}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Folder size={14} className="text-amber-500 shrink-0" />
+                    <span className="truncate">{f.name}</span>
+                  </div>
+                  {selectedFolderId === f.id && <Check size={14} className="text-green-600" />}
+                </button>
+              ))}
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Member Dropdown */}
+      <div className="relative member-dropdown flex items-center">
+        <div
+          onClick={() => { setIsOpen(!isOpen); setIsFolderOpen(false); }}
+          className="flex items-center gap-2 text-xs font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 cursor-pointer hover:bg-gray-100 transition-all w-48 justify-between shadow-sm"
+        >
+          <div className="flex items-center gap-2 truncate">
+            {selectedMember?.profileImage ? (
+              <img src={selectedMember.profileImage} className="w-5 h-5 rounded-full object-cover shrink-0 border border-gray-200" />
+            ) : (
+              <div className="w-5 h-5 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
+            )}
+            <span className="truncate">{selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : 'Original Template'}</span>
+          </div>
+          <ChevronDown size={14} className="text-gray-900 flex-shrink-0" />
         </div>
-      )}
+
+        {isOpen && (
+          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-100 rounded-xl z-50 overflow-hidden flex flex-col shadow-lg">
+            <div className="p-2 border-b border-gray-100 bg-gray-50/50">
+              <div className="relative">
+                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-900" />
+                <input
+                  type="text"
+                  placeholder="Search members..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  autoFocus
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all"
+                />
+              </div>
+            </div>
+            <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+              <button
+                onClick={() => handleSelect(null)}
+                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${!previewMemberId ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-900'}`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 border border-gray-200 flex items-center justify-center">
+                    <Grid3X3 size={12} className="text-gray-500" />
+                  </div>
+                  <span className="truncate font-medium">Original Template</span>
+                </div>
+                {!previewMemberId && <Check size={14} className="text-green-600" />}
+              </button>
+              {filteredMembers.length > 0 ? filteredMembers.map((m: any) => (
+                <button
+                  key={m.id}
+                  onClick={() => handleSelect(m.id)}
+                  className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-green-50 transition-colors ${(previewMemberId === m.id || (!previewMemberId && m.id === folderMembers[0]?.id)) ? 'bg-green-50/50 text-green-700 font-bold' : 'text-gray-900'}`}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    {m.profileImage ? (
+                      <img src={m.profileImage} className="w-6 h-6 rounded-full object-cover shrink-0 border border-gray-200" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 border border-gray-200" />
+                    )}
+                    <span className="truncate">{m.firstName} {m.lastName}</span>
+                  </div>
+                  {(previewMemberId === m.id || (!previewMemberId && m.id === folderMembers[0]?.id)) && <Check size={14} className="text-green-600" />}
+                </button>
+              )) : (
+                <div className="p-4 text-center text-xs text-gray-500 font-medium">No members found</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -322,7 +442,7 @@ export function DesignerView() {
   useEffect(() => {
     if (!canvas || !previewMemberId) return;
     const { members: storeMembers } = useDesignerStore.getState();
-    const targetMember = storeMembers.find((m: any) => m.id === previewMemberId) || storeMembers[0];
+    const targetMember = storeMembers.find((m: any) => m.id === previewMemberId);
     if (!targetMember) return;
 
     // Give canvas time to finish loadFromJSON before applying preview
@@ -338,6 +458,15 @@ export function DesignerView() {
           avs(obj, storeMembers);
           canvas.renderAll();
         } else if (obj.type === 'image' && obj.placeholder) {
+          if (obj.originalSrc === undefined) {
+            obj.originalSrc = obj.src;
+            obj.originalCropX = obj.cropX;
+            obj.originalCropY = obj.cropY;
+            obj.originalWidth = obj.width;
+            obj.originalHeight = obj.height;
+            obj.originalScaleX = obj.scaleX;
+            obj.originalScaleY = obj.scaleY;
+          }
           const ph = obj.placeholder;
           if (ph === '{{barcode}}' || ph === '{{qr_code}}' || ph === '{{pdf417}}' || ph === '{{datamatrix}}') {
             const dataUrl = await gsiu(obj, targetMember);
