@@ -70,7 +70,7 @@ export function LoginView() {
       <div className="flex flex-1 min-h-0 relative">
         {/* Forgot Password Notification Overlay */}
         {showForgotHint && (
-          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/5 backdrop-blur-[2px] animate-in fade-in duration-300">
+          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/20 animate-in fade-in duration-300">
             <div className="w-full max-w-sm bg-white rounded-[40px] p-10  border border-stone-100 text-center animate-in zoom-in-95 duration-300">
               <div className="h-20 w-20 bg-green-50 rounded-[32px] flex items-center justify-center mx-auto mb-6 ">
                 <Sparkles className="h-10 w-10 text-[#1a5d1a]" />

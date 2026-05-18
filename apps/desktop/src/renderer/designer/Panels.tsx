@@ -601,7 +601,7 @@ export const TextPanel = ({ setPanel }: { setPanel: (p: string | null) => void }
             onClick={() => addText('Add headline')}
             className="flex items-center justify-center gap-3 p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all  active:scale-95 group"
           >
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center">
               <Type size={18} />
             </div>
             <span className="text-xs font-black">Single Line</span>
@@ -2419,7 +2419,7 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
             onClick={() => setIsImageLibraryOpen(true)}
             className="flex flex-col items-center justify-center p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all  active:scale-95 group"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center mb-2">
+            <div className="w-10 h-10 rounded-xl bg-white/90 flex items-center justify-center mb-2">
               <ImageIcon size={20} />
             </div>
             <span className="text-[11px] font-black">My Images</span>

@@ -394,7 +394,8 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member,
           // No image — load a grey SVG placeholder that inherits the original clipPath (e.g. circle crop)
           const w = obj.width || 100;
           const h = obj.height || 100;
-          const svgPlaceholder = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='${w}' height='${h}' fill='%23d1d5db'/><circle cx='${w/2}' cy='${h*0.38}' r='${Math.min(w,h)*0.18}' fill='%239ca3af'/><ellipse cx='${w/2}' cy='${h*0.72}' rx='${Math.min(w,h)*0.24}' ry='${Math.min(w,h)*0.16}' fill='%239ca3af'/></svg>`;
+          const svgString = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='${w}' height='${h}' fill='#d1d5db'/><circle cx='${w/2}' cy='${h*0.38}' r='${Math.min(w,h)*0.18}' fill='#9ca3af'/><ellipse cx='${w/2}' cy='${h*0.72}' rx='${Math.min(w,h)*0.24}' ry='${Math.min(w,h)*0.16}' fill='#9ca3af'/></svg>`;
+          const svgPlaceholder = `data:image/svg+xml;base64,${window.btoa(svgString)}`;
 
           await new Promise<void>(resolve => {
             fabric.Image.fromURL(svgPlaceholder, (img) => {
@@ -402,12 +403,16 @@ async function processCanvasObjects(canvas: fabric.StaticCanvas, member: Member,
                 img.set({
                   left: obj.left,
                   top: obj.top,
+                  width: w,
+                  height: h,
                   scaleX: obj.scaleX,
                   scaleY: obj.scaleY,
                   angle: obj.angle,
                   originX: obj.originX,
                   originY: obj.originY,
                   clipPath: obj.clipPath,
+                  cropX: 0,
+                  cropY: 0,
                   selectable: false,
                   evented: false,
                 });

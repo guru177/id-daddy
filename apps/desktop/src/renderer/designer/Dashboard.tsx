@@ -39,7 +39,7 @@ const DesignCard = ({
             ) : (
               <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 text-xs font-bold">No Preview</div>
             )}
-            <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
+            <div className="absolute top-3 left-3 px-3 py-1 bg-black/200 text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
               Front
             </div>
           </div>
@@ -53,7 +53,7 @@ const DesignCard = ({
                 <span className="text-gray-300 font-black uppercase tracking-[0.15em] text-xs">Blank</span>
               </div>
             )}
-            <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
+            <div className="absolute top-3 left-3 px-3 py-1 bg-black/200 text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">
               Back
             </div>
           </div>
@@ -61,13 +61,13 @@ const DesignCard = ({
 
         {/* Top-right badge (e.g. Sparkles for official) */}
         {badge && (
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ">
+          <div className="absolute top-3 right-3 bg-white/90 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ">
             {badge}
           </div>
         )}
 
         {/* Hover action overlay */}
-        <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gray-900/30 opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center">
           <div className="p-4 bg-white text-gray-900 rounded-2xl  transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
             <Edit2 size={22} strokeWidth={2.5} />
           </div>

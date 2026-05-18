@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useDesignerStore } from './store';
+import { useShallow } from 'zustand/react/shallow';
 import { fabric } from 'fabric';
 import { 
   Layers, 
@@ -151,7 +152,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       {/* Visibility Toggle */}
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleVisibility(e); }}
-        className={`p-1 rounded hover:bg-black/10 transition-colors z-20 relative ${
+        className={`p-1 rounded hover:bg-black/30 transition-colors z-20 relative ${
           isSelected ? 'text-white' : 'text-gray-900'
         }`}
       >
@@ -161,7 +162,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
       {/* Lock Toggle */}
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleLock(e); }}
-        className={`p-1 rounded hover:bg-black/10 transition-colors z-20 relative ${
+        className={`p-1 rounded hover:bg-black/30 transition-colors z-20 relative ${
           isSelected ? 'text-white' : 'text-gray-900'
         }`}
       >
@@ -170,7 +171,7 @@ const SortableLayerItem = ({ obj, isSelected, onSelect, onToggleVisibility, onTo
 
       {/* Icon & Name */}
       <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${
-        isSelected ? 'bg-white/20' : 'bg-gray-100'
+        isSelected ? 'bg-white/90' : 'bg-gray-100'
       }`}>
         {getIcon(obj)}
       </div>
@@ -215,23 +216,16 @@ interface LayersPanelProps {
 
 const LayersPanel = ({ onContextMenu, hideHeader }: LayersPanelProps) => {
   const { 
-    canvas, 
-    selectedObject, 
-    setSelectedObject, 
-    saveState,
-    deleteSelected,
-    duplicateSelected,
-    bringForward,
-    sendBackward,
-    bringToFront,
-    sendToBack,
-    mergeSelected,
-    renameLayer,
-    history,
-    redoStack,
-    undo,
-    redo
-  } = useDesignerStore();
+    canvas, selectedObject, setSelectedObject, saveState, deleteSelected,
+    duplicateSelected, bringForward, sendBackward, bringToFront, sendToBack,
+    mergeSelected, renameLayer, history, redoStack, undo, redo
+  } = useDesignerStore(useShallow(state => ({
+    canvas: state.canvas, selectedObject: state.selectedObject, setSelectedObject: state.setSelectedObject,
+    saveState: state.saveState, deleteSelected: state.deleteSelected, duplicateSelected: state.duplicateSelected,
+    bringForward: state.bringForward, sendBackward: state.sendBackward, bringToFront: state.bringToFront,
+    sendToBack: state.sendToBack, mergeSelected: state.mergeSelected, renameLayer: state.renameLayer,
+    history: state.history, redoStack: state.redoStack, undo: state.undo, redo: state.redo
+  })));
   const [layers, setLayers] = useState<any[]>([]);
   // Tracks the last non-shift-clicked layer index for range selection
   const pivotIndexRef = useRef<number>(-1);

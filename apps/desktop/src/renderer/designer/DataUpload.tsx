@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search, ChevronLeft, ChevronRight, Sparkles, RotateCcw, Folder, FolderPlus, FolderOpen, MoreVertical, Pencil, Trash2, ArrowLeft, Users } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useDesignerStore } from './store';
+import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from '../store';
 import { api } from '../api';
 
@@ -73,7 +74,9 @@ const FormField = ({ label, placeholder, required = false, value, onChange, orig
 };
 
 export const DataUpload = () => {
-  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig, isProcessingBulkBG, setIsProcessingBulkBG, bgProgress, setBgProgress, selectedMembers, setSelectedMembers, folders, createFolder, renameFolder, deleteFolder, moveMemberToFolder, loadMembersFromDb, loadFoldersFromDb } = useDesignerStore();
+  const { members, deleteMember, addMember, updateMember, showModal, organizationType, setOrganizationType, formConfig, setFormConfig, isProcessingBulkBG, setIsProcessingBulkBG, bgProgress, setBgProgress, selectedMembers, setSelectedMembers, folders, createFolder, renameFolder, deleteFolder, moveMemberToFolder, loadMembersFromDb, loadFoldersFromDb } = useDesignerStore(useShallow(state => ({
+    members: state.members, deleteMember: state.deleteMember, addMember: state.addMember, updateMember: state.updateMember, showModal: state.showModal, organizationType: state.organizationType, setOrganizationType: state.setOrganizationType, formConfig: state.formConfig, setFormConfig: state.setFormConfig, isProcessingBulkBG: state.isProcessingBulkBG, setIsProcessingBulkBG: state.setIsProcessingBulkBG, bgProgress: state.bgProgress, setBgProgress: state.setBgProgress, selectedMembers: state.selectedMembers, setSelectedMembers: state.setSelectedMembers, folders: state.folders, createFolder: state.createFolder, renameFolder: state.renameFolder, deleteFolder: state.deleteFolder, moveMemberToFolder: state.moveMemberToFolder, loadMembersFromDb: state.loadMembersFromDb, loadFoldersFromDb: state.loadFoldersFromDb
+  })));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -775,7 +778,7 @@ export const DataUpload = () => {
 
           {/* ── Create Folder Modal ── */}
           {isCreatingFolder && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { setIsCreatingFolder(false); setNewFolderName(''); }}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => { setIsCreatingFolder(false); setNewFolderName(''); }}>
               <div
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in zoom-in-95 fade-in duration-200"
                 onClick={e => e.stopPropagation()}
@@ -931,10 +934,10 @@ export const DataUpload = () => {
             const folder = folders.find(f => f.id === deletingFolderId);
             const count = members.filter(m => m.folderId === deletingFolderId).length;
             return (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDeletingFolderId(null)}>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setDeletingFolderId(null)}>
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in zoom-in-95 fade-in duration-200" onClick={e => e.stopPropagation()}>
                   <div className="bg-gradient-to-br from-red-600 to-red-500 px-6 py-5 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center shrink-0">
                       <Trash2 size={20} className="text-white" />
                     </div>
                     <div>
@@ -994,10 +997,10 @@ export const DataUpload = () => {
       {deletingMemberId && (() => {
         const member = members.find(m => m.id === deletingMemberId);
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDeletingMemberId(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setDeletingMemberId(null)}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in zoom-in-95 fade-in duration-200" onClick={e => e.stopPropagation()}>
               <div className="bg-gradient-to-br from-red-600 to-red-500 px-6 py-5 flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center shrink-0">
                   <Trash2 size={20} className="text-white" />
                 </div>
                 <div>
@@ -1039,7 +1042,7 @@ export const DataUpload = () => {
       })()}
       {/* Move to folder modal */}
       {movingMemberId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setMovingMemberId(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/200" onClick={() => setMovingMemberId(null)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-72 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <h3 className="font-black text-gray-900 mb-4 text-sm">Move to Folder</h3>
             <div className="flex flex-col gap-1">
@@ -1331,7 +1334,7 @@ export const DataUpload = () => {
 
       {/* Settings Modal Popup */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-8">
           <div className="bg-white rounded-xl  w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
             <div className="bg-gray-50 border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-black text-gray-900">Variable Checklist & Profile</h2>
@@ -1786,7 +1789,7 @@ export const DataUpload = () => {
 
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-8">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 p-8">
           <div className="bg-white rounded-xl  w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-200">
             <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
@@ -1822,7 +1825,7 @@ export const DataUpload = () => {
 
       {/* Modal Popup */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-8">
           <div className="bg-stone-50 rounded-[28px]  w-full max-w-[1200px] h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
             {/* Modal Header */}
             <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
@@ -1991,8 +1994,8 @@ export const DataUpload = () => {
                                 {imageVal ? (
                                   <>
                                     <img src={imageVal} alt={field} className="absolute inset-0 w-full h-full object-contain p-2 bg-white" />
-                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
-                                      <span className="bg-white/20 text-white px-4 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-colors">
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
+                                      <span className="bg-white/90 text-white px-4 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-white/30 hover:bg-white/30 transition-colors">
                                         <ImageIcon size={12} /> Change {field}
                                       </span>
                                     </div>
@@ -2043,8 +2046,8 @@ export const DataUpload = () => {
                             {imageValue ? (
                               <>
                                 <img src={imageValue} alt={field} className="absolute inset-0 w-full h-full object-contain p-2 bg-white" />
-                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
-                                  <span className="bg-white/20 text-white px-4 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-colors">
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center z-10">
+                                  <span className="bg-white/90 text-white px-4 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-white/30 hover:bg-white/30 transition-colors">
                                     <ImageIcon size={12} /> Change {field}
                                   </span>
                                 </div>
@@ -2094,7 +2097,7 @@ export const DataUpload = () => {
       )}
       {/* Image Viewer / Changer Modal */}
       {imageViewerMemberId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-8" onClick={() => setImageViewerMemberId(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-8" onClick={() => setImageViewerMemberId(null)}>
           <div className="bg-white rounded-2xl  overflow-hidden max-w-sm w-full animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
               <h3 className="font-black text-gray-900 text-sm uppercase tracking-wider">Profile Photo</h3>
@@ -2110,7 +2113,7 @@ export const DataUpload = () => {
                 ) : (
                   <ImageIcon size={48} className="text-stone-300" />
                 )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <div className="absolute inset-0 bg-black/200 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                   <button 
                     onClick={() => document.getElementById(`quick-upload-${imageViewerMemberId}`)?.click()}
                     className="bg-white text-gray-900 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100 transition-colors "

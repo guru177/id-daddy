@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import Toolbar from '../designer/Toolbar';
 import Canvas from '../designer/Canvas';
 import { Dashboard } from '../designer/Dashboard';
@@ -174,7 +175,7 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
           canvas.renderAll();
         } else if (obj.type === 'image' && obj.placeholder) {
           if (obj.originalSrc === undefined) {
-            obj.originalSrc = obj.src;
+            obj.originalSrc = typeof obj.getSrc === 'function' ? obj.getSrc() : obj.src;
             obj.originalCropX = obj.cropX;
             obj.originalCropY = obj.cropY;
             obj.originalWidth = obj.width;
@@ -247,14 +248,24 @@ const MemberDropdown = ({ members, previewMemberId, setPreviewMemberId, canvas }
                 canvas.renderAll();
               }, { crossOrigin: 'anonymous' });
             } else {
-              // No image for this member — reset to grey placeholder so previous photo doesn't persist.
-              // Use obj.width/height (intrinsic), NOT multiplied by scale — Fabric applies scale separately.
-              const w = obj.width || 100;
-              const h = obj.height || 100;
-              const svgPlaceholder = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='${w}' height='${h}' fill='%23d1d5db'/><circle cx='${w/2}' cy='${h*0.38}' r='${Math.min(w,h)*0.18}' fill='%239ca3af'/><ellipse cx='${w/2}' cy='${h*0.72}' rx='${Math.min(w,h)*0.24}' ry='${Math.min(w,h)*0.16}' fill='%239ca3af'/></svg>`;
+              // No image for this member — show a grey SVG silhouette.
+              // We must reset cropX and cropY to 0 so the SVG isn't cropped into invisibility.
+              const w = obj.originalWidth || obj.width || 100;
+              const h = obj.originalHeight || obj.height || 100;
+              const svgString = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='${w}' height='${h}' fill='#d1d5db'/><circle cx='${w/2}' cy='${h*0.38}' r='${Math.min(w,h)*0.18}' fill='#9ca3af'/><ellipse cx='${w/2}' cy='${h*0.72}' rx='${Math.min(w,h)*0.24}' ry='${Math.min(w,h)*0.16}' fill='#9ca3af'/></svg>`;
+              const svgPlaceholder = `data:image/svg+xml;base64,${window.btoa(svgString)}`;
+              
               obj.setSrc(svgPlaceholder, () => {
+                obj.set({
+                  cropX: 0,
+                  cropY: 0,
+                  width: w,
+                  height: h,
+                  scaleX: obj.originalScaleX || obj.scaleX,
+                  scaleY: obj.originalScaleY || obj.scaleY
+                });
                 canvas.renderAll();
-              }, {});
+              }, { crossOrigin: 'anonymous' });
             }
           }
         }
@@ -389,45 +400,28 @@ export function DesignerView() {
   const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
 
   const {
-    canvas,
-    undo,
-    redo,
-    history,
-    redoStack,
-    side,
-    setSide,
-    config,
-    showGrid,
-    setShowGrid,
-    downloadCanvas,
-    saveDesign,
-    newDesign,
-    resetDesign,
-    savedDesigns,
-    loadDesign,
-    loadGlobalTemplateAsCopy,
-    deleteDesign,
-    loadTemplatesFromDb,
-    modal,
-    closeModal,
-    showModal,
-    activeTemplateId,
-    setActiveTemplateId,
-    members,
-    previewMemberId,
-    setPreviewMemberId,
-    guidelines,
-    addGuideline,
-    updateGuideline,
-    removeGuideline,
-    zoom,
-    setZoom,
-    resetZoom,
-    activePanel,
-    setActivePanel,
-    activeRightPanel,
-    setActiveRightPanel
-  } = useDesignerStore();
+    canvas, undo, redo, history, redoStack, side, setSide, config, showGrid, setShowGrid,
+    downloadCanvas, saveDesign, newDesign, resetDesign, savedDesigns, loadDesign,
+    loadGlobalTemplateAsCopy, deleteDesign, loadTemplatesFromDb, modal, closeModal,
+    showModal, activeTemplateId, setActiveTemplateId, members, previewMemberId,
+    setPreviewMemberId, guidelines, addGuideline, updateGuideline, removeGuideline,
+    zoom, setZoom, resetZoom, activePanel, setActivePanel, activeRightPanel, setActiveRightPanel
+  } = useDesignerStore(useShallow(state => ({
+    canvas: state.canvas, undo: state.undo, redo: state.redo, history: state.history,
+    redoStack: state.redoStack, side: state.side, setSide: state.setSide, config: state.config,
+    showGrid: state.showGrid, setShowGrid: state.setShowGrid, downloadCanvas: state.downloadCanvas,
+    saveDesign: state.saveDesign, newDesign: state.newDesign, resetDesign: state.resetDesign,
+    savedDesigns: state.savedDesigns, loadDesign: state.loadDesign,
+    loadGlobalTemplateAsCopy: state.loadGlobalTemplateAsCopy, deleteDesign: state.deleteDesign,
+    loadTemplatesFromDb: state.loadTemplatesFromDb, modal: state.modal, closeModal: state.closeModal,
+    showModal: state.showModal, activeTemplateId: state.activeTemplateId,
+    setActiveTemplateId: state.setActiveTemplateId, members: state.members,
+    previewMemberId: state.previewMemberId, setPreviewMemberId: state.setPreviewMemberId,
+    guidelines: state.guidelines, addGuideline: state.addGuideline, updateGuideline: state.updateGuideline,
+    removeGuideline: state.removeGuideline, zoom: state.zoom, setZoom: state.setZoom,
+    resetZoom: state.resetZoom, activePanel: state.activePanel, setActivePanel: state.setActivePanel,
+    activeRightPanel: state.activeRightPanel, setActiveRightPanel: state.setActiveRightPanel
+  })));
 
   // Sync templates from DB whenever the designer view opens
   useEffect(() => {
@@ -459,7 +453,7 @@ export function DesignerView() {
           canvas.renderAll();
         } else if (obj.type === 'image' && obj.placeholder) {
           if (obj.originalSrc === undefined) {
-            obj.originalSrc = obj.src;
+            obj.originalSrc = typeof obj.getSrc === 'function' ? obj.getSrc() : obj.src;
             obj.originalCropX = obj.cropX;
             obj.originalCropY = obj.cropY;
             obj.originalWidth = obj.width;
@@ -501,6 +495,23 @@ export function DesignerView() {
                   newCropW = imgW; newCropH = imgW / targetRatio; newCropY = (imgH - newCropH) / 2;
                 }
                 obj.set({ cropX: newCropX, cropY: newCropY, width: newCropW, height: newCropH, scaleX: targetW / newCropW, scaleY: targetH / newCropH });
+                canvas.renderAll();
+              }, { crossOrigin: 'anonymous' });
+            } else {
+              const w = obj.originalWidth || obj.width || 100;
+              const h = obj.originalHeight || obj.height || 100;
+              const svgString = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='${w}' height='${h}' fill='#d1d5db'/><circle cx='${w/2}' cy='${h*0.38}' r='${Math.min(w,h)*0.18}' fill='#9ca3af'/><ellipse cx='${w/2}' cy='${h*0.72}' rx='${Math.min(w,h)*0.24}' ry='${Math.min(w,h)*0.16}' fill='#9ca3af'/></svg>`;
+              const svgPlaceholder = `data:image/svg+xml;base64,${window.btoa(svgString)}`;
+              
+              obj.setSrc(svgPlaceholder, () => {
+                obj.set({
+                  cropX: 0,
+                  cropY: 0,
+                  width: w,
+                  height: h,
+                  scaleX: obj.originalScaleX || obj.scaleX,
+                  scaleY: obj.originalScaleY || obj.scaleY
+                });
                 canvas.renderAll();
               }, { crossOrigin: 'anonymous' });
             }
@@ -699,7 +710,7 @@ export function DesignerView() {
         </div>
 
         {userDesigns.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-40 bg-white/50 backdrop-blur-xl rounded-[40px] border-2 border-dashed border-gray-200">
+          <div className="flex flex-col items-center justify-center py-40 bg-white/95 rounded-[40px] border-2 border-dashed border-gray-200">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
               <Plus size={40} className="text-gray-300" />
             </div>
@@ -726,7 +737,7 @@ export function DesignerView() {
                   <div className={`w-full h-full flex ${design.config.orientation === 'horizontal' ? 'flex-col' : 'flex-row'}`}>
                     <div className="flex-1 relative overflow-hidden border-b border-gray-100 last:border-0 group-hover:scale-105 transition-transform duration-700">
                       <img src={design.thumbnailFront} alt="Front" className="w-full h-full object-contain" />
-                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Front</div>
+                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/200 text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Front</div>
                     </div>
                     <div className="flex-1 relative overflow-hidden border-l border-gray-100 first:border-0 group-hover:scale-105 transition-transform duration-700 delay-75">
                       {design.config?.backsidePrinting !== 'none' && design.thumbnailBack ? (
@@ -736,7 +747,7 @@ export function DesignerView() {
                           <span className="text-gray-300 font-black uppercase tracking-[0.15em] text-xs">Blank</span>
                         </div>
                       )}
-                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Back</div>
+                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/200 text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Back</div>
                     </div>
                   </div>
                   {activeTemplateId === design.id && (
@@ -745,7 +756,7 @@ export function DesignerView() {
                     </div>
                   )}
                   {/* Floating Action Overlay */}
-                  <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
+                  <div className="absolute inset-0 bg-gray-900/30 opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
                     <button
                       onClick={() => { loadDesign(design); setActiveTab('Card Designer'); }}
                       className="p-4 bg-white text-gray-900 rounded-2xl hover:bg-green-500 hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 "
@@ -911,7 +922,7 @@ export function DesignerView() {
       >
 
         {/* Utility Toolbar — only visible on Card Designer tab */}
-        <div className="min-h-[48px] py-2 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-6 gap-x-4 gap-y-2 z-50 shrink-0 relative backdrop-blur-sm">
+        <div className="min-h-[48px] py-2 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-6 gap-x-4 gap-y-2 z-50 shrink-0 relative">
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
               <button onClick={undo} disabled={history.length <= 1} className="p-1.5 rounded-lg hover:bg-[#e8d5c4]/50 text-[#2c3e50] disabled:opacity-20 transition-all">
@@ -1023,7 +1034,7 @@ export function DesignerView() {
             </div>
 
             {/* Front / Back Toggle on Center Right Edge */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#f5ece2]/95 backdrop-blur-md p-2 rounded-l-2xl border-l border-y border-[#e8d5c4] flex flex-col gap-2 z-50 pointer-events-auto">
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#f5ece2]/95 p-2 rounded-l-2xl border-l border-y border-[#e8d5c4] flex flex-col gap-2 z-50 pointer-events-auto">
               <button onClick={() => setSide('front')} className={`px-4 py-6 text-xs font-black rounded-xl transition-all flex flex-col items-center gap-1 ${side === 'front'
                 ? 'bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] text-white scale-105 shadow-lg shadow-green-900/20'
                 : 'text-[#2c3e50] hover:bg-[#e8d5c4]/50'
@@ -1078,7 +1089,7 @@ export function DesignerView() {
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Unsaved Changes Warning Modal ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       {pendingAction && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[3px] animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 animate-in fade-in duration-200">
           <div className="w-full max-w-sm bg-white rounded-[28px]  border border-gray-100 p-8 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-center mb-5">
               <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center">

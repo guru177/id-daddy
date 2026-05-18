@@ -21,7 +21,7 @@ export function GlobalModal() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
+        className="absolute inset-0 bg-gray-900/60 transition-opacity animate-in fade-in duration-300"
         onClick={closeModal}
       />
       <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-sm overflow-hidden z-10 animate-in zoom-in-95 fade-in duration-200">

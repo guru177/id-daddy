@@ -50,7 +50,7 @@ const ShortcutOverlay = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-gray-900/50" />
       <div
         className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 w-full max-w-lg animate-in zoom-in-95 fade-in duration-200"
         onClick={(e) => e.stopPropagation()}

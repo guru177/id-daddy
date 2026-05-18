@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Loader2, X, Eye, FileDown, Image as ImageIcon, Search, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useDesignerStore } from './store';
+import { useShallow } from 'zustand/react/shallow';
 import { generatePreviews, VdpResult, generateSingleHighRes } from './VdpEngine';
 import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 
 export const MyMembers = () => {
   const { 
-    savedDesigns, 
-    members, 
-    folders,
-    activeTemplateId, 
-    previewResults, 
-    setPreviewResults,
-    isGeneratingPreviews,
-    setIsGeneratingPreviews,
-    selectedMembers,
-    setSelectedMembers
-  } = useDesignerStore();
+    savedDesigns, members, folders, activeTemplateId, previewResults, 
+    setPreviewResults, isGeneratingPreviews, setIsGeneratingPreviews, 
+    selectedMembers, setSelectedMembers
+  } = useDesignerStore(useShallow(state => ({
+    savedDesigns: state.savedDesigns, members: state.members, folders: state.folders,
+    activeTemplateId: state.activeTemplateId, previewResults: state.previewResults,
+    setPreviewResults: state.setPreviewResults, isGeneratingPreviews: state.isGeneratingPreviews,
+    setIsGeneratingPreviews: state.setIsGeneratingPreviews, selectedMembers: state.selectedMembers,
+    setSelectedMembers: state.setSelectedMembers
+  })));
 
   const [selectedHighRes, setSelectedHighRes] = useState<{ member: any, design: any } | null>(null);
   const [highResImages, setHighResImages] = useState<{ front: string, back: string } | null>(null);
@@ -477,7 +477,7 @@ export const MyMembers = () => {
                   <div className="p-4 flex flex-row gap-4">
                     <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-100 bg-stone-50">
                       <img src={preview.front} alt="Front Preview" className="w-full h-auto max-h-[300px] object-contain mx-auto" />
-                      <div className="absolute top-2 left-2 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Front</div>
+                      <div className="absolute top-2 left-2 px-3 py-1 bg-black/200 text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Front</div>
                     </div>
                     
                     <div className="flex-1 relative group rounded-xl overflow-hidden  border border-gray-100 bg-stone-50">
@@ -488,7 +488,7 @@ export const MyMembers = () => {
                           <span className="text-gray-300 font-bold uppercase tracking-widest text-xs">Blank</span>
                         </div>
                       )}
-                      <div className="absolute top-2 left-2 px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Back</div>
+                      <div className="absolute top-2 left-2 px-3 py-1 bg-black/200 text-[10px] font-black text-white uppercase tracking-[0.1em] rounded-full shadow-lg border border-white/10 z-10">Back</div>
                     </div>
                   </div>
                 </div>
@@ -552,7 +552,7 @@ export const MyMembers = () => {
       {/* 4K Modal Viewer */}
       {selectedHighRes && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12">
-          <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-md transition-opacity animate-in fade-in duration-300" onClick={() => setSelectedHighRes(null)} />
+          <div className="absolute inset-0 bg-gray-900/90 transition-opacity animate-in fade-in duration-300" onClick={() => setSelectedHighRes(null)} />
           <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-stone-100 rounded-[32px]  flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Modal Header */}
             <div className="bg-white px-8 py-5 flex items-center justify-between border-b border-gray-200 shrink-0  z-10">

@@ -193,7 +193,7 @@ export default function App() {
 
       {/* BLOCKED OVERLAY */}
       {isBlocked && (
-        <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md p-6">
+        <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/60 p-6">
 
           <div className="w-full max-w-sm bg-white rounded-[40px] p-10 text-center border-2 border-red-500/20">
 
@@ -236,7 +236,7 @@ export default function App() {
 
           {/* BRAND */}
           <button
-            className="px-8 py-8 text-left hover:bg-white/40 transition-all group relative"
+            className="px-8 py-8 text-left hover:bg-white/95 transition-all group relative"
             onClick={() =>
               !isBlocked && setPage("profile")
             }
@@ -323,7 +323,7 @@ export default function App() {
                     className={clsx(
                       "p-2.5 rounded-md transition-colors",
                       page === item.id
-                        ? "bg-white/20"
+                        ? "bg-white/90"
                         : "bg-stone-100 group-hover:bg-white"
                     )}
                   >
@@ -353,7 +353,7 @@ export default function App() {
 
           {/* USER CARD */}
           <div className="p-6">
-            <div className="bg-white/40 backdrop-blur-sm rounded-[32px] p-5 border border-white/60">
+            <div className="bg-white/95 rounded-[32px] p-5 border border-white/60">
 
               <div className="flex items-center gap-3 mb-4 px-2">
 
