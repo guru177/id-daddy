@@ -1579,10 +1579,10 @@ export const CustomizePanel = () => {
                       {showField('Blood Group') && <option value="{{bloodGroup}}">Blood Group</option>}
                     </optgroup>
                   )}
-                  {['Title', 'ID Number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
+                  {['Title', 'ID number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
                     <optgroup label={getLabel('Employment Info')}>
                       {showField('Title') && <option value="{{title}}">{getLabel('Title')}</option>}
-                      {showField('ID Number') && <option value="{{idNumber}}">{getLabel('ID Number')}</option>}
+                      {showField('ID number') && <option value="{{idNumber}}">ID number</option>}
                       {showField('Employee ID') && <option value="{{employeeId}}">{getLabel('Employee ID')}</option>}
                       {showField('Department') && <option value="{{department}}">{getLabel('Department')}</option>}
                       {showField('Hire Date') && <option value="{{hireDate}}">{getLabel('Hire Date')}</option>}
@@ -1785,10 +1785,10 @@ export const CustomizePanel = () => {
                         {showField('Blood Group') && <option value="{{bloodGroup}}">Blood Group</option>}
                       </optgroup>
                     )}
-                    {['Title', 'ID Number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
+                    {['Title', 'ID number', 'Employee ID', 'Department', 'Hire Date', 'Role'].some(showField) && (
                       <optgroup label={getLabel('Employment Info')}>
                         {showField('Title') && <option value="{{title}}">{getLabel('Title')}</option>}
-                        {showField('ID Number') && <option value="{{idNumber}}">{getLabel('ID Number')}</option>}
+                        {showField('ID number') && <option value="{{idNumber}}">ID number</option>}
                         {showField('Employee ID') && <option value="{{employeeId}}">{getLabel('Employee ID')}</option>}
                         {showField('Department') && <option value="{{department}}">{getLabel('Department')}</option>}
                         {showField('Hire Date') && <option value="{{hireDate}}">{getLabel('Hire Date')}</option>}

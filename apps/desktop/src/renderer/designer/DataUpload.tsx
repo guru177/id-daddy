@@ -328,10 +328,10 @@ export const DataUpload = () => {
     reader.onload = async (evt) => {
       try {
         const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wb = XLSX.read(bstr, { type: 'binary', cellDates: true, dateNF: 'yyyy-mm-dd' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws);
+        const data = XLSX.utils.sheet_to_json(ws, { raw: false, dateNF: 'yyyy-mm-dd' });
 
         let importedCount = 0;
         let skippedCount = 0;
@@ -363,18 +363,32 @@ export const DataUpload = () => {
             return '';
           };
 
+          // Normalize any date format (JS Date string, serial, ISO) to YYYY-MM-DD
+          const getDateVal = (possibleKeys: string[]) => {
+            const raw = getVal(possibleKeys);
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (!isNaN(d.getTime())) {
+              const yyyy = d.getFullYear();
+              const mm = String(d.getMonth() + 1).padStart(2, '0');
+              const dd = String(d.getDate()).padStart(2, '0');
+              return `${yyyy}-${mm}-${dd}`;
+            }
+            return raw;
+          };
+
           const newMember = {
             firstName: getVal(['First Name', 'FirstName', 'First', 'Name']),
             lastName: getVal(['Last Name', 'LastName', 'Last']),
             nickname: getVal(['Nickname']),
-            dob: getVal(['Date of Birth', 'DOB', 'Birthday']),
-            title: getVal(['Title', 'Role', 'Position']),
-            idNumber: getVal(['ID number', 'ID', 'IDNumber']),
+            dob: getDateVal(['Date of Birth', 'Date Of Birth', 'DOB', 'Birthday']),
+            title: getVal(['Title', 'Position']),
+            idNumber: getVal(['ID number', 'ID Number', 'IDNumber', 'ID No', 'IDNo']),
             employeeId: getVal(['Employee ID', 'EmployeeID', 'EmpID']),
-            department: getVal(['Department', 'Dept']),
-            hireDate: getVal(['Hire Date', 'HireDate']),
-            issueDate: getVal(['Issue Date', 'IssueDate']),
-            expirationDate: getVal(['Expiration Date', 'ExpDate', 'Expiry']),
+            department: getVal(['Department', 'Dept', 'Grade/Class', 'Class']),
+            hireDate: getDateVal(['Hire Date', 'HireDate']),
+            issueDate: getDateVal(['Issue Date', 'IssueDate']),
+            expirationDate: getDateVal(['Expiration Date', 'ExpDate', 'Expiry']),
             phone1: getVal(['Phone 1', 'Phone', 'Phone1', 'Mobile']),
             phone2: getVal(['Phone 2', 'Phone2']),
             fax: getVal(['Fax']),
@@ -386,13 +400,23 @@ export const DataUpload = () => {
             city: getVal(['City']),
             street1: getVal(['Street 1', 'Street', 'Address', 'Address 1']),
             street2: getVal(['Street 2', 'Address 2']),
-            gradeLevel: getVal(['Grade Level', 'Grade']),
+            gradeLevel: getVal(['Grade Level']),
             securityLevel: getVal(['Security Level', 'Clearance']),
             height: getVal(['Height']),
             weight: getVal(['Weight']),
             gender: getVal(['Gender', 'Sex']),
-            eyeColor: getVal(['Eye Color', 'Eyes']),
-            hairColor: getVal(['Hair Color', 'Hair']),
+            eyeColor: getVal(['Eye Color', 'Eye color', 'Eyes']),
+            hairColor: getVal(['Hair Color', 'Hair color', 'Hair']),
+            bloodGroup: getVal(['Blood Group', 'BloodGroup', 'Blood Type']),
+            parentName: getVal(['Parent Name', 'ParentName', 'Guardian Name', 'Guardian']),
+            parentPhone: getVal(['Parent Phone', 'ParentPhone', 'Guardian Phone']),
+            emergencyContact: getVal(['Emergency Contact', 'EmergencyContact']),
+            emergencyPhone: getVal(['Emergency Phone', 'EmergencyPhone']),
+            rfidNo: getVal(['RFID No', 'RFID', 'RFIDNo']),
+            busRoute: getVal(['Bus Route', 'BusRoute', 'Bus']),
+            hostelName: getVal(['Hostel Name', 'HostelName', 'Hostel']),
+            roomNo: getVal(['Room No', 'RoomNo', 'Room']),
+            role: getVal(['Role']),
             profileImage: getVal(['Profile Image', 'Photo', 'Image', 'Picture']),
             signature: getVal(['Signature', 'Sign']),
             fingerprint: getVal(['Fingerprint', 'Thumbprint']),
@@ -400,7 +424,7 @@ export const DataUpload = () => {
             customFields: {} as Record<string, string>
           };
 
-          const knownFields = ['First Name', 'FirstName', 'First', 'Name', 'Last Name', 'LastName', 'Last', 'Nickname', 'Date of Birth', 'DOB', 'Birthday', 'Title', 'Role', 'Position', 'ID number', 'ID', 'IDNumber', 'Employee ID', 'EmployeeID', 'EmpID', 'Department', 'Dept', 'Hire Date', 'HireDate', 'Issue Date', 'IssueDate', 'Expiration Date', 'ExpDate', 'Expiry', 'Phone 1', 'Phone', 'Phone1', 'Mobile', 'Phone 2', 'Phone2', 'Fax', 'Email', 'Email Address', 'Website', 'Web', 'URL', 'Country', 'Postal Code', 'Zip Code', 'Zip', 'State', 'Province', 'City', 'Street 1', 'Street', 'Address', 'Address 1', 'Street 2', 'Address 2', 'Grade Level', 'Grade', 'Security Level', 'Clearance', 'Height', 'Weight', 'Gender', 'Sex', 'Eye Color', 'Eyes', 'Hair Color', 'Hair', 'Profile Image', 'Photo', 'Image', 'Picture', 'Signature', 'Sign', 'Fingerprint', 'Thumbprint', 'Division Logo', 'Logo', 'Dept Logo'];
+          const knownFields = ['First Name', 'FirstName', 'First', 'Name', 'Last Name', 'LastName', 'Last', 'Nickname', 'Date of Birth', 'Date Of Birth', 'DOB', 'Birthday', 'Title', 'Position', 'ID number', 'ID Number', 'IDNumber', 'ID No', 'IDNo', 'Employee ID', 'EmployeeID', 'EmpID', 'Department', 'Dept', 'Grade/Class', 'Class', 'Hire Date', 'HireDate', 'Issue Date', 'IssueDate', 'Expiration Date', 'ExpDate', 'Expiry', 'Phone 1', 'Phone', 'Phone1', 'Mobile', 'Phone 2', 'Phone2', 'Fax', 'Email', 'Email Address', 'Website', 'Web', 'URL', 'Country', 'Postal Code', 'Zip Code', 'Zip', 'State', 'Province', 'City', 'Street 1', 'Street', 'Address', 'Address 1', 'Street 2', 'Address 2', 'Grade Level', 'Security Level', 'Clearance', 'Height', 'Weight', 'Gender', 'Sex', 'Eye Color', 'Eye color', 'Eyes', 'Hair Color', 'Hair color', 'Hair', 'Blood Group', 'BloodGroup', 'Blood Type', 'Parent Name', 'ParentName', 'Guardian Name', 'Guardian', 'Parent Phone', 'ParentPhone', 'Guardian Phone', 'Emergency Contact', 'EmergencyContact', 'Emergency Phone', 'EmergencyPhone', 'RFID No', 'RFID', 'RFIDNo', 'Bus Route', 'BusRoute', 'Bus', 'Hostel Name', 'HostelName', 'Hostel', 'Room No', 'RoomNo', 'Room', 'Role', 'Profile Image', 'Photo', 'Image', 'Picture', 'Signature', 'Sign', 'Fingerprint', 'Thumbprint', 'Division Logo', 'Logo', 'Dept Logo'];
 
           Object.keys(row).forEach(k => {
             const val = row[k];
