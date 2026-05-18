@@ -97,6 +97,7 @@ export const DataUpload = () => {
   const [movingMemberId, setMovingMemberId] = useState<string | null>(null);
   const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
   const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
+  const [deleteFolderWithMembers, setDeleteFolderWithMembers] = useState(false);
 
   const [imageViewerMemberId, setImageViewerMemberId] = useState<string | null>(null);
 
@@ -756,7 +757,7 @@ export const DataUpload = () => {
       {view === 'folders' && (
         <div className="flex flex-col h-full">
           {/* Folder view header */}
-          <div className="bg-[#FAF7F2] border-b border-[#E8DFD0] px-8 py-5 flex items-center justify-between gap-6 shrink-0">
+          <div className="bg-[#FAF7F2] border-b border-[#E8DFD0] px-6 lg:px-8 py-5 flex flex-wrap items-center justify-between gap-4 shrink-0 z-10">
             <div>
               <h1 className="text-xl font-black text-gray-900">Data Upload</h1>
               <p className="text-xs text-gray-400 mt-0.5 font-medium">Select a folder to view or add members</p>
@@ -946,19 +947,32 @@ export const DataUpload = () => {
                       You are about to delete <span className="text-red-600">&ldquo;{folder?.name}&rdquo;</span>.
                     </p>
                     <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 space-y-1.5">
-                      <p className="text-[11px] font-black text-red-700 uppercase tracking-widest">? What will happen:</p>
+                      <p className="text-[11px] font-black text-red-700 uppercase tracking-widest">⚠ What will happen:</p>
                       <ul className="text-xs text-red-600 font-medium space-y-1 list-disc list-inside">
                         <li>The folder will be permanently removed.</li>
-                        {count > 0 && <li>The <strong>{count} member{count > 1 ? "s" : ""}</strong> inside will be moved to <strong>All Members</strong>.</li>}
+                        {count > 0 && <li>The <strong>{count} member{count > 1 ? 's' : ''}</strong> inside will be <strong>{deleteFolderWithMembers ? 'permanently deleted' : 'moved to All Members'}</strong>.</li>}
                         <li>This action <strong>cannot be undone</strong>.</li>
                       </ul>
                     </div>
+                    {count > 0 && (
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={deleteFolderWithMembers}
+                          onChange={e => setDeleteFolderWithMembers(e.target.checked)}
+                          className="w-4 h-4 rounded accent-red-600 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-red-700 group-hover:text-red-900">
+                          Also permanently delete all {count} member{count > 1 ? 's' : ''} inside
+                        </span>
+                      </label>
+                    )}
                   </div>
                   <div className="px-6 pb-6 flex gap-3">
-                    <button onClick={() => setDeletingFolderId(null)} className="flex-1 h-10 rounded-xl border-2 border-gray-200 text-gray-600 text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
+                    <button onClick={() => { setDeletingFolderId(null); setDeleteFolderWithMembers(false); }} className="flex-1 h-10 rounded-xl border-2 border-gray-200 text-gray-600 text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
                       Cancel
                     </button>
-                    <button onClick={() => { deleteFolder(deletingFolderId); setDeletingFolderId(null); }} className="flex-1 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-500 text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <button onClick={() => { deleteFolder(deletingFolderId!, deleteFolderWithMembers); setDeletingFolderId(null); setDeleteFolderWithMembers(false); }} className="flex-1 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-500 text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                       <Trash2 size={13} /> Accept &amp; Delete
                     </button>
                   </div>
@@ -1045,8 +1059,8 @@ export const DataUpload = () => {
       )}
 
       {/* Header */}
-      <div className="bg-[#FAF7F2] border-b border-[#E8DFD0] px-8 py-5 flex items-center justify-between gap-8 shrink-0 z-10  overflow-hidden">
-        <div className="flex items-center gap-6 min-w-0">
+      <div className="bg-[#FAF7F2] border-b border-[#E8DFD0] px-6 lg:px-8 py-5 flex flex-wrap items-center justify-between gap-4 shrink-0 z-10">
+        <div className="flex items-center flex-wrap gap-4 min-w-0">
           {/* Back button */}
           <button onClick={() => { setView('folders'); setSelectedMembers(new Set()); }} className="flex items-center gap-1.5 text-gray-400 hover:text-[#1a5d1a] transition-colors shrink-0">
             <ArrowLeft size={18} />
@@ -1067,7 +1081,7 @@ export const DataUpload = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <input type="file" ref={excelInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportExcel} />
           <input type="file" ref={bulkImageInputRef} accept="image/*" multiple className="hidden" onChange={handleBulkImageUpload} />
 

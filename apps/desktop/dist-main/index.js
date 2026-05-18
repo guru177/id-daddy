@@ -41,8 +41,8 @@ function createWindow() {
         show: true,
         width: 1280,
         height: 820,
-        minWidth: 800,
-        minHeight: 600,
+        minWidth: 960,
+        minHeight: 660,
         backgroundColor: "#fdfaf5",
         titleBarStyle: "hidden",
         icon: node_path_1.default.join(__dirname, "../resources/icon.ico"),
@@ -56,7 +56,8 @@ function createWindow() {
             preload: node_path_1.default.join(__dirname, "preload.js"),
             contextIsolation: true,
             nodeIntegration: false,
-            sandbox: true
+            sandbox: true,
+            backgroundThrottling: false // prevent render slowdown when window loses focus
         }
     });
     logStartup("Main window created");
@@ -65,6 +66,7 @@ function createWindow() {
     mainWindow.once("ready-to-show", () => {
         logStartup("Main window ready to show");
         showMainWindow();
+        mainWindow?.maximize();
     });
     mainWindow.webContents.once("did-finish-load", () => {
         logStartup("Renderer finished load");

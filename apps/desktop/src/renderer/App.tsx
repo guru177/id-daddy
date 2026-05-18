@@ -389,7 +389,7 @@ export default function App() {
         {/* MAIN CONTENT */}
         <main
           className={clsx(
-            "min-w-0 flex-1 overflow-hidden transition-all w-full",
+            "min-w-0 flex-1 overflow-hidden transition-all",
             (isBlocked || isTrialExpired) &&
             "grayscale"
           )}

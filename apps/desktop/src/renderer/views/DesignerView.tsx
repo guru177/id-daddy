@@ -823,8 +823,10 @@ export function DesignerView() {
     >
 
       { }
-      <header className="h-[73px] bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex items-center justify-between px-8 shrink-0 z-20 relative">
-        <div className="flex-1 flex items-center justify-start">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-4 lg:px-8 shrink-0 z-20 relative gap-x-4">
+        {/* Left: Back Button */}
+        <div className="flex items-center justify-start py-3 shrink-0 order-1">
           <button
             onClick={() => interceptAction(() => setActiveTab('Get Started'))}
             className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
@@ -833,7 +835,8 @@ export function DesignerView() {
           </button>
         </div>
         
-        <div className="flex items-center justify-center gap-10 absolute left-1/2 -translate-x-1/2 h-full">
+        {/* Center: Nav Tabs (Drops to second line on smaller screens) */}
+        <div className="flex items-center justify-center gap-4 md:gap-10 overflow-x-auto no-scrollbar order-3 xl:order-2 w-full xl:w-auto xl:flex-1 h-[50px] xl:h-[73px] border-t border-[#e8d5c4]/30 xl:border-t-0">
           {navItems.map(item => (
             <button
               key={item}
@@ -844,7 +847,7 @@ export function DesignerView() {
                   setActiveTab(item);
                 }
               }}
-              className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] ${activeTab === item
+              className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] whitespace-nowrap ${activeTab === item
                 ? 'border-[#1a5d1a] text-[#1a5d1a]'
                 : 'border-transparent text-[#2c3e50]/60 hover:text-[#1a5d1a]'
                 }`}
@@ -854,7 +857,8 @@ export function DesignerView() {
           ))}
         </div>
 
-        <div className="flex-1 flex items-center justify-end gap-3">
+        {/* Right: Actions */}
+        <div className="flex items-center justify-end gap-3 py-3 shrink-0 order-2 xl:order-3">
           <button
             onClick={() => interceptAction(() => useAuthStore.getState().setPage('upload'))}
             className="text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
@@ -906,9 +910,9 @@ export function DesignerView() {
         className="flex-col flex-1 min-h-0 w-full h-full"
       >
 
-        {/* Utility Toolbar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â only visible on Card Designer tab */}
-        <div className="h-12 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex items-center justify-between px-6 z-50 shrink-0 relative backdrop-blur-sm">
-          <div className="flex items-center gap-6">
+        {/* Utility Toolbar — only visible on Card Designer tab */}
+        <div className="min-h-[48px] py-2 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-6 gap-x-4 gap-y-2 z-50 shrink-0 relative backdrop-blur-sm">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
               <button onClick={undo} disabled={history.length <= 1} className="p-1.5 rounded-lg hover:bg-[#e8d5c4]/50 text-[#2c3e50] disabled:opacity-20 transition-all">
                 <Undo2 size={16} />

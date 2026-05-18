@@ -42,8 +42,8 @@ function createWindow() {
     show: true,
     width: 1280,
     height: 820,
-    minWidth: 800,
-    minHeight: 600,
+    minWidth: 960,
+    minHeight: 660,
     backgroundColor: "#fdfaf5",
     titleBarStyle: "hidden",
     icon: path.join(__dirname, "../resources/icon.ico"),
@@ -57,7 +57,8 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      backgroundThrottling: false  // prevent render slowdown when window loses focus
     }
   });
   logStartup("Main window created");

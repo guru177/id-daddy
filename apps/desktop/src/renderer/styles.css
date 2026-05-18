@@ -20,11 +20,44 @@
 
 body {
   margin: 0;
-  min-width: 1024px;
-  min-height: 100vh;
   overflow: hidden;
   font-size: 16px;
+  /* Enable GPU rasterization for the whole app */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
+
+/* Smooth scroll for all scrollable containers */
+* {
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+}
+
+/* Canvas area — promote to GPU compositing layer for smooth drags */
+canvas {
+  will-change: transform;
+  touch-action: none; /* prevents browser gesture interference during drag */
+}
+
+/* Sidebar and panel scroll performance */
+[class*="overflow-y-auto"],
+[class*="overflow-auto"],
+[class*="overflow-y-scroll"] {
+  -webkit-overflow-scrolling: touch;
+  contain: paint;
+}
+
+/* Smooth interactive transitions — but skip transitions during drag */
+button, input, select {
+  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+/* Prevent jank from expensive paints on list items */
+tr, .member-row {
+  will-change: auto;
+  contain: layout style;
+}
+
 
 button,
 input,

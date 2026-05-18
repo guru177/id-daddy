@@ -98,7 +98,7 @@ interface DesignerState {
   folders: Folder[];
   createFolder: (name: string) => void;
   renameFolder: (id: string, name: string) => void;
-  deleteFolder: (id: string) => void;
+  deleteFolder: (id: string, deleteMembers?: boolean) => void;
   moveMemberToFolder: (memberId: string, folderId: string | null) => Promise<void>;
   canvas: fabric.Canvas | null;
   side: 'front' | 'back';
@@ -221,6 +221,9 @@ interface DesignerState {
   setSelectedMembers: (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
 }
 
+// Module-level debounce timer for thumbnail generation in saveState()
+let _thumbTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const useDesignerStore = create<DesignerState>((set, get) => ({
   folders: [],
 
@@ -245,13 +248,23 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       console.error("Failed to rename folder", e);
     }
   },
-  deleteFolder: async (id) => {
+  deleteFolder: async (id, deleteMembers = false) => {
     try {
+      const { members } = get();
+      const membersInFolder = members.filter(m => m.folderId === id);
+
+      if (deleteMembers && membersInFolder.length > 0) {
+        // Delete all members inside the folder from the database
+        await Promise.all(membersInFolder.map(m => deleteRecord(m.id)));
+      }
+
       await deleteFolderApi(id);
+
       set((state) => {
         const updatedFolders = state.folders.filter(f => f.id !== id);
-        // Members on the backend don't cascade delete on SetNull automatically, so we update the local state to match the DB
-        const updatedMembers = state.members.map(m => m.folderId === id ? { ...m, folderId: undefined } : m);
+        const updatedMembers = deleteMembers
+          ? state.members.filter(m => m.folderId !== id)          // remove them entirely
+          : state.members.map(m => m.folderId === id ? { ...m, folderId: undefined } : m); // move to All
         return { folders: updatedFolders, members: updatedMembers };
       });
     } catch (e) {
@@ -518,7 +531,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     const json = canvas.toJSON(['id', 'name', 'selectable', 'evented', 'isVariable', 'variableType', 'placeholder', 'variableColors', 'securityData', 'securityFormat', 'securityType', 'qrFields', 'securityHideText']);
     const jsonStr = JSON.stringify(json);
 
-    // Deduplicate history
+    // Deduplicate history — skip if nothing changed
     if (history.length > 0 && JSON.stringify(history[history.length - 1]) === jsonStr) return;
 
     const updates: any = {
@@ -529,15 +542,21 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     if (side === 'front') updates.frontData = json;
     else updates.backData = json;
 
-    // Also update thumbnail for current side
-    const thumb = canvas.toDataURL({ format: 'png', multiplier: 1.0 });
-    if (side === 'front') updates.frontThumbnail = thumb;
-    else updates.backThumbnail = thumb;
-
     set(updates);
 
-    // Notify layers panel to refresh using a custom event to avoid the
-    // object:modified → saveState() feedback loop
+    // Debounce thumbnail generation — toDataURL is expensive (encodes full PNG)
+    // so we defer it 500ms after the last change instead of running synchronously
+    // on every object:modified / mouse-move event.
+    if (_thumbTimer) clearTimeout(_thumbTimer);
+    _thumbTimer = setTimeout(() => {
+      const { canvas: c, side: s } = get();
+      if (!c) return;
+      const thumb = c.toDataURL({ format: 'jpeg', multiplier: 0.5, quality: 0.7 });
+      if (s === 'front') set({ frontThumbnail: thumb });
+      else set({ backThumbnail: thumb });
+    }, 500);
+
+    // Notify layers panel to refresh
     canvas.fire('layers:refresh');
   },
 

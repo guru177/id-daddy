@@ -301,14 +301,20 @@ const Canvas = () => {
       // its starting position), which leaves guide lines stuck on the canvas.
       // mouse:up always fires, so we use it as the definitive cleanup point.
       fabricCanvas.on('mouse:up', () => {
+        if (movingRafId !== null) { cancelAnimationFrame(movingRafId); movingRafId = null; }
         clearSmartGuides();
         fabricCanvas.requestRenderAll();
       });
 
-      // SMART GUIDES & ALIGNMENT SNAPPING
+    let movingRafId: number | null = null;
+
+      // SMART GUIDES & ALIGNMENT SNAPPING — throttled to one rAF per frame
       fabricCanvas.on('object:moving', (options) => {
-        const obj = options.target;
-        if (!obj) return;
+        if (movingRafId !== null) return; // skip if a frame is already queued
+        movingRafId = requestAnimationFrame(() => {
+          movingRafId = null;
+          const obj = options.target;
+          if (!obj) return;
 
         clearSmartGuides();
         const snapThreshold = 5;
@@ -581,6 +587,7 @@ const Canvas = () => {
           }
         });
         // ────────────────────────────────────────────────────────────────────
+        }); // end rAF
       });
 
     };
