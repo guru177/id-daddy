@@ -32,7 +32,6 @@ export class AuthController {
     } catch (err) {
       return { 
         PRO_1Y_PRICE: 2999, 
-        LIFETIME_PRICE: 9999, 
         CURRENCY: "INR" 
       };
     }

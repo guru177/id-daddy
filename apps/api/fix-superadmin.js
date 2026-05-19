@@ -31,12 +31,13 @@ async function main() {
       const newWs = await prisma.workspace.create({
         data: {
           name: "Platform Admin (System)",
-          plan: "LIFETIME",
+          plan: "PRO_1Y",
           status: "ACTIVE",
           subscription: {
             create: {
-              plan: "LIFETIME",
-              startDate: new Date()
+              plan: "PRO_1Y",
+              startDate: new Date(),
+              endDate: new Date("2099-12-31T23:59:59.000Z")
             }
           }
         }

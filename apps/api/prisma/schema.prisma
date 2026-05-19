@@ -22,7 +22,6 @@ enum Plan {
   PRO
   FREE_TRIAL
   PRO_1Y
-  LIFETIME
 
   @@map("plan")
 }

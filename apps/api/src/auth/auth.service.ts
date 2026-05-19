@@ -70,12 +70,13 @@ export class AuthService {
             ws = await tx.workspace.create({
               data: {
                 name: "Platform Admin System",
-                plan: "LIFETIME" as any,
+                plan: "PRO_1Y" as any,
                 status: "ACTIVE",
                 subscription: {
                   create: {
-                    plan: "LIFETIME" as any,
-                    startDate: new Date()
+                    plan: "PRO_1Y" as any,
+                    startDate: new Date(),
+                    endDate: new Date("2099-12-31T23:59:59.000Z")
                   }
                 }
               }
@@ -170,7 +171,7 @@ export class AuthService {
         role: dbUser.role,
         workspaceId: dbUser.workspaceId,
         workspaceName: dbUser.workspace?.name ?? (dbUser.role === "SUPER_ADMIN" ? "Platform Admin" : "No Workspace"),
-        plan: dbUser.workspace?.plan || (dbUser.role === "SUPER_ADMIN" ? "LIFETIME" : "FREE_TRIAL"),
+        plan: dbUser.workspace?.plan || (dbUser.role === "SUPER_ADMIN" ? "PRO_1Y" : "FREE_TRIAL"),
         subscriptionEnd,
         settings: dbUser.settings
       };
@@ -235,7 +236,7 @@ export class AuthService {
 
     const fullUser: AuthUser = {
       ...user,
-      plan: (workspace?.plan || subscription?.plan || (user.role === "SUPER_ADMIN" ? "LIFETIME" : "FREE_TRIAL")) as any,
+      plan: (workspace?.plan || subscription?.plan || (user.role === "SUPER_ADMIN" ? "PRO_1Y" : "FREE_TRIAL")) as any,
       subscriptionEnd: subscription?.endDate?.toISOString()
     };
 

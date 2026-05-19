@@ -121,9 +121,6 @@ export class BillingService {
     if (plan === "PRO_1Y") {
       return this.config.getOrThrow<string>("STRIPE_PRICE_PRO_1Y");
     }
-    if (plan === "LIFETIME") {
-      return this.config.getOrThrow<string>("STRIPE_PRICE_LIFETIME");
-    }
     throw new BadRequestException("Free trial does not require checkout");
   }
 }

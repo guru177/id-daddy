@@ -5,12 +5,10 @@ import { Metric } from "../components/Metric";
 import { WorkspaceRow } from "../types";
 
 const planBadge: Record<string, string> = {
-  LIFETIME: "badge-amber",
   PRO_1Y:   "badge-blue",
   FREE_TRIAL:"badge-gray"
 };
 const planLabel: Record<string, string> = {
-  LIFETIME: "Lifetime",
   PRO_1Y:   "Pro 1Y",
   FREE_TRIAL:"Free Trial"
 };

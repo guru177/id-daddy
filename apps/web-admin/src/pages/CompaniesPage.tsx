@@ -6,8 +6,7 @@ import { WorkspaceRow } from "../types";
 
 const PLAN_LABELS: Record<Plan, string> = {
   FREE_TRIAL: "Free Trial (3 Days)",
-  PRO_1Y: "Pro (1 Year)",
-  LIFETIME: "Lifetime"
+  PRO_1Y: "Pro (1 Year)"
 };
 
 export function CompaniesPage() {
@@ -493,7 +492,6 @@ export function CompaniesPage() {
                   >
                     <option value="FREE_TRIAL">Free Trial (3 Days)</option>
                     <option value="PRO_1Y">Pro (1 Year)</option>
-                    <option value="LIFETIME">Lifetime</option>
                   </select>
                 </div>
               </div>
@@ -644,7 +642,6 @@ export function CompaniesPage() {
                       >
                         <option value="FREE_TRIAL">Free Trial (3 Days)</option>
                         <option value="PRO_1Y">Pro (1 Year)</option>
-                        <option value="LIFETIME">Lifetime</option>
                       </select>
                     </td>
                     <td className="px-4 py-3">{company.status}</td>
@@ -666,7 +663,7 @@ export function CompaniesPage() {
                               </div>
                             );
                           })()
-                        : "Lifetime"}
+                        : "No Subscription"}
                     </td>
                     <td className="px-4 py-3">{company._count?.users ?? 0}</td>
                     <td className="px-4 py-3">{company._count?.templates ?? 0}</td>

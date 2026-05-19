@@ -21,10 +21,14 @@ async function main() {
           const newWs = await prisma.workspace.create({
             data: {
               name: "Platform Admin System",
-              plan: "LIFETIME",
+              plan: "PRO_1Y",
               status: "ACTIVE",
               subscription: {
-                create: { plan: "LIFETIME", startDate: new Date() }
+                create: { 
+                  plan: "PRO_1Y", 
+                  startDate: new Date(),
+                  endDate: new Date("2099-12-31T23:59:59.000Z")
+                }
               }
             }
           });
@@ -38,16 +42,20 @@ async function main() {
     } else {
        // Superadmin has no workspace. We need to create one for them so they don't get assigned to a regular user's workspace
        console.log("Superadmin has NO workspace. Creating one...");
-       const newWs = await prisma.workspace.create({
-         data: {
-           name: "Platform Admin System",
-           plan: "LIFETIME",
-           status: "ACTIVE",
-           subscription: {
-             create: { plan: "LIFETIME", startDate: new Date() }
-           }
-         }
-       });
+        const newWs = await prisma.workspace.create({
+          data: {
+            name: "Platform Admin System",
+            plan: "PRO_1Y",
+            status: "ACTIVE",
+            subscription: {
+              create: { 
+                plan: "PRO_1Y", 
+                startDate: new Date(),
+                endDate: new Date("2099-12-31T23:59:59.000Z")
+              }
+            }
+          }
+        });
        await prisma.user.update({
          where: { id: superadmin.id },
          data: { workspaceId: newWs.id }

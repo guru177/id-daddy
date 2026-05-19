@@ -66,7 +66,6 @@ export default function App() {
 
   const [pricing, setPricing] = useState({
     PRO_1Y_PRICE: 2999,
-    LIFETIME_PRICE: 9999,
     CURRENCY: "INR",
   });
 
@@ -76,7 +75,7 @@ export default function App() {
   useEffect(() => {
     // Wait until the fresh profile is loaded from the server before checking expiry
     if (!profileLoaded) return;
-    if (!user || user.plan === "LIFETIME" || !user.subscriptionEnd) {
+    if (!user || !user.subscriptionEnd) {
       setIsTimeExpired(false);
       return;
     }
@@ -101,7 +100,6 @@ export default function App() {
   const isPlanExpired = useMemo(() => {
     if (
       !user ||
-      user.plan === "LIFETIME" ||
       !user.subscriptionEnd
     )
       return false;
@@ -140,8 +138,6 @@ export default function App() {
             ...prev,
             PRO_1Y_PRICE:
               data.PRO_1Y_PRICE ?? prev.PRO_1Y_PRICE,
-            LIFETIME_PRICE:
-              data.LIFETIME_PRICE ?? prev.LIFETIME_PRICE,
             CURRENCY: data.CURRENCY ?? prev.CURRENCY,
           }));
         }
@@ -268,7 +264,7 @@ export default function App() {
               Unlock all premium features and create unlimited ID cards by upgrading your plan today.
             </p>
 
-            <div className="grid grid-cols-2 gap-4 mb-6 xl:mb-8 text-left">
+            <div className="max-w-md mx-auto mb-6 xl:mb-8 text-left">
               <div className="bg-stone-50 p-5 xl:p-6 rounded-3xl border-2 border-stone-100 hover:border-[#1a5d1a]/30 transition-colors">
                 <h3 className="text-lg xl:text-xl font-black mb-1 xl:mb-2 text-[#1a5d1a]">PRO (1 Year)</h3>
                 <p className="text-xl xl:text-2xl font-black mb-3 xl:mb-4">{pricing.CURRENCY} {pricing.PRO_1Y_PRICE}</p>
@@ -276,16 +272,6 @@ export default function App() {
                   <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#1a5d1a]" /> Unlimited ID Generation</li>
                   <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#1a5d1a]" /> All Premium Templates</li>
                   <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#1a5d1a]" /> Priority Support</li>
-                </ul>
-              </div>
-              <div className="bg-amber-50 p-5 xl:p-6 rounded-3xl border-2 border-amber-200 relative overflow-hidden shadow-lg shadow-amber-500/10">
-                <div className="absolute top-3 right-3 bg-amber-500 text-white text-[9px] xl:text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Best Value</div>
-                <h3 className="text-lg xl:text-xl font-black mb-1 xl:mb-2 text-amber-700">LIFETIME</h3>
-                <p className="text-xl xl:text-2xl font-black mb-3 xl:mb-4">{pricing.CURRENCY} {pricing.LIFETIME_PRICE}</p>
-                <ul className="space-y-1.5 xl:space-y-2 text-xs xl:text-sm font-bold text-stone-600">
-                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-amber-600" /> One-time Payment</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-amber-600" /> Lifetime Updates</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-amber-600" /> 24/7 Premium Support</li>
                 </ul>
               </div>
             </div>
@@ -358,11 +344,9 @@ export default function App() {
               <div
                 className={clsx(
                   "inline-flex items-center gap-1.5 xl:gap-2 text-[9px] xl:text-[10px] font-black uppercase tracking-[0.1em] px-2.5 py-1 xl:px-3 xl:py-1.5 rounded-lg xl:rounded-2xl border",
-                  user.plan === "LIFETIME"
-                    ? "bg-amber-100 text-amber-700 border-amber-200"
-                    : user.plan === "PRO_1Y"
-                      ? "bg-green-100 text-green-700 border-green-200"
-                      : "bg-stone-100 text-stone-900 border-stone-200"
+                  user.plan === "PRO_1Y"
+                    ? "bg-green-100 text-green-700 border-green-200"
+                    : "bg-stone-100 text-stone-900 border-stone-200"
                 )}
               >
                 <Sparkles
@@ -370,14 +354,12 @@ export default function App() {
                   className="opacity-50"
                 />
 
-                {user.plan === "LIFETIME"
-                  ? "Lifetime Membership"
-                  : user.plan === "PRO_1Y"
-                    ? "PRO Membership"
-                    : "Trial Version"}
+                {user.plan === "PRO_1Y"
+                  ? "PRO Membership"
+                  : "Trial Version"}
               </div>
 
-              {user.plan !== "LIFETIME" && user.subscriptionEnd && (() => {
+              {user.subscriptionEnd && (() => {
                 const msLeft = new Date(user.subscriptionEnd).getTime() - Date.now();
                 const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
                 const isExpired = daysLeft <= 0;

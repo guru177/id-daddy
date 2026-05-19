@@ -212,8 +212,6 @@ export class WorkspacesService {
         const days = settings.PRO_1Y_DAYS || 365;
         endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
         this.recordPayment(id, settings.PRO_1Y_PRICE || 0, settings.CURRENCY || "INR", "PRO_1Y");
-      } else if (dto.plan === "LIFETIME") {
-        this.recordPayment(id, settings.LIFETIME_PRICE || 0, settings.CURRENCY || "INR", "LIFETIME");
       }
 
       // Allow manual override of endDate if provided, otherwise calculate based on plan change

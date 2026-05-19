@@ -37,7 +37,7 @@ export function BillingPage() {
           acc[workspace.plan] = (acc[workspace.plan] || 0) + 1;
           return acc;
         },
-        { FREE_TRIAL: 0, PRO_1Y: 0, LIFETIME: 0 } as Record<string, number>
+        { FREE_TRIAL: 0, PRO_1Y: 0 } as Record<string, number>
       ),
     [workspaces]
   );
@@ -57,7 +57,7 @@ export function BillingPage() {
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 max-w-4xl">
         {settings && (
           <>
             <div className="panel p-6 border-teal-100 bg-teal-50/20">
@@ -88,19 +88,6 @@ export function BillingPage() {
               </div>
             </div>
 
-            <div className="panel p-6 border-amber-100 bg-amber-50/20">
-              <div className="flex items-center gap-3 mb-4 text-amber-600">
-                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                  <span className="font-bold">LT</span>
-                </div>
-                <h3 className="font-bold">Lifetime</h3>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-stone-500">Duration</span><span className="font-semibold">Forever</span></div>
-                <div className="flex justify-between"><span className="text-stone-500">Record Limit</span><span className="font-semibold">{settings.LIFETIME_LIMIT}</span></div>
-                <div className="flex justify-between"><span className="text-stone-500">Price</span><span className="font-semibold text-amber-600">{settings.CURRENCY} {settings.LIFETIME_PRICE}</span></div>
-              </div>
-            </div>
           </>
         )}
       </div>
@@ -144,10 +131,7 @@ export function BillingPage() {
                     <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Pro 1Y Price ({editSettings.CURRENCY})</label>
                     <input type="number" className="input h-12 text-lg font-bold" value={editSettings.PRO_1Y_PRICE} onChange={e => setEditSettings({...editSettings, PRO_1Y_PRICE: parseInt(e.target.value)})} />
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Lifetime Price ({editSettings.CURRENCY})</label>
-                    <input type="number" className="input h-12 text-lg font-bold" value={editSettings.LIFETIME_PRICE} onChange={e => setEditSettings({...editSettings, LIFETIME_PRICE: parseInt(e.target.value)})} />
-                  </div>
+                  
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Currency Code</label>
                     <input type="text" className="input h-12 text-lg font-bold" placeholder="e.g. INR, USD" value={editSettings.CURRENCY} onChange={e => setEditSettings({...editSettings, CURRENCY: e.target.value.toUpperCase()})} />

@@ -1,13 +1,12 @@
 export const ROLES = ["SUPER_ADMIN", "COMPANY_ADMIN", "STAFF", "VIEWER"] as const;
 export type Role = (typeof ROLES)[number];
 
-export const PLANS = ["FREE_TRIAL", "PRO_1Y", "LIFETIME"] as const;
+export const PLANS = ["FREE_TRIAL", "PRO_1Y"] as const;
 export type Plan = (typeof PLANS)[number];
 
 export const PLAN_NAMES: Record<Plan, string> = {
   FREE_TRIAL: "Free Trial (3 Days)",
-  PRO_1Y: "Pro (1 Year)",
-  LIFETIME: "Lifetime"
+  PRO_1Y: "Pro (1 Year)"
 };
 
 export const WORKSPACE_STATUSES = ["ACTIVE", "BLOCKED", "PAST_DUE", "CANCELED"] as const;
@@ -18,8 +17,7 @@ export type ExportStatus = (typeof EXPORT_STATUSES)[number];
 
 export const PLAN_LIMITS: Record<Plan, number | null> = {
   FREE_TRIAL: 50,
-  PRO_1Y: 5000,
-  LIFETIME: null
+  PRO_1Y: 5000
 };
 
 export type IdCardFieldType = "text" | "image" | "shape" | "qr";
