@@ -71,8 +71,11 @@ export default function App() {
   });
 
   const [isTimeExpired, setIsTimeExpired] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
+    // Wait until the fresh profile is loaded from the server before checking expiry
+    if (!profileLoaded) return;
     if (!user || user.plan === "LIFETIME" || !user.subscriptionEnd) {
       setIsTimeExpired(false);
       return;
@@ -80,16 +83,20 @@ export default function App() {
 
     const timeUntilExpiry = new Date(user.subscriptionEnd).getTime() - Date.now();
 
+    console.log("[Expiry Check] subscriptionEnd:", user.subscriptionEnd, "ms until expiry:", timeUntilExpiry);
+
     if (timeUntilExpiry <= 0) {
+      console.log("[Expiry Check] Plan already expired — blocking now.");
       setIsTimeExpired(true);
     } else if (timeUntilExpiry < 2147483647) {
       // Schedule exact block when time runs out (max ~24.8 days)
+      console.log("[Expiry Check] Scheduling expiry block in", Math.round(timeUntilExpiry / 1000), "seconds.");
       const timeoutId = setTimeout(() => {
         setIsTimeExpired(true);
       }, timeUntilExpiry);
       return () => clearTimeout(timeoutId);
     }
-  }, [user]);
+  }, [user, profileLoaded]);
 
   const isPlanExpired = useMemo(() => {
     if (
@@ -175,7 +182,13 @@ export default function App() {
         })
         .catch((err) =>
           console.error("Failed to sync profile:", err)
-        );
+        )
+        .finally(() => {
+          // Signal that fresh subscription data is now loaded
+          setProfileLoaded(true);
+        });
+    } else {
+      setProfileLoaded(true);
     }
   }, []);
 
@@ -341,7 +354,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="mt-2 xl:mt-4">
+            <div className="mt-2 xl:mt-4 flex items-center gap-2 flex-wrap">
               <div
                 className={clsx(
                   "inline-flex items-center gap-1.5 xl:gap-2 text-[9px] xl:text-[10px] font-black uppercase tracking-[0.1em] px-2.5 py-1 xl:px-3 xl:py-1.5 rounded-lg xl:rounded-2xl border",
@@ -363,6 +376,28 @@ export default function App() {
                     ? "PRO Membership"
                     : "Trial Version"}
               </div>
+
+              {user.plan !== "LIFETIME" && user.subscriptionEnd && (() => {
+                const msLeft = new Date(user.subscriptionEnd).getTime() - Date.now();
+                const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+                const isExpired = daysLeft <= 0;
+                const isUrgent = daysLeft <= 3;
+                const isWarning = daysLeft <= 7;
+                return (
+                  <span className={clsx(
+                    "inline-flex items-center text-[9px] xl:text-[10px] font-black px-2 py-0.5 xl:px-2.5 xl:py-1 rounded-md xl:rounded-lg border",
+                    isExpired
+                      ? "bg-red-100 text-red-700 border-red-200"
+                      : isUrgent
+                        ? "bg-orange-100 text-orange-700 border-orange-200"
+                        : isWarning
+                          ? "bg-amber-100 text-amber-700 border-amber-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200"
+                  )}>
+                    {isExpired ? "Expired" : `${daysLeft}d left`}
+                  </span>
+                );
+              })()}
             </div>
           </button>
 
