@@ -82,7 +82,7 @@ export function Shell({ children }: { children: ReactNode }) {
       {/* Main area */}
       <div className="flex-1 md:pl-60 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="sticky top-0 z-10 h-14 flex items-center justify-between px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <header className="sticky top-0 z-10 h-16 flex items-center justify-between px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-gray-100">
           <div>
             <p className="text-sm font-semibold text-gray-800">Platform Console</p>
             <p className="text-xs text-gray-400">{user?.email}</p>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { CreditCard, Save, Settings, Settings2 } from "lucide-react";
 import { api } from "../api/client";
 import { WorkspaceRow } from "../types";
@@ -57,7 +58,7 @@ export function BillingPage() {
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 max-w-4xl">
+      <div className="grid gap-6 sm:grid-cols-2">
         {settings && (
           <>
             <div className="panel p-6 border-teal-100 bg-teal-50/20">
@@ -93,7 +94,7 @@ export function BillingPage() {
       </div>
 
       {/* Settings Modal */}
-      {isSettingsModalOpen && editSettings && (
+      {isSettingsModalOpen && editSettings && createPortal(
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-stone-900/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-[2rem] w-full max-w-2xl p-10 shadow-[0_32px_64px_rgba(0,0,0,0.2)] border border-stone-100 animate-in zoom-in-95 duration-300">
             <div className="h-16 w-16 bg-stone-900 rounded-2xl flex items-center justify-center text-white mb-8 mx-auto shadow-xl">
@@ -105,25 +106,34 @@ export function BillingPage() {
               <p className="text-stone-500 font-medium">Changes here reflect across all new registrations and checkouts.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-8 mb-10">
+            <div className="grid grid-cols-2 gap-8 mb-10 text-left">
+              {/* Left Column: Trial & Durations */}
               <div className="space-y-6">
-                <h3 className="text-xs font-black uppercase tracking-widest text-teal-600 border-b border-teal-100 pb-2">Trial & Durations</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Trial & Durations</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Free Trial Days</label>
                     <input type="number" className="input h-12 text-lg font-bold" value={editSettings.FREE_TRIAL_DAYS} onChange={e => setEditSettings({...editSettings, FREE_TRIAL_DAYS: parseInt(e.target.value)})} />
                   </div>
+
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Pro Year Days</label>
                     <input type="number" className="input h-12 text-lg font-bold" value={editSettings.PRO_1Y_DAYS} onChange={e => setEditSettings({...editSettings, PRO_1Y_DAYS: parseInt(e.target.value)})} />
                   </div>
+
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Free Trial Record Limit</label>
                     <input type="number" className="input h-12 text-lg font-bold" value={editSettings.FREE_TRIAL_LIMIT} onChange={e => setEditSettings({...editSettings, FREE_TRIAL_LIMIT: parseInt(e.target.value)})} />
                   </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Pro 1Y Record Limit</label>
+                    <input type="number" className="input h-12 text-lg font-bold" value={editSettings.PRO_1Y_LIMIT} onChange={e => setEditSettings({...editSettings, PRO_1Y_LIMIT: parseInt(e.target.value)})} />
+                  </div>
                 </div>
               </div>
 
+              {/* Right Column: Pricing (Amount) */}
               <div className="space-y-6">
                 <h3 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-2">Pricing (Amount)</h3>
                 <div className="space-y-4">
@@ -131,7 +141,7 @@ export function BillingPage() {
                     <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Pro 1Y Price ({editSettings.CURRENCY})</label>
                     <input type="number" className="input h-12 text-lg font-bold" value={editSettings.PRO_1Y_PRICE} onChange={e => setEditSettings({...editSettings, PRO_1Y_PRICE: parseInt(e.target.value)})} />
                   </div>
-                  
+
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-tighter text-stone-400 mb-1 block">Currency Code</label>
                     <input type="text" className="input h-12 text-lg font-bold" placeholder="e.g. INR, USD" value={editSettings.CURRENCY} onChange={e => setEditSettings({...editSettings, CURRENCY: e.target.value.toUpperCase()})} />
@@ -155,7 +165,8 @@ export function BillingPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="panel p-4 text-sm text-stone-600 bg-stone-50/50 border-dashed border-stone-200">

@@ -42,7 +42,7 @@ export function DashboardPage() {
       </div>
 
       {/* Metrics */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Metric label="Total Users"       value={metrics.totalUsers}   icon={Users} />
         <Metric label="Total Records"     value={metrics.totalRecords} icon={FileText} />
         <Metric label="Free Trial Clients" value={metrics.freeClients} icon={Building2} />
