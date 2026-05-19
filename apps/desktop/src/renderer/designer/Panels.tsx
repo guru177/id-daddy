@@ -38,7 +38,6 @@ import {
 import { AddImageDialog } from './ImageLibrary';
 import QRCode from 'qrcode';
 import bwipjs from 'bwip-js';
-import { removeBackground } from '@imgly/background-removal';
 
 
 const GOOGLE_FONTS = Array.from(new Set([
@@ -804,7 +803,6 @@ export const CustomizePanel = () => {
     setLibraryMode
   } = useDesignerStore();
   const [props, setProps] = React.useState<any>({});
-  const [isProcessingBG, setIsProcessingBG] = React.useState(false);
   const [isApplyingSecurity, setIsApplyingSecurity] = React.useState(false);
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -1060,44 +1058,6 @@ export const CustomizePanel = () => {
     }
   };
 
-
-  const handleRemoveBackground = async () => {
-    if (!selectedObject || selectedObject.type !== 'image') return;
-
-    setIsProcessingBG(true);
-    try {
-      const imgObj = selectedObject as fabric.Image;
-      const element = imgObj.getElement() as HTMLImageElement;
-
-      // Convert current image to blob
-      const response = await fetch(element.src);
-      const blob = await response.blob();
-
-      // Remove background using AI
-      const resultBlob = await removeBackground(blob, {
-        progress: (status, progress) => {
-          console.log(`BG Removal: ${status} (${Math.round(progress * 100)}%)`);
-        }
-      });
-
-      // Convert result back to data URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        imgObj.setSrc(dataUrl, () => {
-          canvas?.renderAll();
-          saveState();
-          setIsProcessingBG(false);
-        });
-      };
-      reader.readAsDataURL(resultBlob);
-    } catch (err) {
-      console.error('Perfect BG Removal Error:', err);
-      setIsProcessingBG(false);
-      alert('Background removal failed. Please try a different image.');
-    }
-  };
-
   const NumberInput = ({ label, value, onChange, min = 0, max = 1000 }: any) => (
     <div className="flex items-center justify-between">
       {label && <label className="text-[11px] font-bold text-gray-900">{label}</label>}
@@ -1236,26 +1196,6 @@ export const CustomizePanel = () => {
           >
             <ImageIcon size={18} />
             Browse New
-          </button>
-          <button
-            onClick={handleRemoveBackground}
-            disabled={isProcessingBG}
-            className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl font-bold transition-all active:scale-95  ${isProcessingBG
-              ? 'bg-gray-100 text-gray-900 cursor-not-allowed'
-              : 'bg-green-500 text-white hover:bg-green-600 '
-              }`}
-          >
-            {isProcessingBG ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                Processing...
-              </div>
-            ) : (
-              <>
-                <Sparkles size={18} />
-                Remove BG
-              </>
-            )}
           </button>
         </div>
 

@@ -1,56 +1,59 @@
 {
   "name": "@id-daddy/desktop",
-  "version": "1.7.0",
+  "version": "1.7.2",
   "private": true,
   "type": "module",
   "main": "dist-main/index.js",
   "scripts": {
     "build:main": "tsc -p tsconfig.main.json && node scripts/write-main-package.cjs",
     "dev": "npm run build:main && concurrently -k \"vite --host 0.0.0.0 --port 5180 --strictPort\" \"wait-on http://localhost:5180 && node scripts/launch-electron.cjs\"",
-    "build": "npm run build:main && tsc -p tsconfig.json && vite build && electron-builder",
+    "build": "node -e \"const fs = require('fs'); fs.rmSync('release', { recursive: true, force: true });\" && npm run build:main && tsc -p tsconfig.json && vite build && electron-builder",
     "build:renderer": "vite build",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.main.json --noEmit",
     "test": "echo \"No desktop tests yet\""
   },
   "dependencies": {
+    "@id-daddy/shared": "workspace:*",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@id-daddy/shared": "workspace:*",
-    "@imgly/background-removal": "^1.7.0",
     "@types/fabric": "^5.3.11",
     "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
     "clsx": "^2.1.1",
-    "electron-updater": "^6.3.9",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
     "fabric": "^5.3.0",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.468.0",
+    "postcss": "^8.4.49",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^3.8.1",
-    "xlsx": "^0.18.5",
-    "zustand": "^5.0.13"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "autoprefixer": "^10.4.20",
-    "concurrently": "^9.1.0",
-    "electron": "^33.2.0",
-    "electron-builder": "^25.1.8",
-    "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
-    "wait-on": "^8.0.1"
+    "wait-on": "^8.0.1",
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.13"
   },
   "build": {
     "appId": "com.iddaddy.desktop",
     "productName": "ID Daddy",
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
+    ],
     "directories": {
       "output": "release"
     },
@@ -68,6 +71,7 @@
       "forceCodeSigning": false,
       "artifactName": "ID-Daddy-${version}-Setup.${ext}"
     },
+
     "nsis": {
       "oneClick": false,
       "perMachine": true,

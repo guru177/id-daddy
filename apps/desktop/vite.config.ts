@@ -6,7 +6,17 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: "dist-renderer",
-    emptyOutDir: true
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'fabric-vendor': ['fabric'],
+          'ui-vendor': ['lucide-react', 'recharts', 'clsx'],
+          'utils-vendor': ['xlsx', 'jspdf', 'jszip']
+        }
+      }
+    }
   },
   server: {
     port: 5180
