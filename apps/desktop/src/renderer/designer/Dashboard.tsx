@@ -99,23 +99,23 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
   const myRecent = savedDesigns.filter((d: any) => !d.isGlobal).slice(0, 4);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#fafaf9] px-10 py-12 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto bg-[#fafaf9] px-4 xl:px-10 py-6 xl:py-12 custom-scrollbar">
       <div className="max-w-[1600px] mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Get Started</h1>
-          <p className="text-gray-900 font-medium mt-2 text-lg">Pick a professional template or start from scratch.</p>
+        <header className="mb-6 xl:mb-12">
+          <h1 className="text-2xl xl:text-4xl font-black text-gray-900 tracking-tight">Get Started</h1>
+          <p className="text-gray-900 font-medium mt-1 xl:mt-2 text-sm xl:text-lg">Pick a professional template or start from scratch.</p>
         </header>
 
         {/* Section: Official Templates */}
-        <section className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-green-100 text-green-600 rounded-xl">
-              <Globe size={20} strokeWidth={2.5} />
+        <section className="mb-8 xl:mb-16">
+          <div className="flex items-center gap-2 xl:gap-3 mb-4 xl:mb-8">
+            <div className="p-1.5 xl:p-2 bg-green-100 text-green-600 rounded-lg xl:rounded-xl">
+              <Globe className="w-4 h-4 xl:w-5 xl:h-5" strokeWidth={2.5} />
             </div>
-            <h2 className="text-xl font-black text-gray-900 uppercase tracking-widest text-sm">Official ID Templates</h2>
+            <h2 className="text-sm xl:text-xl font-black text-gray-900 uppercase tracking-widest">Official ID Templates</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-8">
             {/* Blank Canvas — matches card height via aspect-square */}
             <button
               type="button"
@@ -149,14 +149,14 @@ export const Dashboard = ({ onSelect }: { onSelect: (design: SavedDesign | null)
         {/* Section: Recent Designs */}
         {myRecent.length > 0 && (
           <section>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="p-2 bg-amber-100 text-amber-600 rounded-xl">
-                <Clock size={20} strokeWidth={2.5} />
+            <div className="flex items-center gap-2 xl:gap-3 mb-4 xl:mb-8">
+              <div className="p-1.5 xl:p-2 bg-amber-100 text-amber-600 rounded-lg xl:rounded-xl">
+                <Clock className="w-4 h-4 xl:w-5 xl:h-5" strokeWidth={2.5} />
               </div>
-              <h2 className="text-xl font-black text-gray-900 uppercase tracking-widest text-sm">Your Recent Designs</h2>
+              <h2 className="text-sm xl:text-xl font-black text-gray-900 uppercase tracking-widest">Your Recent Designs</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xl:gap-8">
               {myRecent.map((design: any) => (
                 <DesignCard
                   key={design.id}

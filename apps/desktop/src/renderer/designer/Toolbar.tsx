@@ -137,12 +137,12 @@ const Toolbar = () => {
     <>
       <div className="flex h-full bg-white relative">
         {/* Icon Rail */}
-        <div className="w-[88px] flex flex-col border-r border-gray-100 items-stretch">
+        <div className="w-[72px] xl:w-[88px] flex flex-col border-r border-gray-100 items-stretch">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActivePanel(activePanel === item.id ? null : item.id)}
-              className={`flex flex-col items-center justify-center py-3 transition-all relative ${
+              className={`flex flex-col items-center justify-center py-2 xl:py-3 transition-all relative ${
                 activePanel === item.id 
                   ? 'text-green-600 bg-green-50/50' 
                   : 'text-gray-900 hover:text-gray-900'
@@ -151,8 +151,8 @@ const Toolbar = () => {
               {activePanel === item.id && (
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500" />
               )}
-              <item.icon className={`w-6 h-6 mb-2 ${activePanel === item.id ? 'opacity-100' : 'opacity-60'}`} />
-              <span className="text-[10px] font-bold text-center px-1">{item.label}</span>
+              <item.icon className={`w-5 h-5 xl:w-6 xl:h-6 mb-1.5 xl:mb-2 ${activePanel === item.id ? 'opacity-100' : 'opacity-60'}`} />
+              <span className="text-[9px] xl:text-[10px] font-bold text-center px-1">{item.label}</span>
             </button>
           ))}
 
@@ -163,39 +163,39 @@ const Toolbar = () => {
           <div className="border-t border-gray-100 flex flex-col items-center py-2 gap-1">
             <button
               onClick={() => setZoom(Math.min(5, zoom + 0.1))}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+              className="w-6 h-6 xl:w-8 xl:h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
               title="Zoom In (Ctrl++)"
             >
-              <ZoomIn size={16} />
+              <ZoomIn className="w-3 h-3 xl:w-4 xl:h-4" />
             </button>
             <button
               onClick={resetZoom}
-              className="text-[10px] font-black text-gray-600 hover:text-green-600 transition-colors tabular-nums"
+              className="text-[9px] xl:text-[10px] font-black text-gray-600 hover:text-green-600 transition-colors tabular-nums"
               title="Reset Zoom (Ctrl+0)"
             >
               {zoomPercent}%
             </button>
             <button
               onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+              className="w-6 h-6 xl:w-8 xl:h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
               title="Zoom Out (Ctrl+-)"
             >
-              <ZoomOut size={16} />
+              <ZoomOut className="w-3 h-3 xl:w-4 xl:h-4" />
             </button>
             <button
               onClick={() => setShowShortcuts(true)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors mt-1"
+              className="w-6 h-6 xl:w-8 xl:h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors mt-0.5 xl:mt-1"
               title="Keyboard Shortcuts (?)"
             >
-              <Keyboard size={14} />
+              <Keyboard className="w-3 h-3 xl:w-4 xl:h-4" />
             </button>
           </div>
         </div>
 
         {/* Expanded Panel */}
         {activePanel && activePanel !== 'customize' && activePanel !== 'layers' && (
-          <div className="w-[320px] border-r border-gray-200 flex flex-col z-10 animate-in slide-in-from-left duration-200 bg-white">
-            <div className="h-14 flex items-center justify-between px-6 border-b border-gray-100">
+          <div className="w-[280px] xl:w-[320px] border-r border-gray-200 flex flex-col z-10 animate-in slide-in-from-left duration-200 bg-white">
+            <div className="h-12 xl:h-14 flex items-center justify-between px-4 xl:px-6 border-b border-gray-100">
               <h2 className="text-sm font-bold text-gray-900">
                 {menuItems.find(m => m.id === activePanel)?.label}
               </h2>
@@ -206,7 +206,7 @@ const Toolbar = () => {
                 <X size={18} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 xl:p-6 custom-scrollbar">
               {renderPanel()}
             </div>
           </div>

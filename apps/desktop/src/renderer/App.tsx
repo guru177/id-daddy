@@ -236,15 +236,15 @@ export default function App() {
 
           {/* BRAND */}
           <button
-            className="px-8 py-8 text-left hover:bg-white/95 transition-all group relative"
+            className="px-4 py-4 xl:px-8 xl:py-8 text-left hover:bg-white/95 transition-all group relative"
             onClick={() =>
               !isBlocked && setPage("profile")
             }
             disabled={isBlocked}
           >
-            <div className="flex items-center gap-4 mb-2">
+            <div className="flex items-center gap-3 xl:gap-4 mb-1 xl:mb-2">
 
-              <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0">
+              <div className="w-8 h-8 xl:w-12 xl:h-12 rounded-lg xl:rounded-2xl overflow-hidden shrink-0">
                 <img
                   src={faviconImg}
                   alt="ID Daddy"
@@ -253,20 +253,20 @@ export default function App() {
               </div>
 
               <div>
-                <p className="font-black text-2xl tracking-tight leading-none">
+                <p className="font-black text-lg xl:text-2xl tracking-tight leading-none">
                   ID Daddy
                 </p>
 
-                <p className="text-sm font-bold text-stone-900 mt-1 opacity-70">
+                <p className="text-xs xl:text-sm font-bold text-stone-900 mt-0.5 xl:mt-1 opacity-70">
                   Desktop Professional
                 </p>
               </div>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-2 xl:mt-4">
               <div
                 className={clsx(
-                  "inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-2xl border",
+                  "inline-flex items-center gap-1.5 xl:gap-2 text-[9px] xl:text-[10px] font-black uppercase tracking-[0.1em] px-2.5 py-1 xl:px-3 xl:py-1.5 rounded-lg xl:rounded-2xl border",
                   user.plan === "LIFETIME"
                     ? "bg-amber-100 text-amber-700 border-amber-200"
                     : user.plan === "PRO_1Y"
@@ -289,7 +289,7 @@ export default function App() {
           </button>
 
           {/* NAVIGATION */}
-          <nav className="flex-1 space-y-2 px-6 py-2 overflow-y-auto custom-scrollbar">
+          <nav className="flex-1 min-h-0 space-y-1 xl:space-y-2 px-3 xl:px-6 py-1 xl:py-2 overflow-y-auto custom-scrollbar">
 
             {pages
               .filter((item) => {
@@ -308,7 +308,7 @@ export default function App() {
                 <button
                   key={item.id}
                   className={clsx(
-                    "flex h-16 w-full items-center gap-4 px-6 text-left transition-all duration-300 group rounded-lg",
+                    "flex h-11 xl:h-16 w-full items-center gap-3 xl:gap-4 px-3 xl:px-6 text-left transition-all duration-300 group rounded-lg",
                     page === item.id
                       ? "bg-gradient-to-r from-[#1a5d1a] to-[#2d7a2d] text-white scale-[1.02]"
                       : "text-stone-900 hover:bg-white/60 hover:text-[#1a5d1a]"
@@ -321,7 +321,7 @@ export default function App() {
                 >
                   <div
                     className={clsx(
-                      "p-2.5 rounded-md transition-colors",
+                      "p-1.5 xl:p-2.5 rounded-md transition-colors",
                       page === item.id
                         ? "bg-white/90"
                         : "bg-stone-100 group-hover:bg-white"
@@ -329,7 +329,7 @@ export default function App() {
                   >
                     <item.icon
                       className={clsx(
-                        "h-6 w-6",
+                        "h-4 w-4 xl:h-6 xl:w-6",
                         page === item.id
                           ? "text-white"
                           : "text-stone-900 group-hover:text-[#1a5d1a]"
@@ -339,7 +339,7 @@ export default function App() {
 
                   <span
                     className={clsx(
-                      "font-black text-lg",
+                      "font-black text-sm xl:text-lg",
                       page === item.id
                         ? "text-white"
                         : "text-stone-900"
@@ -352,34 +352,34 @@ export default function App() {
           </nav>
 
           {/* USER CARD */}
-          <div className="p-6">
-            <div className="bg-white/95 rounded-[32px] p-5 border border-white/60">
+          <div className="p-3 xl:p-6 shrink-0">
+            <div className="bg-white/95 rounded-xl xl:rounded-[32px] p-3 xl:p-5 border border-white/60">
 
-              <div className="flex items-center gap-3 mb-4 px-2">
+              <div className="flex items-center gap-2 xl:gap-3 mb-2 xl:mb-4 px-1 xl:px-2">
 
-                <div className="w-10 h-10 rounded-full bg-[#e8d5c4] flex items-center justify-center text-[#1a5d1a] font-black">
+                <div className="w-8 h-8 xl:w-10 xl:h-10 rounded-full bg-[#e8d5c4] flex items-center justify-center text-[#1a5d1a] font-black shrink-0 text-xs xl:text-base">
                   {user.workspaceName
                     ? user.workspaceName[0].toUpperCase()
                     : user.email[0].toUpperCase()}
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-sm font-black truncate">
+                  <p className="text-xs xl:text-sm font-black truncate">
                     {user.workspaceName ||
                       user.email.split("@")[0]}
                   </p>
 
-                  <p className="text-[10px] font-bold text-stone-900 truncate">
+                  <p className="text-[9px] xl:text-[10px] font-bold text-stone-900 truncate">
                     {user.email}
                   </p>
                 </div>
               </div>
 
               <button
-                className="w-full h-12 bg-white text-stone-900 font-black rounded-2xl border border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2"
+                className="w-full h-8 xl:h-12 bg-white text-stone-900 font-black text-xs xl:text-sm rounded-lg xl:rounded-2xl border border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-1.5 xl:gap-2"
                 onClick={logout}
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3 w-3 xl:h-4 xl:w-4" />
                 Sign out
               </button>
             </div>

@@ -694,15 +694,15 @@ export function DesignerView() {
     // Only show user-owned designs; global templates live in Get Started only
     const userDesigns = savedDesigns.filter((d: any) => !d.isGlobal);
     return (
-      <div className="p-10 max-w-[1600px] mx-auto min-h-screen">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <div className="p-4 xl:p-10 max-w-[1600px] mx-auto min-h-screen">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 xl:gap-6 mb-6 xl:mb-12">
           <div>
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Design Library</h1>
-            <p className="text-gray-900 text-base font-medium">You have {userDesigns.length} saved templates in your library</p>
+            <h1 className="text-2xl xl:text-4xl font-black text-gray-900 tracking-tight mb-1 xl:mb-2">Design Library</h1>
+            <p className="text-gray-900 text-sm xl:text-base font-medium">You have {userDesigns.length} saved templates in your library</p>
           </div>
           <button
             onClick={() => { interceptAction(() => { resetDesign(); setActiveTab('Card Designer'); }); }}
-            className="flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-sm font-black rounded-2xl   transition-all hover:-translate-y-1 active:scale-95"
+            className="flex items-center gap-2 xl:gap-3 px-6 py-3 xl:px-8 xl:py-4 bg-green-500 hover:bg-green-600 text-white text-xs xl:text-sm font-black rounded-xl xl:rounded-2xl transition-all hover:-translate-y-1 active:scale-95"
           >
             <Plus size={20} strokeWidth={3} />
             Create New Design
@@ -710,12 +710,12 @@ export function DesignerView() {
         </div>
 
         {userDesigns.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-40 bg-white/95 rounded-[40px] border-2 border-dashed border-gray-200">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-              <Plus size={40} className="text-gray-300" />
+          <div className="flex flex-col items-center justify-center py-20 xl:py-40 bg-white/95 rounded-[24px] xl:rounded-[40px] border-2 border-dashed border-gray-200">
+            <div className="w-16 h-16 xl:w-24 xl:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4 xl:mb-6">
+              <Plus className="w-8 h-8 xl:w-10 xl:h-10 text-gray-300" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your library is empty</h2>
-            <p className="text-gray-900 font-medium text-lg mb-8 text-center max-w-sm">
+            <h2 className="text-xl xl:text-2xl font-bold text-gray-900 mb-2">Your library is empty</h2>
+            <p className="text-gray-900 font-medium text-sm xl:text-lg mb-6 xl:mb-8 text-center max-w-sm">
               Start creating your professional ID cards and they will appear here for easy management.
             </p>
             <button
@@ -835,19 +835,19 @@ export function DesignerView() {
 
       { }
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-4 lg:px-8 shrink-0 z-20 relative gap-x-4">
+      <header className="bg-gradient-to-r from-[#f5ece2] via-[#f5ece2]/80 to-[#d4e7d4]/40 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-3 xl:px-8 shrink-0 z-20 relative gap-x-2 xl:gap-x-4">
         {/* Left: Back Button */}
-        <div className="flex items-center justify-start py-3 shrink-0 order-1">
+        <div className="flex items-center justify-start py-2 xl:py-3 shrink-0 order-1">
           <button
             onClick={() => interceptAction(() => setActiveTab('Get Started'))}
-            className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
+            className="flex items-center gap-1 xl:gap-1.5 text-[10px] xl:text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-3 py-1.5 xl:px-5 xl:py-2.5 rounded-lg xl:rounded-xl active:scale-95"
           >
-            <ChevronLeft size={16} strokeWidth={3} /> BACK
+            <ChevronLeft className="w-3 h-3 xl:w-4 xl:h-4" strokeWidth={3} /> BACK
           </button>
         </div>
         
         {/* Center: Nav Tabs (Drops to second line on smaller screens) */}
-        <div className="flex items-center justify-center gap-4 md:gap-10 overflow-x-auto no-scrollbar order-3 xl:order-2 w-full xl:w-auto xl:flex-1 h-[50px] xl:h-[73px] border-t border-[#e8d5c4]/30 xl:border-t-0">
+        <div className="flex items-center justify-center gap-2 xl:gap-10 overflow-x-auto no-scrollbar order-3 xl:order-2 w-full xl:w-auto xl:flex-1 h-[40px] xl:h-[73px] border-t border-[#e8d5c4]/30 xl:border-t-0">
           {navItems.map(item => (
             <button
               key={item}
@@ -858,7 +858,7 @@ export function DesignerView() {
                   setActiveTab(item);
                 }
               }}
-              className={`text-[11px] uppercase tracking-widest font-black h-full border-b-[3px] px-3 transition-all pt-[3px] whitespace-nowrap ${activeTab === item
+              className={`text-[9px] xl:text-[11px] uppercase tracking-widest font-black h-full border-b-[2px] xl:border-b-[3px] px-2 xl:px-3 transition-all pt-[2px] xl:pt-[3px] whitespace-nowrap ${activeTab === item
                 ? 'border-[#1a5d1a] text-[#1a5d1a]'
                 : 'border-transparent text-[#2c3e50]/60 hover:text-[#1a5d1a]'
                 }`}
@@ -869,16 +869,16 @@ export function DesignerView() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-3 py-3 shrink-0 order-2 xl:order-3">
+        <div className="flex items-center justify-end gap-1.5 xl:gap-3 py-2 xl:py-3 shrink-0 order-2 xl:order-3">
           <button
             onClick={() => interceptAction(() => useAuthStore.getState().setPage('upload'))}
-            className="text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
+            className="text-[10px] xl:text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-3 py-1.5 xl:px-5 xl:py-2.5 rounded-lg xl:rounded-xl active:scale-95"
           >
             View Members
           </button>
           <button
             onClick={() => interceptAction(() => useAuthStore.getState().setPage('generate'))}
-            className="text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-5 py-2.5 rounded-xl active:scale-95"
+            className="text-[10px] xl:text-xs font-black uppercase tracking-widest text-white transition-all bg-gradient-to-b from-[#1a5d1a] to-[#2d7a2d] hover:opacity-90 px-3 py-1.5 xl:px-5 xl:py-2.5 rounded-lg xl:rounded-xl active:scale-95"
           >
             All Previews
           </button>
@@ -922,9 +922,9 @@ export function DesignerView() {
       >
 
         {/* Utility Toolbar — only visible on Card Designer tab */}
-        <div className="min-h-[48px] py-2 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-6 gap-x-4 gap-y-2 z-50 shrink-0 relative">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            <div className="flex items-center gap-2">
+        <div className="min-h-[40px] xl:min-h-[48px] py-1.5 xl:py-2 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-3 xl:px-6 gap-x-2 xl:gap-x-4 gap-y-2 z-50 shrink-0 relative">
+          <div className="flex flex-wrap items-center gap-2 xl:gap-6">
+            <div className="flex items-center gap-1 xl:gap-2">
               <button onClick={undo} disabled={history.length <= 1} className="p-1.5 rounded-lg hover:bg-[#e8d5c4]/50 text-[#2c3e50] disabled:opacity-20 transition-all">
                 <Undo2 size={16} />
               </button>
@@ -991,7 +991,7 @@ export function DesignerView() {
 
               {/* Card */}
               <div
-                className="flex-1 w-full h-full flex items-start justify-center pt-20 px-20 pb-40 min-h-0 shrink-0 overflow-auto"
+                className="flex-1 w-full h-full flex items-start justify-center pt-10 px-10 pb-20 xl:pt-20 xl:px-20 xl:pb-40 min-h-0 shrink-0 overflow-auto"
                 onClick={(e) => { if (e.target === e.currentTarget && canvas) { canvas.discardActiveObject(); canvas.requestRenderAll(); } }}
               >
                 <div ref={cardRef} className="relative " style={{ width: (config.orientation === 'horizontal' ? 700 : 400) * zoom, height: (config.orientation === 'horizontal' ? 441 : 633) * zoom }}>
@@ -1051,9 +1051,9 @@ export function DesignerView() {
           </div>
 
           {/* Right Sidebar: Tabs for Customize / Layers */}
-          <div className="w-[320px] bg-white border-l border-gray-200 flex flex-col z-10 shrink-0">
+          <div className="w-[280px] xl:w-[320px] bg-white border-l border-gray-200 flex flex-col z-10 shrink-0">
             {/* Tabs Header */}
-            <div className="flex items-center h-12 border-b border-gray-100 shrink-0 bg-gray-50/50">
+            <div className="flex items-center h-10 xl:h-12 border-b border-gray-100 shrink-0 bg-gray-50/50">
               <button 
                 onClick={() => setActiveRightPanel('customize')}
                 className={`flex-1 flex items-center justify-center gap-2 h-full text-[11px] font-black uppercase tracking-[1px] transition-colors border-b-[3px] ${activeRightPanel === 'customize' ? 'border-green-500 text-green-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}
@@ -1071,7 +1071,7 @@ export function DesignerView() {
             {/* Tab Content */}
             <div className="flex-1 overflow-hidden relative">
               <div className={`absolute inset-0 flex flex-col transition-opacity duration-200 ${activeRightPanel === 'customize' ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none -z-10'}`}>
-                 <div className="flex-1 overflow-y-auto p-6 pb-24 custom-scrollbar">
+                 <div className="flex-1 overflow-y-auto p-4 xl:p-6 pb-24 custom-scrollbar">
                    <CustomizePanel />
                  </div>
               </div>
