@@ -70,33 +70,53 @@ export default function App() {
     CURRENCY: "INR",
   });
 
-  const isTrialExpired = useMemo(() => {
+  const [isTimeExpired, setIsTimeExpired] = useState(false);
+
+  useEffect(() => {
+    if (!user || user.plan === "LIFETIME" || !user.subscriptionEnd) {
+      setIsTimeExpired(false);
+      return;
+    }
+
+    const timeUntilExpiry = new Date(user.subscriptionEnd).getTime() - Date.now();
+
+    if (timeUntilExpiry <= 0) {
+      setIsTimeExpired(true);
+    } else if (timeUntilExpiry < 2147483647) {
+      // Schedule exact block when time runs out (max ~24.8 days)
+      const timeoutId = setTimeout(() => {
+        setIsTimeExpired(true);
+      }, timeUntilExpiry);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [user]);
+
+  const isPlanExpired = useMemo(() => {
     if (
       !user ||
-      user.plan !== "FREE_TRIAL" ||
+      user.plan === "LIFETIME" ||
       !user.subscriptionEnd
     )
       return false;
 
     return (
-      new Date(user.subscriptionEnd).getTime() <
-      new Date().getTime()
+      isTimeExpired || new Date(user.subscriptionEnd).getTime() < Date.now()
     );
-  }, [user]);
+  }, [user, isTimeExpired, page]);
 
   useEffect(() => {
     if (
       user &&
       user.plan === "FREE_TRIAL" &&
-      !isTrialExpired
+      !isPlanExpired
     ) {
       const interval = setInterval(() => {
         setShowUpgradePrompt(true);
-      }, 15 * 60 * 1000);
+      }, 10 * 60 * 1000); // 10 minutes
 
       return () => clearInterval(interval);
     }
-  }, [user, isTrialExpired]);
+  }, [user, isPlanExpired]);
 
   useEffect(() => {
     window.idDaddy
@@ -191,22 +211,22 @@ export default function App() {
         </div>
       </div>
 
-      {/* BLOCKED OVERLAY */}
-      {isBlocked && (
+      {/* BLOCKED / EXPIRED OVERLAY */}
+      {(isBlocked || isPlanExpired) && (
         <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/60 p-6">
-
           <div className="w-full max-w-sm bg-white rounded-[40px] p-10 text-center border-2 border-red-500/20">
-
             <div className="h-20 w-20 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
               <LogOut className="h-10 w-10 text-red-600" />
             </div>
 
             <h2 className="text-2xl font-black text-stone-900 mb-3">
-              Account Blocked
+              {isBlocked ? "Account Blocked" : "Plan Expired"}
             </h2>
 
             <p className="text-stone-900 font-medium text-lg leading-relaxed mb-8">
-              Your account has been blocked by the admin.
+              {isBlocked
+                ? "Your account has been blocked by the admin."
+                : "Your subscription plan has ended. Please renew to continue."}
             </p>
 
             <button
@@ -219,8 +239,8 @@ export default function App() {
         </div>
       )}
 
-      {/* PLAN NOTIFICATION / EXPIRED OVERLAY */}
-      {(showUpgradePrompt || isTrialExpired) && !isBlocked && (
+      {/* PLAN NOTIFICATION OVERLAY (For Active Trial) */}
+      {showUpgradePrompt && !isBlocked && !isPlanExpired && (
         <div className="absolute inset-0 z-[9998] flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
           <div className="w-full max-w-2xl bg-white rounded-[40px] p-8 xl:p-10 text-center border-2 border-[#1a5d1a]/20 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="h-16 w-16 xl:h-20 xl:w-20 bg-amber-50 rounded-[24px] xl:rounded-[32px] flex items-center justify-center mx-auto mb-4 xl:mb-6">
@@ -228,13 +248,11 @@ export default function App() {
             </div>
 
             <h2 className="text-2xl xl:text-3xl font-black text-stone-900 mb-2 xl:mb-3 tracking-tight">
-              {isTrialExpired ? "Trial Expired" : "Upgrade Your Plan"}
+              Upgrade Your Plan
             </h2>
 
             <p className="text-stone-600 font-medium text-sm xl:text-lg leading-relaxed mb-6 xl:mb-8 max-w-lg mx-auto">
-              {isTrialExpired
-                ? "Your free trial has ended. Please upgrade your plan on the web admin portal to continue using ID Daddy."
-                : "Unlock all premium features and create unlimited ID cards by upgrading your plan today."}
+              Unlock all premium features and create unlimited ID cards by upgrading your plan today.
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-6 xl:mb-8 text-left">
@@ -260,30 +278,19 @@ export default function App() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 xl:gap-4">
-              {!isTrialExpired && (
-                <button
-                  className="w-full sm:flex-1 h-12 xl:h-14 bg-stone-100 text-stone-900 hover:bg-stone-200 transition-colors font-black text-sm xl:text-lg rounded-[20px] xl:rounded-[24px]"
-                  onClick={() => setShowUpgradePrompt(false)}
-                >
-                  Maybe Later
-                </button>
-              )}
+              <button
+                className="w-full sm:flex-1 h-12 xl:h-14 bg-stone-100 text-stone-900 hover:bg-stone-200 transition-colors font-black text-sm xl:text-lg rounded-[20px] xl:rounded-[24px]"
+                onClick={() => setShowUpgradePrompt(false)}
+              >
+                Maybe Later
+              </button>
               <button
                 className="w-full sm:flex-1 h-12 xl:h-14 bg-gradient-to-r from-[#1a5d1a] to-[#2d7a2d] text-white font-black text-sm xl:text-lg rounded-[20px] xl:rounded-[24px] shadow-lg shadow-green-900/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2"
                 onClick={() => {
-                  if (isTrialExpired) logout();
-                  else setShowUpgradePrompt(false);
+                  setShowUpgradePrompt(false);
                 }}
               >
-                {isTrialExpired ? (
-                  <>
-                    <LogOut size={18} /> OK, Log Out
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={18} /> Got it
-                  </>
-                )}
+                <Sparkles size={18} /> Got it
               </button>
             </div>
           </div>
@@ -297,7 +304,7 @@ export default function App() {
         <aside
           className={clsx(
             "flex w-64 lg:w-80 shrink-0 flex-col border-r border-[#e8d5c4]/50 relative overflow-hidden",
-            (isBlocked || isTrialExpired) &&
+            (isBlocked || isPlanExpired) &&
             "grayscale"
           )}
         >
@@ -461,7 +468,7 @@ export default function App() {
         <main
           className={clsx(
             "min-w-0 flex-1 overflow-hidden transition-all",
-            (isBlocked || isTrialExpired) &&
+            (isBlocked || isPlanExpired) &&
             "grayscale"
           )}
         >

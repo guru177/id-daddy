@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import * as fs from "fs";
 
 @Injectable()
 export class StorageService {
@@ -27,6 +28,21 @@ export class StorageService {
         Bucket: this.bucket,
         Key: key,
         Body: body,
+        ContentType: contentType,
+        ServerSideEncryption: this.config.get<string>("AWS_S3_ENDPOINT") ? undefined : "AES256"
+      })
+    );
+
+    return `s3://${this.bucket}/${key}`;
+  }
+
+  async putFile(key: string, filePath: string, contentType: string) {
+    const fileStream = fs.createReadStream(filePath);
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: fileStream,
         ContentType: contentType,
         ServerSideEncryption: this.config.get<string>("AWS_S3_ENDPOINT") ? undefined : "AES256"
       })

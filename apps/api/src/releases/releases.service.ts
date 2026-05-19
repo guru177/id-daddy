@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
+import * as fs from "fs/promises";
 
 @Injectable()
 export class ReleasesService {
@@ -25,8 +26,26 @@ export class ReleasesService {
     const installerKey = `releases/${data.version}/${installerFile.originalname}`;
     const yamlKey = `releases/${data.version}/${yamlFile.originalname}`;
 
-    const installerUrl = await this.storage.putBuffer(installerKey, installerFile.buffer, "application/octet-stream");
-    const yamlUrl = await this.storage.putBuffer(yamlKey, yamlFile.buffer, "application/x-yaml");
+    let installerUrl: string;
+    let yamlUrl: string;
+
+    try {
+      if (installerFile.path) {
+        installerUrl = await this.storage.putFile(installerKey, installerFile.path, "application/octet-stream");
+      } else {
+        installerUrl = await this.storage.putBuffer(installerKey, installerFile.buffer, "application/octet-stream");
+      }
+
+      if (yamlFile.path) {
+        yamlUrl = await this.storage.putFile(yamlKey, yamlFile.path, "application/x-yaml");
+      } else {
+        yamlUrl = await this.storage.putBuffer(yamlKey, yamlFile.buffer, "application/x-yaml");
+      }
+    } finally {
+      // Clean up temp files if they exist
+      if (installerFile.path) await fs.unlink(installerFile.path).catch(() => {});
+      if (yamlFile.path) await fs.unlink(yamlFile.path).catch(() => {});
+    }
 
     return this.prisma.appRelease.create({
       data: {

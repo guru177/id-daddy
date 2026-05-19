@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFiles, Res, StreamableFile, Req, BadRequestException } from "@nestjs/common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
+import * as os from "os";
 import { ReleasesService } from "./releases.service";
 import { AuthUser } from "@id-daddy/shared";
 import { CurrentUser } from "../common/current-user.decorator";
@@ -94,7 +96,14 @@ export class ReleasesController {
   @UseInterceptors(FileFieldsInterceptor([
     { name: "installer", maxCount: 1 },
     { name: "yaml", maxCount: 1 }
-  ]))
+  ], {
+    storage: diskStorage({
+      destination: os.tmpdir(),
+      filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+      }
+    })
+  }))
   async createRelease(
     @CurrentUser() user: AuthUser,
     @Body() body: any,
