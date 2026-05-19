@@ -6,7 +6,7 @@ import { useAuthStore } from "../store/auth";
 export function LoginPage({ message }: { message?: string }) {
   const setSession = useAuthStore((state) => state.setSession);
   const logout = useAuthStore((state) => state.logout);
-  const [email, setEmail] = useState("admin@retaildaddy.in");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(message ?? "");
   const [loading, setLoading] = useState(false);
@@ -60,7 +60,7 @@ export function LoginPage({ message }: { message?: string }) {
               <input
                 className="input"
                 type="email"
-                placeholder="admin@retaildaddy.in"
+                placeholder="example@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

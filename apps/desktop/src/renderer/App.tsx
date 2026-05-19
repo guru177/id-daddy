@@ -219,6 +219,77 @@ export default function App() {
         </div>
       )}
 
+      {/* PLAN NOTIFICATION / EXPIRED OVERLAY */}
+      {(showUpgradePrompt || isTrialExpired) && !isBlocked && (
+        <div className="absolute inset-0 z-[9998] flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
+          <div className="w-full max-w-2xl bg-white rounded-[40px] p-8 xl:p-10 text-center border-2 border-[#1a5d1a]/20 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="h-16 w-16 xl:h-20 xl:w-20 bg-amber-50 rounded-[24px] xl:rounded-[32px] flex items-center justify-center mx-auto mb-4 xl:mb-6">
+              <Sparkles className="h-8 w-8 xl:h-10 xl:w-10 text-amber-500" />
+            </div>
+
+            <h2 className="text-2xl xl:text-3xl font-black text-stone-900 mb-2 xl:mb-3 tracking-tight">
+              {isTrialExpired ? "Trial Expired" : "Upgrade Your Plan"}
+            </h2>
+
+            <p className="text-stone-600 font-medium text-sm xl:text-lg leading-relaxed mb-6 xl:mb-8 max-w-lg mx-auto">
+              {isTrialExpired
+                ? "Your free trial has ended. Please upgrade your plan on the web admin portal to continue using ID Daddy."
+                : "Unlock all premium features and create unlimited ID cards by upgrading your plan today."}
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 mb-6 xl:mb-8 text-left">
+              <div className="bg-stone-50 p-5 xl:p-6 rounded-3xl border-2 border-stone-100 hover:border-[#1a5d1a]/30 transition-colors">
+                <h3 className="text-lg xl:text-xl font-black mb-1 xl:mb-2 text-[#1a5d1a]">PRO (1 Year)</h3>
+                <p className="text-xl xl:text-2xl font-black mb-3 xl:mb-4">{pricing.CURRENCY} {pricing.PRO_1Y_PRICE}</p>
+                <ul className="space-y-1.5 xl:space-y-2 text-xs xl:text-sm font-bold text-stone-600">
+                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#1a5d1a]" /> Unlimited ID Generation</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#1a5d1a]" /> All Premium Templates</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#1a5d1a]" /> Priority Support</li>
+                </ul>
+              </div>
+              <div className="bg-amber-50 p-5 xl:p-6 rounded-3xl border-2 border-amber-200 relative overflow-hidden shadow-lg shadow-amber-500/10">
+                <div className="absolute top-3 right-3 bg-amber-500 text-white text-[9px] xl:text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Best Value</div>
+                <h3 className="text-lg xl:text-xl font-black mb-1 xl:mb-2 text-amber-700">LIFETIME</h3>
+                <p className="text-xl xl:text-2xl font-black mb-3 xl:mb-4">{pricing.CURRENCY} {pricing.LIFETIME_PRICE}</p>
+                <ul className="space-y-1.5 xl:space-y-2 text-xs xl:text-sm font-bold text-stone-600">
+                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-amber-600" /> One-time Payment</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-amber-600" /> Lifetime Updates</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-amber-600" /> 24/7 Premium Support</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 xl:gap-4">
+              {!isTrialExpired && (
+                <button
+                  className="w-full sm:flex-1 h-12 xl:h-14 bg-stone-100 text-stone-900 hover:bg-stone-200 transition-colors font-black text-sm xl:text-lg rounded-[20px] xl:rounded-[24px]"
+                  onClick={() => setShowUpgradePrompt(false)}
+                >
+                  Maybe Later
+                </button>
+              )}
+              <button
+                className="w-full sm:flex-1 h-12 xl:h-14 bg-gradient-to-r from-[#1a5d1a] to-[#2d7a2d] text-white font-black text-sm xl:text-lg rounded-[20px] xl:rounded-[24px] shadow-lg shadow-green-900/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2"
+                onClick={() => {
+                  if (isTrialExpired) logout();
+                  else setShowUpgradePrompt(false);
+                }}
+              >
+                {isTrialExpired ? (
+                  <>
+                    <LogOut size={18} /> OK, Log Out
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={18} /> Got it
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MAIN APP */}
       <div className="flex flex-1 min-h-0 relative overflow-hidden">
 

@@ -47,13 +47,34 @@ export function ProfileView() {
   }, []);
 
   async function save() {
-    if (form.password && form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    setSaving(true);
     setError("");
     setMessage("");
+
+    if (form.password) {
+      if (form.password.length < 6) {
+        setError("Password must be at least 6 characters");
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+    } else if (form.confirmPassword) {
+      setError("Please enter a new password");
+      return;
+    }
+
+    if (isEditingWorkspaceName && !tempWorkspaceName.trim()) {
+      setError("Workspace name cannot be empty");
+      return;
+    }
+
+    if (!form.password && !isEditingWorkspaceName) {
+      setError("No changes to save");
+      return;
+    }
+
+    setSaving(true);
     try {
       const newWorkspaceName = isEditingWorkspaceName ? tempWorkspaceName : undefined;
       await api("/auth/profile", {
