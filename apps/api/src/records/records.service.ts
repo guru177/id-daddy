@@ -63,6 +63,40 @@ export class RecordsService {
     });
   }
 
+  async bulkUpsert(user: AuthUser, payload: { create: any[]; update: { id: string, data: any }[] }) {
+    const workspaceId = this.requireWorkspace(user);
+    return this.prisma.runScoped(user, async (tx) => {
+      await this.checkLimit(tx, user, payload.create.length);
+      
+      let created = 0;
+      let updated = 0;
+
+      if (payload.create.length > 0) {
+        await tx.record.createMany({
+          data: payload.create.map(d => ({
+            workspaceId,
+            data: d as Prisma.InputJsonValue,
+            imageUrl: this.extractImageUrl(d)
+          }))
+        });
+        created = payload.create.length;
+      }
+
+      for (const updateReq of payload.update) {
+         await tx.record.updateMany({
+           where: { id: updateReq.id, workspaceId },
+           data: {
+             data: updateReq.data as Prisma.InputJsonValue,
+             imageUrl: this.extractImageUrl(updateReq.data)
+           }
+         });
+         updated++;
+      }
+
+      return { created, updated };
+    });
+  }
+
   async delete(user: AuthUser, id: string) {
     const workspaceId = this.requireWorkspace(user);
     return this.prisma.runScoped(user, async (tx) => {

@@ -81,6 +81,14 @@ export function deleteRecord(id: string) {
   });
 }
 
+export function bulkUpsertRecords(payload: { create: any[]; update: { id: string, data: any }[] }) {
+  return api<{ created: number; updated: number }>("/records/bulk-upsert", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+
 export function fetchTemplates() {
   return api<{ data: { id: string; name: string; design: any }[]; total: number }>("/templates");
 }

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { fabric } from 'fabric';
 import { VdpResult } from './VdpEngine';
-import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates, createTemplate, updateTemplate, deleteTemplate, fetchFolders, createFolderApi, renameFolderApi, deleteFolderApi } from '../api';
+import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates, createTemplate, updateTemplate, deleteTemplate, fetchFolders, createFolderApi, renameFolderApi, deleteFolderApi, bulkUpsertRecords } from '../api';
 import { useAuthStore } from '../store';
 import { updateProfile } from '../api';
 
@@ -176,6 +176,7 @@ interface DesignerState {
   loadMembersFromDb: () => Promise<void>;
   loadFoldersFromDb: () => Promise<void>;
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
+  bulkUpsertMembers: (payload: { create: Omit<Member, 'id'>[]; update: { id: string, data: Partial<Member> }[] }) => Promise<void>;
   updateMember: (id: string, member: Partial<Member>) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   activeTemplateId: string | null;
@@ -466,6 +467,15 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       }
     } catch (e) {
       console.error("Failed to fetch templates from DB", e);
+    }
+  },
+  bulkUpsertMembers: async (payload) => {
+    try {
+      await bulkUpsertRecords(payload);
+      await get().loadMembersFromDb();
+    } catch (e) {
+      console.error("Failed to bulk upsert records", e);
+      throw e;
     }
   },
   addMember: async (member) => {

@@ -28,6 +28,12 @@ export class RecordsController {
     return this.records.update(user, id, data);
   }
 
+  @Post("bulk-upsert")
+  @Roles("SUPER_ADMIN", "COMPANY_ADMIN", "STAFF")
+  bulkUpsert(@CurrentUser() user: AuthUser, @Body() payload: { create: any[]; update: { id: string, data: any }[] }) {
+    return this.records.bulkUpsert(user, payload);
+  }
+
   @Delete(":id")
   @Roles("SUPER_ADMIN", "COMPANY_ADMIN", "STAFF")
   delete(@CurrentUser() user: AuthUser, @Param("id") id: string) {

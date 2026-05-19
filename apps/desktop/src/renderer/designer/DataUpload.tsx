@@ -355,6 +355,9 @@ export const DataUpload = () => {
           }
         }
 
+        const toCreate: any[] = [];
+        const toUpdate: { id: string, data: any }[] = [];
+
         for (const row of data as any[]) {
           try {
           const getVal = (possibleKeys: string[]) => {
@@ -462,10 +465,9 @@ export const DataUpload = () => {
             });
 
             if (existingMember) {
-              await updateMember(existingMember.id, cleanNewMember);
-              importedCount++;
+              toUpdate.push({ id: existingMember.id, data: cleanNewMember });
             } else {
-              const currentLength = useDesignerStore.getState().members.length;
+              const currentLength = useDesignerStore.getState().members.length + toCreate.length;
               if (isFreeTrial && currentLength >= limit) {
                 skippedCount++;
                 continue;
@@ -474,17 +476,29 @@ export const DataUpload = () => {
               ['profileImage', 'signature', 'fingerprint', 'divisionLogo'].forEach(imgField => {
                 if (cleanNewMember[imgField] === '[Image Attached]') cleanNewMember[imgField] = '';
               });
-              await addMember({ ...cleanNewMember, customImage: '', folderId: selectedFolderId ?? undefined });
-              importedCount++;
+              toCreate.push({ ...cleanNewMember, customImage: '', folderId: selectedFolderId ?? undefined });
             }
           }
           } catch (error) {
             failedCount++;
             if (!firstErrorMessage) {
+              const getErrorMessage = (err: any) => err instanceof Error ? err.message : String(err);
               firstErrorMessage = getErrorMessage(error);
             }
-            console.error("Failed to import member row", error);
+            console.error("Failed to parse member row", error);
           }
+        }
+
+        try {
+          if (toCreate.length > 0 || toUpdate.length > 0) {
+            await useDesignerStore.getState().bulkUpsertMembers({ create: toCreate, update: toUpdate });
+            importedCount = toCreate.length + toUpdate.length;
+          }
+        } catch (error) {
+          failedCount += toCreate.length + toUpdate.length;
+          const getErrorMessage = (err: any) => err instanceof Error ? err.message : String(err);
+          if (!firstErrorMessage) firstErrorMessage = getErrorMessage(error);
+          console.error("Bulk upsert failed", error);
         }
 
         const extraMsg = skippedCount > 0 ? `\n\nNote: ${skippedCount} records were skipped because you reached your Free Trial limit of ${limit} members. Upgrade your plan to add unlimited members.` : '';
@@ -1129,157 +1143,7 @@ export const DataUpload = () => {
             </>
           )}
 
-          {selectedMembers.size > 0 ? (
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-2 h-11 animate-in zoom-in-95 duration-200">
-              <input
-                type="color"
-                value={bulkBgColor}
-                onChange={(e) => setBulkBgColor(e.target.value)}
-                className="w-6 h-6 rounded border-none cursor-pointer p-0"
-                title="Uniform Background Color"
-              />
-              <button
-                onClick={async () => {
-                  if (selectedMembers.size === 0) return;
-                  
-                  const memberIds = Array.from(selectedMembers);
-                  const validMembers = memberIds.filter(id => {
-                    const member = members.find(m => m.id === id);
-                    return member && member.profileImage && member.profileImage.startsWith('data:image');
-                  });
-
-                  if (validMembers.length === 0) {
-                    showModal({ title: 'No Images Found', message: 'None of the selected members have an attached profile image to process.', type: 'error' });
-                    return;
-                  }
-
-                  setIsProcessingBulkBG(true);
-                  setBgProgress({ current: 0, total: validMembers.length });
-                  let successCount = 0;
-                  
-                  const CHUNK_SIZE = 5; // We can run more in parallel now since the backend handles it smoothly
-                  
-                  for (let i = 0; i < validMembers.length; i += CHUNK_SIZE) {
-                    const chunk = validMembers.slice(i, i + CHUNK_SIZE);
-                    await Promise.all(chunk.map(async (memberId) => {
-                      const member = members.find(m => m.id === memberId)!;
-                      
-                      try {
-                        const { jobId } = await api<{ jobId: string }>('/bg-removal', {
-                          method: 'POST',
-                          body: JSON.stringify({ imageBase64: member.profileImage, bgColor: bulkBgColor }),
-                        });
-
-                        // Poll BullMQ job status
-                        while (true) {
-                          await new Promise(r => setTimeout(r, 1000));
-                          const status = await api<{ id: string; status: string; result: string | null; failedReason: string | null }>(`/bg-removal/${jobId}`);
-                          
-                          if (status.status === 'completed' && status.result) {
-                            const img = new Image();
-                            const src = status.result;
-                            
-                            await new Promise((resolve, reject) => {
-                              img.onload = resolve;
-                              img.onerror = reject;
-                              img.src = src;
-                            });
-                            
-                            const canvas = document.createElement('canvas');
-                            canvas.width = img.width;
-                            canvas.height = img.height;
-                            const ctx = canvas.getContext('2d');
-                            if (ctx) {
-                              ctx.fillStyle = bulkBgColor;
-                              ctx.fillRect(0, 0, canvas.width, canvas.height);
-                              ctx.drawImage(img, 0, 0);
-                              const newImage = canvas.toDataURL('image/jpeg', 0.9);
-                              await updateMember(memberId, {
-                                profileImage: newImage,
-                                originalProfileImage: member.originalProfileImage || member.profileImage
-                              });
-                              successCount++;
-                            }
-                            break;
-                          } else if (status.status === 'failed') {
-                            console.error('BG removal failed on server:', status.failedReason);
-                            break;
-                          } else if (status.status === 'not_found') {
-                            console.error('BullMQ Job not found:', jobId);
-                            break;
-                          }
-                        }
-                      } catch (err) {
-                        console.error('Failed to submit bg removal job for', memberId, err);
-                      } finally {
-                        setBgProgress(p => ({ ...p, current: p.current + 1 }));
-                      }
-                    }));
-                  }
-                  
-                  setIsProcessingBulkBG(false);
-                  showModal({
-                    title: 'Bulk Action Complete',
-                    message: `Successfully processed background for ${successCount} profile images.`,
-                    type: 'info'
-                  });
-                }}
-                disabled={isProcessingBulkBG}
-                className={`text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 ${isProcessingBulkBG ? 'bg-gray-100 text-gray-900 cursor-not-allowed' : 'bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-100 '}`}
-                title="Remove BG and apply color to selected"
-              >
-                {isProcessingBulkBG ? (
-                  <>
-                    <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                    {bgProgress.current} / {bgProgress.total} Processed
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={14} className="text-purple-500" />
-                    Process BG
-                  </>
-                )}
-              </button>
-
-              {Array.from(selectedMembers).some(id => members.find(m => m.id === id)?.originalProfileImage) && (
-                <button
-                  onClick={async () => {
-                    let restoredCount = 0;
-                    let failedCount = 0;
-                    for (const id of selectedMembers) {
-                      const member = members.find(m => m.id === id);
-                      if (member && member.originalProfileImage) {
-                        try {
-                          await updateMember(id, {
-                            profileImage: member.originalProfileImage,
-                            originalProfileImage: undefined // Reset it
-                          });
-                          restoredCount++;
-                        } catch (error) {
-                          failedCount++;
-                          console.error("Failed to restore member image", error);
-                        }
-                      }
-                    }
-                    
-                    if (restoredCount > 0 || failedCount > 0) {
-                      showModal({
-                        title: failedCount ? 'Restoration Complete with Errors' : 'Restoration Complete',
-                        message: `Successfully restored original profile images for ${restoredCount} members.`
-                          + (failedCount ? ` ${failedCount} update${failedCount === 1 ? '' : 's'} could not be saved to the database.` : ''),
-                        type: failedCount ? 'error' : 'info'
-                      });
-                    }
-                  }}
-                  disabled={isProcessingBulkBG}
-                  className="text-[10px] uppercase tracking-widest font-black px-4 rounded-lg h-8 transition-all flex items-center gap-2 bg-white border border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-red-50 hover:text-red-600  disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Restore original image"
-                >
-                  <RotateCcw size={14} /> Restore BG
-                </button>
-              )}
-            </div>
-          ) : (
+          {selectedMembers.size === 0 && (
             <button
               onClick={() => bulkImageInputRef.current?.click()}
               className="h-11 bg-blue-50/50 border border-blue-100 text-blue-600 text-[10px] uppercase tracking-widest font-black px-4 rounded-xl transition-all flex items-center gap-2 hover:bg-blue-100/50 hover:border-blue-200 animate-in zoom-in-95 duration-200"
