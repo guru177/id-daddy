@@ -2372,7 +2372,7 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
   const { canvas, setIsImageLibraryOpen, formConfig } = useDesignerStore();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
 
-  const activeStandardImageFields = formConfig?.enabledFields || ['Signature', 'Division Logo', 'Fingerprint'];
+  const activeStandardImageFields = formConfig?.enabledImageFields || ['Signature', 'Division Logo', 'Fingerprint'];
   
   const imageVariables = [
     { label: 'Headshot', ph: '{{photo}}', icon: <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"><ImageIcon size={14} /></div> }
@@ -2395,7 +2395,7 @@ export const ImagesPanel = ({ setPanel }: { setPanel: (p: string | null) => void
 
   if (formConfig?.customImageFields) {
     formConfig.customImageFields.forEach(cf => {
-      if (formConfig.enabledFields.includes(cf)) {
+      if (formConfig.enabledImageFields?.includes(cf)) {
         imageVariables.push({ label: cf, ph: `{{${cf}}}`, icon: <ImageIcon size={18} /> });
       }
     });

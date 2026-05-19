@@ -5,6 +5,12 @@ import { fetchRecords, createRecord, updateRecord, deleteRecord, fetchTemplates,
 import { useAuthStore } from '../store';
 import { updateProfile } from '../api';
 
+export const DEFAULT_ENABLED_FIELDS = [
+  'First Name', 'Last Name', 'Nickname', 'Date of Birth', 'ID number', 'Phone 1', 'Email', 'Role'
+];
+export const DEFAULT_ENABLED_IMAGE_FIELDS = ['Signature', 'Division Logo'];
+
+
 interface CardConfig {
   orientation: 'horizontal' | 'vertical';
   type: string;
@@ -337,7 +343,9 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     set({ organizationType: type });
     updateProfile({ settings: { organizationType: type, formConfig: get().formConfig } }).catch(console.error);
   },
-  formConfig: localStorage.getItem('id_daddy_form_config') ? (() => { try { return JSON.parse(localStorage.getItem('id_daddy_form_config')!); } catch (e) { return null; } })() : null,
+  formConfig: localStorage.getItem('id_daddy_form_config') 
+    ? (() => { try { return JSON.parse(localStorage.getItem('id_daddy_form_config')!); } catch (e) { return { enabledFields: DEFAULT_ENABLED_FIELDS, customFields: [], enabledImageFields: DEFAULT_ENABLED_IMAGE_FIELDS, customImageFields: [] }; } })() 
+    : { enabledFields: DEFAULT_ENABLED_FIELDS, customFields: [], enabledImageFields: DEFAULT_ENABLED_IMAGE_FIELDS, customImageFields: [] },
   setFormConfig: (config) => {
     if (config) localStorage.setItem('id_daddy_form_config', JSON.stringify(config));
     else localStorage.removeItem('id_daddy_form_config');

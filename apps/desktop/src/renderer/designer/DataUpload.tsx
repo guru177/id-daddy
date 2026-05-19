@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, ChevronUp, Image as ImageIcon, X, Settings, Upload, Download, FolderUp, FileSpreadsheet, Search, ChevronLeft, ChevronRight, Sparkles, RotateCcw, Folder, FolderPlus, FolderOpen, MoreVertical, Pencil, Trash2, ArrowLeft, Users } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { useDesignerStore } from './store';
+import { useDesignerStore, DEFAULT_ENABLED_FIELDS, DEFAULT_ENABLED_IMAGE_FIELDS } from './store';
 import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from '../store';
 import { api } from '../api';
@@ -80,7 +80,7 @@ export const DataUpload = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [tempConfig, setTempConfig] = useState<{ enabledFields: string[], customFields: string[], enabledImageFields: string[], customImageFields: string[] }>({ enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] });
+  const [tempConfig, setTempConfig] = useState<{ enabledFields: string[], customFields: string[], enabledImageFields: string[], customImageFields: string[] }>({ enabledFields: DEFAULT_ENABLED_FIELDS, customFields: [], enabledImageFields: DEFAULT_ENABLED_IMAGE_FIELDS, customImageFields: [] });
   const [tempOrganizationType, setTempOrganizationType] = useState<'corporate' | 'education' | 'healthcare'>('corporate');
   const [formData, setFormData] = useState(initialFormState);
   const [customFieldsList, setCustomFieldsList] = useState<{ label: string, value: string }[]>([]);
@@ -192,7 +192,7 @@ export const DataUpload = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const config = formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] };
+    const config = formConfig || { enabledFields: DEFAULT_ENABLED_FIELDS, customFields: [], enabledImageFields: DEFAULT_ENABLED_IMAGE_FIELDS, customImageFields: [] };
 
     const row: any = {};
 
@@ -231,7 +231,7 @@ export const DataUpload = () => {
   const handleExportExcel = () => {
     if (members.length === 0) return;
 
-    const config = formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] };
+    const config = formConfig || { enabledFields: DEFAULT_ENABLED_FIELDS, customFields: [], enabledImageFields: DEFAULT_ENABLED_IMAGE_FIELDS, customImageFields: [] };
 
     const exportData = members.map(m => {
       const row: any = {};
@@ -1092,7 +1092,7 @@ export const DataUpload = () => {
             <>
               <button
                 onClick={() => {
-                  setTempConfig(formConfig || { enabledFields: STANDARD_FIELDS, customFields: [], enabledImageFields: STANDARD_IMAGE_FIELDS, customImageFields: [] });
+                  setTempConfig(formConfig || { enabledFields: DEFAULT_ENABLED_FIELDS, customFields: [], enabledImageFields: DEFAULT_ENABLED_IMAGE_FIELDS, customImageFields: [] });
                   setTempOrganizationType(organizationType);
                   setIsSettingsOpen(true);
                 }}
