@@ -548,7 +548,7 @@ export function CompaniesPage() {
       )}
 
       <div className="panel overflow-hidden">
-        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)] relative">
+        <div className="overflow-x-auto overflow-y-auto h-[calc(100vh-260px)] relative">
           <table className="w-full text-left text-sm">
             <thead className="sticky top-0 z-10 bg-stone-50 border-b border-stone-100 text-[11px] font-bold uppercase tracking-wider text-stone-500">
               <tr>
