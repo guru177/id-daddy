@@ -1,7 +1,8 @@
 import { AuthResponse } from "@id-daddy/shared";
 import { useAuthStore } from "../store/auth";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "https://dev.iddaddy.com/api";
+const RAW_API_URL = import.meta.env.VITE_API_URL ?? "https://dev.iddaddy.com/api";
+const API_URL = RAW_API_URL.endsWith("/") ? RAW_API_URL.slice(0, -1) : RAW_API_URL;
 
 interface RequestOptions extends RequestInit {
   auth?: boolean;
