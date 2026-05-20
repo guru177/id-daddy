@@ -19,7 +19,8 @@ export function DashboardPage() {
   const [expiring, setExpiring] = useState<WorkspaceRow[]>([]);
 
   useEffect(() => {
-    void api<{ data: WorkspaceRow[]; total: number }>("/workspaces").then((r) => setWorkspaces(r.data));
+    // Request a large limit to ensure all workspaces are loaded for accurate total metrics
+    void api<{ data: WorkspaceRow[]; total: number }>("/workspaces?limit=10000").then((r) => setWorkspaces(r.data));
     void api("/workspaces/settings").then(setSettings);
     void api<WorkspaceRow[]>("/workspaces/expiring").then(setExpiring);
   }, []);
