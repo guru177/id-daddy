@@ -846,8 +846,8 @@ export function DesignerView() {
           </button>
         </div>
         
-        {/* Center: Nav Tabs (Drops to second line on smaller screens) */}
-        <div className="flex items-center justify-center gap-2 xl:gap-10 overflow-x-auto no-scrollbar order-3 xl:order-2 w-full xl:w-auto xl:flex-1 h-[40px] xl:h-[73px] border-t border-[#e8d5c4]/30 xl:border-t-0">
+        {/* Center: Nav Tabs */}
+        <div data-tour="designer-tabs" className="flex items-center justify-center gap-2 xl:gap-10 overflow-x-auto no-scrollbar order-3 xl:order-2 w-full xl:w-auto xl:flex-1 h-[40px] xl:h-[73px] border-t border-[#e8d5c4]/30 xl:border-t-0">
           {navItems.map(item => (
             <button
               key={item}
@@ -922,9 +922,9 @@ export function DesignerView() {
       >
 
         {/* Utility Toolbar — only visible on Card Designer tab */}
-        <div className="min-h-[40px] xl:min-h-[48px] py-1.5 xl:py-2 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-3 xl:px-6 gap-x-2 xl:gap-x-4 gap-y-2 z-50 shrink-0 relative">
+        <div data-tour="designer-toolbar" className="min-h-[40px] xl:min-h-[48px] py-1.5 xl:py-2 bg-[#f5ece2]/60 border-b border-[#e8d5c4]/60 flex flex-wrap items-center justify-between px-3 xl:px-6 gap-x-2 xl:gap-x-4 gap-y-2 z-50 shrink-0 relative">
           <div className="flex flex-wrap items-center gap-2 xl:gap-6">
-            <div className="flex items-center gap-1 xl:gap-2">
+          <div data-tour="designer-undo" className="flex items-center gap-1 xl:gap-2">
               <button onClick={undo} disabled={history.length <= 1} className="p-1.5 rounded-lg hover:bg-[#e8d5c4]/50 text-[#2c3e50] disabled:opacity-20 transition-all">
                 <Undo2 size={16} />
               </button>
@@ -949,6 +949,7 @@ export function DesignerView() {
             </div>
           </div>
           <button
+            data-tour="designer-save"
             onClick={handleSave}
               disabled={savedIndicator === 'saving'}
               className={`flex items-center gap-2 px-6 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${savedIndicator === 'saved'

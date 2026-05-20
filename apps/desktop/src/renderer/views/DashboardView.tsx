@@ -118,7 +118,7 @@ export function DashboardView() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full xl:w-auto">
+        <div data-tour="dashboard-new-design" className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full xl:w-auto">
 
           <button
             onClick={() => setPage("designer")}
@@ -139,7 +139,7 @@ export function DashboardView() {
       </div>
 
       {/* METRICS */}
-      <div className="grid gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+      <div data-tour="dashboard-metrics" className="grid gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
 
         <Metric
           label="Active Templates"
@@ -308,7 +308,7 @@ export function DashboardView() {
       </div>
 
       {/* QUICK LINKS */}
-      <div className="grid gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+      <div data-tour="dashboard-quicklinks" className="grid gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
 
         <QuickLink
           icon={LayoutTemplate}

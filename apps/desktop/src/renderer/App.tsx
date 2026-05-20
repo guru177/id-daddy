@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   BarChart3,
   Database,
@@ -26,8 +26,11 @@ import { ProfileView } from "./views/ProfileView";
 
 import { GlobalModal } from "./designer/GlobalModal";
 import { UpdateNotification } from "./UpdateNotification";
+import { TourOverlay } from "./TourOverlay";
 
 import faviconImg from "./assets/favicon.png";
+
+const TOUR_KEY = "id-daddy-tour-done";
 
 const pages: Array<{
   id: DesktopPage;
@@ -48,6 +51,8 @@ export default function App() {
   const isBlocked = useAuthStore((state) => state.isBlocked);
 
   const setPage = useAuthStore((state) => state.setPage);
+  const tourActive = useAuthStore((state) => state.tourActive);
+  const setTourActive = useAuthStore((state) => state.setTourActive);
 
   const setSystemSettings = useAuthStore(
     (state) => state.setSystemSettings
@@ -71,6 +76,12 @@ export default function App() {
 
   const [isTimeExpired, setIsTimeExpired] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+
+  // Show tour only once for newly logged-in users
+  const dismissTour = useCallback(() => {
+    localStorage.setItem(TOUR_KEY, "1");
+    setTourActive(false);
+  }, [setTourActive]);
 
   useEffect(() => {
     // Wait until the fresh profile is loaded from the server before checking expiry
@@ -182,6 +193,12 @@ export default function App() {
         .finally(() => {
           // Signal that fresh subscription data is now loaded
           setProfileLoaded(true);
+
+          // Show tour for first-time users only
+          if (!localStorage.getItem(TOUR_KEY)) {
+            // Small delay so the UI is fully rendered before spotlighting
+            setTimeout(() => setTourActive(true), 800);
+          }
         });
     } else {
       setProfileLoaded(true);
@@ -313,6 +330,7 @@ export default function App() {
 
           {/* BRAND */}
           <button
+            data-tour="brand-button"
             className="px-4 py-4 xl:px-8 xl:py-8 text-left hover:bg-white/95 transition-all group relative"
             onClick={() =>
               !isBlocked && setPage("profile")
@@ -402,6 +420,7 @@ export default function App() {
               .map((item) => (
                 <button
                   key={item.id}
+                  data-tour={`nav-${item.id}`}
                   className={clsx(
                     "flex h-11 xl:h-16 w-full items-center gap-3 xl:gap-4 px-3 xl:px-6 text-left transition-all duration-300 group rounded-lg",
                     page === item.id
@@ -514,6 +533,11 @@ export default function App() {
       <GlobalModal />
 
       <UpdateNotification />
+
+      {/* ONBOARDING TOUR — shown once for new users */}
+      {user && tourActive && !isBlocked && !isPlanExpired && (
+        <TourOverlay onFinish={dismissTour} />
+      )}
     </div>
   );
 }

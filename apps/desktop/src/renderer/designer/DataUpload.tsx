@@ -782,6 +782,7 @@ export const DataUpload = () => {
             <div className="flex items-center gap-3">
               {/* New folder button — green gradient */}
               <button
+                data-tour="upload-new-folder"
                 onClick={() => setIsCreatingFolder(true)}
                 className="h-9 flex items-center gap-2 px-5 rounded-xl bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm shadow-green-900/20"
               >
@@ -857,6 +858,7 @@ export const DataUpload = () => {
 
               {/* All Members card */}
               <button
+                data-tour="upload-all-members"
                 onClick={() => { setSelectedFolderId(null); setView('members'); }}
                 className="group flex flex-col items-center justify-center gap-3 bg-white rounded-2xl border-2 border-gray-100 hover:border-[#1a5d1a] hover:shadow-lg hover:shadow-green-900/5 transition-all p-6 aspect-square hover:scale-[1.02] active:scale-[0.98]"
               >
@@ -1105,6 +1107,7 @@ export const DataUpload = () => {
           {selectedMembers.size === 0 && (
             <>
               <button
+                data-tour="upload-settings"
                 onClick={() => {
                   setTempConfig(formConfig || { enabledFields: DEFAULT_ENABLED_FIELDS, customFields: [], enabledImageFields: DEFAULT_ENABLED_IMAGE_FIELDS, customImageFields: [] });
                   setTempOrganizationType(organizationType);
@@ -1118,6 +1121,7 @@ export const DataUpload = () => {
               <div className="h-8 w-px bg-gray-200 mx-1" />
 
               <button
+                data-tour="upload-download-template"
                 onClick={handleDownloadTemplate}
                 className="h-11 bg-white border border-gray-200 text-gray-900 text-[10px] uppercase tracking-widest font-black px-4 rounded-xl transition-all flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200"
                 title="Download Template"
@@ -1126,6 +1130,7 @@ export const DataUpload = () => {
               </button>
 
               <button
+                data-tour="upload-import-excel"
                 onClick={() => excelInputRef.current?.click()}
                 className="h-11 bg-white border border-gray-200 text-gray-900 text-[10px] uppercase tracking-widest font-black px-4 rounded-xl transition-all flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200"
                 title="Import Excel"
@@ -1164,6 +1169,7 @@ export const DataUpload = () => {
             </button>
           ) : (
             <button
+              data-tour="upload-add-member"
               onClick={async () => {
                 const user = useAuthStore.getState().user;
                 if (user?.plan === 'FREE_TRIAL') {

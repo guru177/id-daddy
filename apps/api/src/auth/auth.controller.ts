@@ -25,6 +25,18 @@ export class AuthController {
   }
 
   @Public()
+  @Post("verify-email")
+  verifyEmail(@Body() dto: { email: string; code: string }) {
+    return this.auth.verifyEmail(dto);
+  }
+
+  @Public()
+  @Post("resend-verification")
+  resendVerification(@Body() dto: { email: string }) {
+    return this.auth.resendVerification(dto);
+  }
+
+  @Public()
   @Get("system-settings")
   getSystemSettings() {
     try {

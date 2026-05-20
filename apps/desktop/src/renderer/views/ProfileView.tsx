@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Key, Mail, Phone, Save, Building2, Edit2, CheckCircle2, X, Eye, EyeOff } from "lucide-react";
+import { Key, Mail, Phone, Save, Building2, Edit2, CheckCircle2, X, Eye, EyeOff, PlayCircle } from "lucide-react";
+
+const TOUR_KEY = "id-daddy-tour-done";
 import { api } from "../api";
 import { useAuthStore } from "../store";
 
@@ -24,6 +26,7 @@ export function ProfileView() {
   });
   const [isEditingWorkspaceName, setIsEditingWorkspaceName] = useState(false);
   const [tempWorkspaceName, setTempWorkspaceName] = useState("");
+  const setTourActive = useAuthStore((state) => state.setTourActive);
 
   async function load() {
     try {
@@ -107,9 +110,22 @@ export function ProfileView() {
   return (
     <div className="h-full w-full overflow-y-auto bg-stone-50/50 p-6 lg:p-10">
       <div className="w-full">
-        <header className="mb-10">
-          <h1 className="text-4xl font-black text-stone-900 tracking-tight mb-2">Account Settings</h1>
-          <p className="text-lg text-stone-900 font-medium">Manage your administrator profile and workspace credentials.</p>
+        <header className="mb-10 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-black text-stone-900 tracking-tight mb-2">Account Settings</h1>
+            <p className="text-lg text-stone-900 font-medium">Manage your administrator profile and workspace credentials.</p>
+          </div>
+          <button
+            className="flex items-center gap-2 shrink-0 h-10 px-4 rounded-2xl border-2 border-[#1a5d1a]/30 text-[#1a5d1a] text-sm font-black bg-white hover:bg-[#1a5d1a] hover:text-white transition-all"
+            onClick={() => {
+              localStorage.removeItem(TOUR_KEY);
+              setTourActive(true);
+            }}
+            title="Replay the onboarding tour"
+          >
+            <PlayCircle size={16} />
+            Replay Tour
+          </button>
         </header>
 
         <div className="grid gap-8 grid-cols-1 xl:grid-cols-2">

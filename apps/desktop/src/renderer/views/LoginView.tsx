@@ -1,9 +1,32 @@
 import { FormEvent, useState, useEffect } from "react";
-import { ArrowRight, Sparkles, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Sparkles, Eye, EyeOff, Check } from "lucide-react";
 import loginBg from "../assets/desktop.jpg";
 import faviconImg from "../assets/favicon.png";
 import { login, register } from "../api";
 import { useAuthStore } from "../store";
+
+const REMEMBER_KEY = "id_daddy_remember";
+
+function saveCredentials(email: string, password: string) {
+  try {
+    const payload = btoa(JSON.stringify({ email, password }));
+    localStorage.setItem(REMEMBER_KEY, payload);
+  } catch { /* ignore */ }
+}
+
+function loadCredentials(): { email: string; password: string } | null {
+  try {
+    const raw = localStorage.getItem(REMEMBER_KEY);
+    if (!raw) return null;
+    return JSON.parse(atob(raw));
+  } catch {
+    return null;
+  }
+}
+
+function clearCredentials() {
+  localStorage.removeItem(REMEMBER_KEY);
+}
 
 export function LoginView() {
   const setSession = useAuthStore((state) => state.setSession);
@@ -13,13 +36,24 @@ export function LoginView() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForgotHint, setShowForgotHint] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [resending, setResending] = useState(false);
 
+  // Auto-fill saved credentials on mount
   useEffect(() => {
     window.idDaddy?.getAppVersion?.().then((v) => setAppVersion(v)).catch(() => { });
+    const saved = loadCredentials();
+    if (saved) {
+      setEmail(saved.email);
+      setPassword(saved.password);
+      setRememberMe(true);
+    }
   }, []);
 
   async function submit(event: FormEvent) {
@@ -30,11 +64,23 @@ export function LoginView() {
       let session;
       if (mode === "login") {
         session = await login(email, password);
+        // Save or clear credentials based on remember-me
+        if (rememberMe) {
+          saveCredentials(email, password);
+        } else {
+          clearCredentials();
+        }
       } else {
         // Derive workspace name from email (e.g. admin@google.com -> Google)
         const domain = email.split("@")[1]?.split(".")[0] || "My Workspace";
         const workspaceName = domain.charAt(0).toUpperCase() + domain.slice(1);
-        session = await register(workspaceName, email, password, phone);
+        const res = await register(workspaceName, email, password, phone);
+        if ("message" in res && res.message === "VERIFICATION_REQUIRED") {
+          setShowOtp(true);
+          setLoading(false);
+          return;
+        }
+        session = res as import("@id-daddy/shared").AuthResponse;
       }
 
       if (session.user.role === "VIEWER") {
@@ -47,6 +93,38 @@ export function LoginView() {
       setError(err instanceof Error ? err.message : "Action failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleVerify(event: FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const session = await import("../api").then(m => m.verifyEmail(email, otpCode));
+      if (session.user.role === "VIEWER") {
+        setError("Viewer users cannot access the desktop generator.");
+        return;
+      }
+      setSession(session.accessToken, session.refreshToken, session.user);
+      setPage("upload");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setResending(true);
+    setError("");
+    try {
+      await import("../api").then(m => m.resendVerification(email));
+      setError("A new verification code has been sent!");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resend code");
+    } finally {
+      setResending(false);
     }
   }
 
@@ -115,16 +193,17 @@ export function LoginView() {
 
             <header className="mb-12 text-center lg:text-left">
               <h2 className="text-5xl font-black text-stone-900 tracking-tighter mb-3 leading-none">
-                {mode === "login" ? "Sign In" : "Create Account"}
+                {showOtp ? "Verify Email" : mode === "login" ? "Sign In" : "Create Account"}
               </h2>
               <p className="text-stone-900 text-lg font-bold">
-                {mode === "login"
+                {showOtp ? "Enter the OTP sent to your email." : mode === "login"
                   ? "Manage your workspace and designs."
                   : "Join ID Daddy and start designing today."}
               </p>
             </header>
 
-            <form className="space-y-8" onSubmit={submit}>
+            {!showOtp && (
+              <form className="space-y-8" onSubmit={submit}>
               <div className="space-y-3">
                 <label className="text-sm font-black text-stone-900 uppercase tracking-[0.2em] ml-2">Email Address</label>
                 <input
@@ -190,6 +269,32 @@ export function LoginView() {
                 </div>
               ) : null}
 
+              {/* Remember Me — login mode only */}
+              {mode === "login" && (
+                <div className="flex items-center gap-3 px-2">
+                  <button
+                    type="button"
+                    id="remember-me-toggle"
+                    onClick={() => setRememberMe(!rememberMe)}
+                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      rememberMe
+                        ? "bg-[#1a5d1a] border-[#1a5d1a]"
+                        : "bg-white border-stone-200 hover:border-[#1a5d1a]"
+                    }`}
+                    aria-label="Remember me"
+                  >
+                    {rememberMe && <Check size={14} className="text-white" strokeWidth={3} />}
+                  </button>
+                  <label
+                    htmlFor="remember-me-toggle"
+                    className="text-sm font-black text-stone-500 cursor-pointer select-none"
+                    onClick={() => setRememberMe(!rememberMe)}
+                  >
+                    Remember me on this device
+                  </label>
+                </div>
+              )}
+
               <button
                 className="group relative w-full h-16 rounded-[28px] bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white font-black text-xl transition-all 0_20px_40px_-10px_rgba(26,93,26,0.3)] hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0"
                 disabled={loading}
@@ -202,6 +307,50 @@ export function LoginView() {
                 </span>
               </button>
             </form>
+            )}
+
+            {showOtp && (
+              <form className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300" onSubmit={handleVerify}>
+                <div className="space-y-3">
+                  <label className="text-sm font-black text-stone-900 uppercase tracking-[0.2em] ml-2">Verification Code</label>
+                  <p className="text-sm font-medium text-stone-500 mb-4 px-2">
+                    We've sent a 6-digit code to <span className="font-bold text-stone-900">{email}</span>. Check your console logs since email sending is currently mocked.
+                  </p>
+                  <input
+                    className="w-full h-16 rounded-[28px] bg-white border-2 border-stone-100 px-6 text-stone-900 font-black text-2xl tracking-widest text-center outline-none transition-all focus:border-[#1a5d1a] placeholder:text-stone-200"
+                    placeholder="000000"
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(event) => setOtpCode(event.target.value)}
+                    required
+                  />
+                </div>
+
+                {error ? (
+                  <div className="p-5 rounded-[24px] bg-red-50 border border-red-100 text-sm font-black text-red-600 animate-shake flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-red-600" />
+                    {error}
+                  </div>
+                ) : null}
+
+                <button
+                  className="group relative w-full h-16 rounded-[28px] bg-gradient-to-br from-[#1a5d1a] to-[#2d7a2d] text-white font-black text-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0"
+                  disabled={loading || otpCode.length < 6}
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                    {loading ? "Verifying..." : "Verify & Continue"}
+                    {!loading && <Check size={24} />}
+                  </span>
+                </button>
+                
+                <p className="text-center">
+                  <button type="button" onClick={handleResend} disabled={resending} className="text-sm font-bold text-stone-500 hover:text-[#1a5d1a] transition-colors disabled:opacity-50">
+                    {resending ? "Sending..." : "Resend Code"}
+                  </button>
+                </p>
+              </form>
+            )}
 
             <footer className="mt-16 flex flex-col items-center gap-8">
               <div className="flex items-center gap-6 w-full">
@@ -219,6 +368,7 @@ export function LoginView() {
                   className="text-[#1a5d1a] font-black hover:underline ml-1"
                   onClick={() => {
                     setMode(mode === "login" ? "register" : "login");
+                    setShowOtp(false);
                     setError("");
                   }}
                 >

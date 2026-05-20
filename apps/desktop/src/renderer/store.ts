@@ -23,6 +23,8 @@ interface AuthState {
   setSystemSettings: (settings: any) => void;
   updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
+  tourActive: boolean;
+  setTourActive: (active: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
       page: "dashboard",
       isBlocked: false,
       systemSettings: null,
+      tourActive: false,
       setSession: (accessToken, refreshToken, user) => {
         const page = user.role === "SUPER_ADMIN" ? "designer" : "dashboard";
         set({ accessToken, refreshToken, user, page, isBlocked: false });
@@ -42,11 +45,12 @@ export const useAuthStore = create<AuthState>()(
       setIsBlocked: (isBlocked) => set({ isBlocked }),
       setSystemSettings: (systemSettings) => set({ systemSettings }),
       updateUser: (updates) => set((state) => ({ user: state.user ? { ...state.user, ...updates } : null })),
+      setTourActive: (tourActive) => set({ tourActive }),
       logout: () => {
         localStorage.removeItem("saved_id_members");
         localStorage.removeItem("saved_id_designs");
         useDesignerStore.setState({ members: [], savedDesigns: [], folders: [] });
-        set({ accessToken: null, refreshToken: null, user: null, page: "dashboard", isBlocked: false });
+        set({ accessToken: null, refreshToken: null, user: null, page: "dashboard", isBlocked: false, tourActive: false });
       }
     }),
     { name: "id-daddy-desktop-auth" }

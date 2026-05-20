@@ -41,10 +41,26 @@ export function login(email: string, password: string) {
 }
 
 export function register(workspaceName: string, adminEmail: string, adminPassword: string, adminPhone?: string) {
-  return api<AuthResponse>("/auth/register", {
+  return api<AuthResponse | { message: string; email: string }>("/auth/register", {
     method: "POST",
     auth: false,
     body: JSON.stringify({ workspaceName, adminEmail, adminPassword, adminPhone })
+  });
+}
+
+export function verifyEmail(email: string, code: string) {
+  return api<AuthResponse>("/auth/verify-email", {
+    method: "POST",
+    auth: false,
+    body: JSON.stringify({ email, code })
+  });
+}
+
+export function resendVerification(email: string) {
+  return api<{ message: string }>("/auth/resend-verification", {
+    method: "POST",
+    auth: false,
+    body: JSON.stringify({ email })
   });
 }
 
